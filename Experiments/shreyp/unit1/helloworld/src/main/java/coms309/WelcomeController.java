@@ -1,11 +1,15 @@
 package coms309;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+
 
 @RestController
 class WelcomeController {
+
+
+
 
     @GetMapping("/")
     public String welcome() {
@@ -24,6 +28,35 @@ class WelcomeController {
 
     @GetMapping("/course/{cname}/{cnumber}")
     public String course(@PathVariable String cname,@PathVariable String cnumber){return "Its the "+cname+cnumber ;}
+
+
+    @GetMapping("/parity/{num}")
+    public String checkParity(@PathVariable int num) {
+        if (num % 2 == 0) {
+            return num + " is an Even number";
+        } else {
+            return num + " is an Odd number";
+        }
+    }
+    @GetMapping("/reverse")
+    public String reverseWelcome() {
+
+        // Get the original welcome message
+        String origStg = welcome();
+
+        // Reverse it
+        String reversed = "";
+
+        for (int i = origStg.length() - 1; i >= 0; i--) {
+            reversed += origStg.charAt(i);
+        }
+
+        return reversed;
+    }
+
+
+
+
 
 }
 
