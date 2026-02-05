@@ -12,7 +12,7 @@ public class WelcomeController {
         return "Hello this is Boudhayan, working on the backend side.";
     }
 
-    @GetMapping("/welcome/{name}")
+    @GetMapping("/welcome/{name}")//message
     public String welcomeByName(@PathVariable String name) {
         return "Hello and welcome to COMS 309: " + name;
     }
