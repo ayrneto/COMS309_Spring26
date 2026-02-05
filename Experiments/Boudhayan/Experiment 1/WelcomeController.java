@@ -17,16 +17,8 @@ class WelcomeController {
         return "Hello and welcome to COMS 309: " + name;
     }
 
-    @GetMapping("/{name}/{year}")
+    @GetMapping("/student/{name}/{year}")
     public String Student(@PathVariable String name, @PathVariable int yr){
         return "Welcome to COMS 3090 "+name+". This is the year "+yr;
-    }
-
-    @GetMapping("/{age}")
-    public String Vote(@PathVariable int age){
-        if(age>=18)
-            return "You can vote";
-        else
-            return "You cannot vote";
     }
 }
