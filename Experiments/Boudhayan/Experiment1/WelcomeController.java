@@ -23,7 +23,7 @@ public class WelcomeController {
         return "Welcome to COMS 3090 " + name + ". This is the year " + year;
     }
 
-    @GetMapping("/vote/{age}")
+    @GetMapping("/vote/{age}") //check commit
     public String vote(@PathVariable int age) {
         return age >= 18 ? "You can vote" : "You cannot vote";
     }
