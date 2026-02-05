@@ -17,7 +17,7 @@ public class WelcomeController {
         return "Hello and welcome to COMS 309: " + name;
     }
 
-    @GetMapping("/student/{name}/{year}")
+    @GetMapping("/student/{name}/{year}")//Name and year
     public String student(@PathVariable String name,
                           @PathVariable int year) {
         return "Welcome to COMS 3090 " + name + ". This is the year " + year;
