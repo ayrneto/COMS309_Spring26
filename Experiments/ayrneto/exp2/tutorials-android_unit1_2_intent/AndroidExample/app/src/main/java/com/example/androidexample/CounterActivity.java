@@ -3,6 +3,7 @@ package com.example.androidexample;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +17,18 @@ public class CounterActivity extends AppCompatActivity {
     private Button backBtn;     // define back button variable
 
     private int counter = 0;    // counter variable
+
+    private void updateCounter() {
+        numberTxt.setText(String.valueOf(counter));
+
+        int color;
+        if (counter % 10 == 0 && counter != 0) {
+            color = Color.RED;
+        } else {
+            color = Color.BLACK;
+        }
+        numberTxt.setTextColor(color);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +45,8 @@ public class CounterActivity extends AppCompatActivity {
         increaseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                numberTxt.setText(String.valueOf(++counter));
+                counter++;
+                updateCounter();
             }
         });
 
@@ -40,7 +54,8 @@ public class CounterActivity extends AppCompatActivity {
         decreaseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                numberTxt.setText(String.valueOf(--counter));
+                counter--;
+                updateCounter();
             }
         });
 
