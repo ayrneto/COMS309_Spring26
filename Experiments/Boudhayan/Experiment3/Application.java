@@ -1,10 +1,10 @@
-package "Experiment 1";
+package coms309;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * PetClinic Spring Boot Application.
+ * Sample Spring Boot Application.
  *
  * @author Vivek Bengre
  */
