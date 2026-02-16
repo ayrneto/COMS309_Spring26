@@ -37,6 +37,15 @@ public class JsonObjReqActivity extends AppCompatActivity {
         btnJsonObjReq = findViewById(R.id.btnJsonObj);
         msgResponse = findViewById(R.id.msgResponse);
 
+        // Clear button logic
+        Button btnClear = findViewById(R.id.btnClear);
+        btnClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                msgResponse.setText("");
+            }
+        });
+
         // Set a click listener to trigger JSON object request
         btnJsonObjReq.setOnClickListener(new View.OnClickListener() {
             @Override
