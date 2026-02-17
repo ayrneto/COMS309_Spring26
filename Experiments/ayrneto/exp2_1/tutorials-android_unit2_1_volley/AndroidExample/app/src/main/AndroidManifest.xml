@@ -26,6 +26,7 @@
         <activity
             android:name=".StringReqActivity"
             android:exported="false" />
+        <activity android:name=".LoginActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
