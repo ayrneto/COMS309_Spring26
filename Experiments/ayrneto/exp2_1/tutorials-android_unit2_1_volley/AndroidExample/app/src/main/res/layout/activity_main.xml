@@ -16,7 +16,6 @@
         android:text="Volley Examples">
     </TextView>
 
-    <!-- ToDo: Background not working. Not getting it to change shape or color -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/buttonMainLogin"
         android:layout_width="300dp"
@@ -25,7 +24,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="0dp"
         android:background="@drawable/login_button"
-        android:fontFamily="monospace"
+        android:fontFamily="@font/alata"
         android:text="@string/login"
         android:textColorLink="#D51212"
         android:textSize="30sp"
