@@ -1,5 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="aa_bg">#FFFFFF</color>
+    <color name="aa_primary">#2F6F5E</color>      <!-- dark green -->
+    <color name="aa_secondary">#79BFA9</color>    <!-- light green -->
+    <color name="aa_text">#1B1B1B</color>
+    <color name="aa_muted">#6B6B6B</color>
+    <color name="aa_input_bg">#EAF5F1</color>     <!-- very light green -->
 </resources>
