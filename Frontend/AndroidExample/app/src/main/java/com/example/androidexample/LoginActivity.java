@@ -1,10 +1,12 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +29,7 @@ public class LoginActivity extends AppCompatActivity {
         EditText usernameInput = findViewById(R.id.inputUsername); // EditText is the default text entry
         EditText passwordInput = findViewById(R.id.inputPassword);
         Button loginBtn = findViewById(R.id.btnLogin);
+        LinearLayout SignUpBtn = findViewById(R.id.btnSignUp);
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,6 +41,15 @@ public class LoginActivity extends AppCompatActivity {
                 sendLoginRequest(username, password);
             }
         });
+
+//        // Go to SignUp page on click
+//        SignUpBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+//                startActivity(intent);
+//            }
+//        });
     }
 
     private void sendLoginRequest(String username, String password){
