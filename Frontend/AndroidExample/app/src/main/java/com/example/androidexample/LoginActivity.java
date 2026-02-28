@@ -1,10 +1,12 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +29,7 @@ public class LoginActivity extends AppCompatActivity {
         EditText usernameInput = findViewById(R.id.inputUsername); // EditText is the default text entry
         EditText passwordInput = findViewById(R.id.inputPassword);
         Button loginBtn = findViewById(R.id.btnLogin);
+        LinearLayout SignUpBtn = findViewById(R.id.btnSignUp);
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,10 +41,19 @@ public class LoginActivity extends AppCompatActivity {
                 sendLoginRequest(username, password);
             }
         });
+
+//        // Go to SignUp page on click
+//        SignUpBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+//                startActivity(intent);
+//            }
+//        });
     }
 
     private void sendLoginRequest(String username, String password){
-        String url = "http://10.0.2.2:3000/api/login";  // Mockoon port
+        String url = "http://10.26.2.39:3000/api/login";  // Mockoon port
 
         // Create JSON object with username and password
         JSONObject loginData = new JSONObject();
@@ -59,13 +71,24 @@ public class LoginActivity extends AppCompatActivity {
                 loginData,
                 response -> {
                     // Success
-                    Log.d("Login", "Success: " + response.toString());
-                    Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    try{
+                        boolean success = response.getBoolean("success");
+                        if(success){
+                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            Toast.makeText(LoginActivity.this, "Invalid Credentials", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    catch (JSONException e){
+                        e.printStackTrace();
+                    }
                 },
                 error -> {
                     // Error
-                    Log.e("Login", "Error: " + error.toString());
-                    Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
                 }
         );
 

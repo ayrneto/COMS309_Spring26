@@ -1,54 +1,45 @@
 package onetoone.Users;
 
-
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-import java.time.Instant;
-
-
-/**
- * @author Boudhayan Chakraborty
-* Represents the User table in the database.
-* Stores user data like:
-* id name email passwordHash
-* Annotated with @Entity so JPA maps it to a database table.
-* Contains getters and setters.
-*/
-@Getter
-@Setter
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "Email")
-})
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column(nullable = false)
+    @NotBlank
     private String name;
 
-    @Column(nullable = false)
+    @Email
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank
     @Column(nullable = false)
-    private String passwordHash;
+    private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    private boolean active = true;
 
+    // Constructors
+    public User() {}
 
-    // getters/setters
-
-    public long getId() {
-        return id;
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.active = true;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {
@@ -67,19 +58,19 @@ public class User {
         this.email = email;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
-    public Role getRole() {
-        return role;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
