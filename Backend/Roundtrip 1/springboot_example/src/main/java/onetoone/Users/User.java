@@ -3,6 +3,7 @@ package onetoone.Users;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
@@ -23,6 +24,15 @@ public class User {
     @NotBlank
     @Column(nullable = false)
     private String password;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String confirmPassword;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
     private boolean active = true;
 
@@ -72,5 +82,21 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Role getRole() {
+        return this.role;
+    }
+
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
     }
 }
