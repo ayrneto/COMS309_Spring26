@@ -34,13 +34,14 @@ public class CounsellorProfileController {
     }
 
     @PutMapping("/{userId}/update/{counsellorstatus}")
-    public CounsellorStatus updateStatus(@PathVariable long userId, @PathVariable CounsellorStatus counsellorStatus) {
+    public CounsellorStatus updateStatus(@PathVariable long userId, @PathVariable CounsellorStatus counsellorstatus) {
         CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
         if(counsellor == null)
             throw new RuntimeException("Counsellor not found");
-        counsellor.setStatus(counsellorStatus);
+        counsellor.setStatus(counsellorstatus);
 
-        return counsellor.getStatus();
+        counsellorProfileRepository.save(counsellor);  // <-- persist
+        return ResponseEntity.ok(counsellor.getStatus()).getBody();
     }
 
     @GetMapping("/{userId}/profile")
