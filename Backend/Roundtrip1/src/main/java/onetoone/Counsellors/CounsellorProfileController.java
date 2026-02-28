@@ -15,7 +15,7 @@ import onetoone.Users.UserRepository;
 @RestController
 @RequestMapping("/api/counsellors")
 public class CounsellorProfileController {
-
+    int count = 0;
     @Autowired
     private UserRepository userRepository;
 
@@ -42,6 +42,32 @@ public class CounsellorProfileController {
 
         counsellorProfileRepository.save(counsellor);  // <-- persist
         return ResponseEntity.ok(counsellor.getStatus()).getBody();
+    }
+
+    @PutMapping("/{userId}/rating/{ratingAverage}")
+    public String updateRating(@PathVariable long userId, @PathVariable double ratingAverage) {
+        CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
+        if(counsellor == null) {
+            throw new RuntimeException("Counsellor not found");
+        }
+        counsellor.setRatingAverage(ratingAverage);
+
+        count++;
+        counsellor.setRatingCount(count);
+
+        counsellorProfileRepository.save(counsellor);
+        return "success";
+    }
+
+    @PutMapping("/{userId}/rating/{profilePictureURL}")
+    public String updateProfilepic(@PathVariable long userId, @PathVariable String profilePictureURL) {
+        CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
+        if(counsellor == null) {
+            throw new RuntimeException("Counsellor not found");
+        }
+        counsellor.setProfilePictureUrl(profilePictureURL);
+        counsellorProfileRepository.save(counsellor);
+        return "success";
     }
 
     @GetMapping("/{userId}/profile")
