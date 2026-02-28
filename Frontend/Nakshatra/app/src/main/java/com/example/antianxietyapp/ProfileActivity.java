@@ -65,7 +65,7 @@ public class ProfileActivity extends AppCompatActivity {
                     Toast.makeText(ProfileActivity.this, "Profile deleted", Toast.LENGTH_SHORT).show();
 
                     // Back to signup
-                    Intent i = new Intent(ProfileActivity.this, SignupActivity.class);
+                    Intent i = new Intent(ProfileActivity.this, SignUpActivity.class);
                     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(i);
                     finishAffinity();
