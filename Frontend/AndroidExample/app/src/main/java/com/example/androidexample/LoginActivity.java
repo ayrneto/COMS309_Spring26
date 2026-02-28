@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void sendLoginRequest(String username, String password){
-        String url = "http://10.0.2.2:3000/api/login";  // Mockoon port
+        String url = "http://10.26.2.39:3000/api/login";  // Mockoon port
 
         // Create JSON object with username and password
         JSONObject loginData = new JSONObject();
@@ -71,13 +71,24 @@ public class LoginActivity extends AppCompatActivity {
                 loginData,
                 response -> {
                     // Success
-                    Log.d("Login", "Success: " + response.toString());
-                    Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    try{
+                        boolean success = response.getBoolean("success");
+                        if(success){
+                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else{
+                            Toast.makeText(LoginActivity.this, "Invalid Credentials", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    catch (JSONException e){
+                        e.printStackTrace();
+                    }
                 },
                 error -> {
                     // Error
-                    Log.e("Login", "Error: " + error.toString());
-                    Toast.makeText(LoginActivity.this, "Login failed!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
                 }
         );
 
