@@ -7,7 +7,7 @@ import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
@@ -30,8 +30,11 @@ public class SignUpActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_confirm_password);
         btnSignup = findViewById(R.id.btn_signup);
-
+        TextView tvHint = findViewById(R.id.tvHint);
         btnSignup.setOnClickListener(v -> attemptSignup());
+        tvHint.setOnClickListener(v -> {              // 👈 ADD THIS
+            startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
+        });
     }
 
     private void attemptSignup() {
