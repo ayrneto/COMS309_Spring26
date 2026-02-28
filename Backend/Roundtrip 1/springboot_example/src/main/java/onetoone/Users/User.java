@@ -29,11 +29,6 @@ public class User {
     @Column(nullable = false)
     private String confirmPassword;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
-
     private boolean active = true;
 
     // Constructors
@@ -82,14 +77,6 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public Role getRole() {
-        return this.role;
     }
 
     public String getConfirmPassword() {

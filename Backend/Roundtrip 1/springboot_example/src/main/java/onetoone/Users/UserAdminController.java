@@ -23,7 +23,6 @@ public class UserAdminController {
             existing.setName(incoming.getName());
             existing.setEmail(incoming.getEmail());
             existing.setActive(incoming.isActive());
-            existing.setRole(incoming.getRole());
 
             // only update password if provided (optional)
             if (incoming.getPassword() != null && !incoming.getPassword().isBlank()) {
@@ -52,7 +51,6 @@ public class UserAdminController {
         u.setName(req.name.trim());
         u.setEmail(req.emailId.trim());
         u.setPassword(req.password); // if that's your field
-        u.setRole(Role.COUNSELLOR);
         userRepository.save(u);
 
         User saved = userRepository.save(u);

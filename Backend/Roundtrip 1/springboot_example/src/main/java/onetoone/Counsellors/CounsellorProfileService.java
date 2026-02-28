@@ -25,9 +25,6 @@ public class CounsellorProfileService {
         User counsellor = userRepo.findById(counsellorUserId).orElse(null);
         if (counsellor == null) throw new IllegalArgumentException("Counsellor user not found");
 
-        if (counsellor.getRole() != Role.COUNSELLOR) {
-            throw new IllegalArgumentException("User is not a COUNSELLOR");
-        }
 
         CounsellorProfile profile = profileRepo.findByUser_Id(counsellorUserId)
                 .orElseGet(CounsellorProfile::new);

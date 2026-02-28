@@ -87,9 +87,6 @@ public class CounsellorProfileController {
         if (u == null)
             return ResponseEntity.status(404).body(msg("Counsellor user not found"));
 
-        if (u.getRole() != Role.COUNSELLOR)
-            return ResponseEntity.badRequest().body(msg("User is not a counsellor"));
-
         CounsellorProfile profile = counsellorProfileRepository.findByUser_Id(id).orElse(null);
 
         if (profile == null) {

@@ -69,7 +69,6 @@ public class UserController {
         user.setEmail(req.getEmail());
         user.setPassword(req.getPassword());
         user.setConfirmPassword(req.getConfirmPassword());
-        user.setRole(req.getRole());// later hash this in service
 
         User saved = userRepository.save(user);
 
@@ -109,7 +108,7 @@ public class UserController {
         }
 
         return ResponseEntity.ok(
-                new LoginResponse(user.getId(), user.getEmail(), user.getRole())
+                new LoginResponse(user.getId(), user.getEmail())
         );
     }
 }
