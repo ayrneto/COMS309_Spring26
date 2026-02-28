@@ -47,4 +47,15 @@ public class UserController {
         }
         return ResponseEntity.ok(user);
     }
+
+    @DeleteMapping("/LoginPage/user/{email}")
+    public String deleteUserByEmail(@PathVariable("email") String email) {
+        User user = userRepository.findByEmail(email.toLowerCase().trim());
+        if (user == null) {
+            return failure;
+        }
+
+        userRepository.delete(user);
+        return success;
+    }
 }

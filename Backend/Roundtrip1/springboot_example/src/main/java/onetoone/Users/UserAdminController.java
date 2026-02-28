@@ -14,6 +14,15 @@ public class UserAdminController {
         this.userRepository = userRepository;
     }
 
+    @PutMapping("/update/{id}")
+    public String updateUser(@RequestBody User user, @PathVariable long id) {
+        if (userRepository.findById(id).isPresent()) {
+            userRepository.save(user);
+            return "success";
+        }
+        return "failure";
+    }
+
     @PostMapping("/counsellors")
     public ResponseEntity<?> createCounsellor(@RequestBody CreateCounsellorRequest req) {
         if (req.name == null || req.name.trim().isEmpty()) {
