@@ -1,4 +1,4 @@
-package com.example.antianxietyapp;
+package com.example.androidexample;
 
 public class ApiConstants {
 

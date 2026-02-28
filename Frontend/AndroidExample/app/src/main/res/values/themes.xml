@@ -4,6 +4,12 @@
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="android:fontFamily">@font/alata</item>
+        <item name="colorPrimary">@color/aa_primary</item>
+        <item name="colorPrimaryVariant">@color/aa_primary</item>
+        <item name="colorSecondary">@color/aa_secondary</item>
+        <item name="android:statusBarColor">@color/aa_bg</item>
+        <item name="android:navigationBarColor">@color/aa_bg</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
     </style>
 
     <style name="Theme.AndroidExample" parent="Base.Theme.AndroidExample" />
