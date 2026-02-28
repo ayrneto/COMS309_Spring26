@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
 
     // Handles errors you throw like: new ResponseStatusException(...)
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest req) {
+    public ResponseEntity<onetoone.Exceptions.ApiError> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest req) {
         HttpStatus status = (HttpStatus) ex.getStatusCode();
         ApiError err = new ApiError(
                 status.value(),

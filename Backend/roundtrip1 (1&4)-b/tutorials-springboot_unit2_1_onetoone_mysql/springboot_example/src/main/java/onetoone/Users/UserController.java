@@ -31,7 +31,7 @@ public class UserController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-    // ✅ Signup endpoint
+    // Signup endpoint
     @PostMapping("/signup")
     public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest req) {
 
@@ -56,7 +56,7 @@ public class UserController {
                 .body(new UserResponse(saved.getId(), saved.getEmail()));
     }
 
-    // ✅ Delete user
+    // Delete user
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
 
