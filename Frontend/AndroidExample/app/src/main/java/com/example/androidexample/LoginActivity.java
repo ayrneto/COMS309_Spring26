@@ -42,14 +42,14 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-//        // Go to SignUp page on click
-//        SignUpBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
-//                startActivity(intent);
-//            }
-//        });
+        // Go to SignUp page on click
+        SignUpBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void sendLoginRequest(String username, String password){
