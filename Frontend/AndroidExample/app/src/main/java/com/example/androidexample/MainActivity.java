@@ -10,7 +10,7 @@ import android.widget.Button;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     // Declare button variables
-    private Button strBtn, jsonObjBtn, jsonArrBtn, imgBtn, loginBtn;
+    private Button strBtn, jsonObjBtn, jsonArrBtn, imgBtn, mainloginBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,14 +22,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         jsonObjBtn = findViewById(R.id.btnJsonObjRequest);
         jsonArrBtn = findViewById(R.id.btnJsonArrRequest);
         imgBtn = findViewById(R.id.btnImageRequest);
-        loginBtn = findViewById(R.id.buttonMainLogin);
+        mainloginBtn = findViewById(R.id.buttonMainLogin);
 
         /* Set click listeners for each button */
         strBtn.setOnClickListener(this);
         jsonObjBtn.setOnClickListener(this);
         jsonArrBtn.setOnClickListener(this);
         imgBtn.setOnClickListener(this);
-        loginBtn.setOnClickListener(this);
+        mainloginBtn.setOnClickListener(this);
     }
 
     @Override

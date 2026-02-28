@@ -4,4 +4,6 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="log_in">Log In</string>
+    <string name="worrify">Worrify</string>
+    <string name="calmify">Calmify</string>
 </resources>
