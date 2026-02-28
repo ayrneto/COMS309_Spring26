@@ -7,35 +7,78 @@
     android:orientation="vertical"
     android:padding="20dp"
     android:gravity="center"
+    android:background="@drawable/offwhite_background"
     tools:context=".LoginActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="40dp"
+        android:fontFamily="sans-serif-black"
         android:text="@string/login"
-        android:textSize="30sp"
-        android:layout_marginBottom="40dp" />
+        android:textColor="#4A6E60"
+        android:textSize="30sp" />
 
     <EditText
+        android:background="@drawable/light_green_background"
+        android:fontFamily="@font/alata"
+        android:gravity="center"
         android:id="@+id/inputUsername"
         android:layout_width="300dp"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:layout_marginBottom="20dp"
         android:hint="@string/username" />
 
     <EditText
         android:id="@+id/inputPassword"
+        android:fontFamily="@font/alata"
+        android:background="@drawable/light_green_background"
+        android:gravity="center"
         android:layout_width="300dp"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:hint="@string/password"
         android:inputType="textPassword"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="100dp" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
+        android:textAllCaps="false"
         android:id="@+id/btnLogin"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:text="@string/login" />
+        android:background="@drawable/dark_green_background"
+        android:layout_width="300dp"
+        android:layout_height="80dp"
+        android:text="@string/log_in"
+        android:textSize="32sp"
+        android:paddingBottom="10dp"
+        android:fontFamily="@font/alata"
+        />
 
+    <!-- This LinearLayout is clickable -->
+    <LinearLayout
+        android:id="@+id/btnSignUp"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="135dp"
+            android:text="Click here to"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="135dp"
+            android:text=" Sign Up"
+            android:fontFamily="sans-serif-black"
+            android:textColor="#4A6E60"
+            android:textSize="20sp" />
+
+    </LinearLayout>
 
 </LinearLayout>
