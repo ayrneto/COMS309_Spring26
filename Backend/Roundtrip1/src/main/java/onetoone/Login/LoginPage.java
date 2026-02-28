@@ -16,17 +16,12 @@ public class LoginPage {
     @Autowired
     private UserRepository userRepository;
 
-    // ---------- LOGIN ----------
-    // POST /LoginPage/login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         User user = userRepository.findByEmail(req.getEmail());
         if (user == null) {
             return ResponseEntity.status(401).body("{\"message\":\"failure\"}");
         }
-
-        // NOTE: This is just a plain string compare.
-        // In real apps you should hash+verify, but for class projects this is ok if required.
         if (!user.getPasswordHash().equals(req.getPassword())) {
             return ResponseEntity.status(401).body("{\"message\":\"failure\"}");
         }
@@ -34,8 +29,6 @@ public class LoginPage {
         return ResponseEntity.ok(user); // or return success message
     }
 
-    // ---------- FORGOT PASSWORD ----------
-    // PUT /LoginPage/forgotPassword
     @PutMapping("/forgotPassword")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest req) {
         User user = userRepository.findByEmail(req.getEmail());
@@ -49,10 +42,8 @@ public class LoginPage {
         return ResponseEntity.ok("{\"message\":\"success\"}");
     }
 
-    // ---------- EDIT USER (ADMIN ONLY) ----------
-    // PUT /LoginPage/editUser/{adminId}
     @PutMapping("/editUser/{adminId}")
-    public ResponseEntity<String> editUser(@PathVariable int adminId, @RequestBody User updatedUser) {
+    public ResponseEntity<String> editUser(@PathVariable long adminId, @RequestBody User updatedUser) {
 
         Optional<User> adminOpt = userRepository.findById(adminId);
         if (adminOpt.isEmpty() || adminOpt.get().getRole() != Role.ADMIN) {
@@ -63,7 +54,6 @@ public class LoginPage {
         return ResponseEntity.ok("{\"message\":\"success\"}");
     }
 
-    // ---------- Request DTOs ----------
     public static class LoginRequest {
         private String email;
         private String password;

@@ -2,6 +2,9 @@ package onetoone.Users;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.Instant;
 
 
@@ -13,7 +16,8 @@ import java.time.Instant;
 * Annotated with @Entity so JPA maps it to a database table.
 * Contains getters and setters.
 */
-
+@Getter
+@Setter
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "Email")
@@ -21,7 +25,7 @@ import java.time.Instant;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
 
     @Column(nullable = false)
     private String name;
@@ -39,7 +43,7 @@ public class User {
 
     // getters/setters
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
