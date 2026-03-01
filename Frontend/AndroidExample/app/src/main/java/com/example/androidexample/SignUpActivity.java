@@ -32,7 +32,7 @@ public class SignUpActivity extends AppCompatActivity {
         btnSignup = findViewById(R.id.btn_signup);
         TextView tvHint = findViewById(R.id.tvHint);
         btnSignup.setOnClickListener(v -> attemptSignup());
-        tvHint.setOnClickListener(v -> {              // 👈 ADD THIS
+        tvHint.setOnClickListener(v -> {
             startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
         });
     }

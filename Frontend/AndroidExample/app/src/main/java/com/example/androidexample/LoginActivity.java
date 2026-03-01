@@ -76,6 +76,8 @@ public class LoginActivity extends AppCompatActivity {
                         if(success){
                             Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
                             startActivity(intent);
+                            intent.putExtra("username", username);
+                            intent.putExtra("password", password);
                             finish();
                         }
                         else{
