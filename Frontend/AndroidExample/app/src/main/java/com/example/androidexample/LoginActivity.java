@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void sendLoginRequest(String username, String password){
-        String url = "http://10.26.2.39:3000/api/login";  // Mockoon port
+        String url = "http://192.168.56.1:3000/api/login";  // Mockoon port
 
         // Create JSON object with username and password
         JSONObject loginData = new JSONObject();
