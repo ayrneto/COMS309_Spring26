@@ -52,7 +52,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void deleteUser(String userId) {
-        String url = ApiConstants.USERS + "/" + userId;
+        String url = ApiConstants.DELETE + "/" + userId;
 
         StringRequest request = new StringRequest(
                 Request.Method.DELETE,
