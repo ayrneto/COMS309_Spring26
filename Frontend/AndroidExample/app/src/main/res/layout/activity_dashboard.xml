@@ -6,5 +6,8 @@
     android:layout_height="match_parent"
     android:background="@drawable/offwhite_background"
     tools:context=".Dashboard"
+    android:orientation="vertical"
     >
+
+
 </LinearLayout>
