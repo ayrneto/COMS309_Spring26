@@ -28,8 +28,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Grabbing info from previous page:
         Bundle extras = getIntent().getExtras();
-        String username = extras.getString("username");
-        String password = extras.getString("password");
+        String username = extras != null ? extras.getString("username", "") : "";
+        String password = extras != null ? extras.getString("password", "") : "";
 
 
         tvEmail = findViewById(R.id.tvEmail);
@@ -59,20 +59,19 @@ public class ProfileActivity extends AppCompatActivity {
                     .show();
         });
 
-        btnEditProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(ProfileActivity.this, EditProfile.class);
-                startActivity(intent);
-                // Pass the user's info:
-                intent.putExtra("email", username);
-                intent.putExtra("password", password);
-            }
+        btnEditProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, EditProfile.class);
+
+            intent.putExtra("username", username);
+            intent.putExtra("password", password);
+            intent.putExtra("userId", userId);
+
+            startActivity(intent);
         });
     }
 
     private void deleteUser(String userId) {
-        String url = ApiConstants.DELETE + "/" + userId;
+        String url = ApiConstants.USERS + "/" + userId;
 
         StringRequest request = new StringRequest(
                 Request.Method.DELETE,
