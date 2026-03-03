@@ -4,6 +4,7 @@ import com.example.androidexample.ApiConstants;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,9 +25,17 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+
+        // Grabbing info from previous page:
+        Bundle extras = getIntent().getExtras();
+        String username = extras.getString("username");
+        String password = extras.getString("password");
+
+
         tvEmail = findViewById(R.id.tvEmail);
         btnDelete = findViewById(R.id.btn_delete_profile);
         btnBack = findViewById(R.id.btn_back_home);
+        Button btnEditProfile = findViewById(R.id.btnEditProfile);
 
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String email = prefs.getString("USER_EMAIL", "");
@@ -48,6 +57,17 @@ public class ProfileActivity extends AppCompatActivity {
                     .setPositiveButton("Yes, Delete", (dialog, which) -> deleteUser(userId))
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                     .show();
+        });
+
+        btnEditProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ProfileActivity.this, EditProfile.class);
+                startActivity(intent);
+                // Pass the user's info:
+                intent.putExtra("email", username);
+                intent.putExtra("password", password);
+            }
         });
     }
 
