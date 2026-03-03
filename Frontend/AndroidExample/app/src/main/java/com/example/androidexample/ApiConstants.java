@@ -14,5 +14,4 @@ public class ApiConstants {
     public static final String ADMIN_UPDATE_USER = BASE_URL + "/api/admin/update/"; // + id
 //public static final String BASE_URL = "http://REDACTED";
 //    public static final String USERS = BASE_URL + "/users";
-
 }
