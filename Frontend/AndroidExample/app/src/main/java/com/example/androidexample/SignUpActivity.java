@@ -18,7 +18,7 @@ import org.json.JSONObject;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword, etConfirmPassword;
+    private EditText etEmail, etPassword, etConfirmPassword, etName;
     private Button btnSignup;
 
     @Override
@@ -26,21 +26,29 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
+        etName = findViewById(R.id.et_name);
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_confirm_password);
         btnSignup = findViewById(R.id.btn_signup);
         TextView tvHint = findViewById(R.id.tvHint);
         btnSignup.setOnClickListener(v -> attemptSignup());
-        tvHint.setOnClickListener(v -> {              // 👈 ADD THIS
+        tvHint.setOnClickListener(v -> {
             startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
         });
     }
 
     private void attemptSignup() {
+        String name = etName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString();
         String confirm = etConfirmPassword.getText().toString();
+
+        if (name.isEmpty()) {
+            etName.setError("Enter your name");
+            etName.requestFocus();
+            return;
+        }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError("Enter a valid email");
@@ -48,8 +56,8 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         }
 
-        if (password.length() < 6) {
-            etPassword.setError("Password must be at least 6 characters");
+        if (password.length() < 8) {
+            etPassword.setError("Password must be at least 8 characters");
             etPassword.requestFocus();
             return;
         }
@@ -62,8 +70,10 @@ public class SignUpActivity extends AppCompatActivity {
 
         JSONObject body = new JSONObject();
         try {
+            body.put("name", name);
             body.put("email", email);
             body.put("password", password);
+            body.put("confirmPassword", confirm);
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
             return;
@@ -71,7 +81,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.POST,
-                ApiConstants.USERS,
+                ApiConstants.SIGNUP,
                 body,
                 response -> {
                     try {

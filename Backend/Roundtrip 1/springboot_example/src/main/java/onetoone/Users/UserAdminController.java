@@ -15,12 +15,24 @@ public class UserAdminController {
     }
 
     @PutMapping("/update/{id}")
-    public String updateUser(@RequestBody User user, @PathVariable long id) {
-        if (userRepository.findById(id).isPresent()) {
-            userRepository.save(user);
+    public String updateUser(@RequestBody User incoming, @PathVariable long id) {
+
+        return userRepository.findById(id).map(existing -> {
+
+            // update only the fields you allow to change
+            existing.setName(incoming.getName());
+            existing.setEmail(incoming.getEmail());
+            existing.setActive(incoming.isActive());
+
+            // only update password if provided (optional)
+            if (incoming.getPassword() != null && !incoming.getPassword().isBlank()) {
+                existing.setPassword(incoming.getPassword()); // ideally hash
+            }
+
+            userRepository.save(existing);
             return "success";
-        }
-        return "failure";
+
+        }).orElse("failure");
     }
 
     @PostMapping("/counsellors")
@@ -38,8 +50,7 @@ public class UserAdminController {
         User u = new User();
         u.setName(req.name.trim());
         u.setEmail(req.emailId.trim());
-        u.setPasswordHash(req.password); // if that's your field
-        u.setRole(Role.COUNSELLOR);
+        u.setPassword(req.password); // if that's your field
         userRepository.save(u);
 
         User saved = userRepository.save(u);

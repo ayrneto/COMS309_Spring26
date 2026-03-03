@@ -3,6 +3,7 @@ package onetoone.Users;
 import java.util.List;
 
 import jakarta.validation.Valid;
+//import onetoone.Login.LoginPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +31,10 @@ public class UserController {
     private String success = "{\"message\":\"success\"}";
     private String failure = "{\"message\":\"failure\"}";
 
-    @GetMapping(path = "/LoginPage/user")
-    List<User> getAllUsers(){
-        return userRepository.findAll();
-    }
+//    @GetMapping(path = "/LoginPage/user")
+//    List<User> getAllUsers(){
+//        return userRepository.findAll();
+//    }
 
     @GetMapping("/LoginPage/user/{email}")
     public ResponseEntity<User> getUserByEmail(@PathVariable("email") String email) {
@@ -51,22 +52,23 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest req) {
+    public ResponseEntity<UserResponse> signup(@Valid @RequestBody User req) {
 
         // confirm password match
         if (!req.getPassword().equals(req.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
         }
 
-        // email already exists
-        if (userRepository.findByEmail(req.getEmail()).isActive()) {
+        User existing = userRepository.findByEmail(req.getEmail());
+        if (existing != null && existing.isActive()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
         User user = new User();
         user.setName(req.getName());          // optional, if you include name
         user.setEmail(req.getEmail());
-        user.setPassword(req.getPassword());  // later hash this in service
+        user.setPassword(req.getPassword());
+        user.setConfirmPassword(req.getConfirmPassword());
 
         User saved = userRepository.save(user);
 
@@ -86,5 +88,27 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
 
+        User user = userRepository.findByEmail(req.getEmail());
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+
+        if (!user.getPassword().equals(req.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+
+        if (!user.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Account is inactive");
+        }
+
+        return ResponseEntity.ok(
+                new LoginResponse(user.getId(), user.getEmail())
+        );
+    }
 }
