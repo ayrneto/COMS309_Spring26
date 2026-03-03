@@ -43,7 +43,7 @@ public class EditProfile extends AppCompatActivity {
     }
 
     private void updateProfile(String username, String password) {
-        String url = "http://10.26.2.39:3000/api/profile/update";  // Your IP
+        String url = "http://10.26.2.39:3000/api/profile/update";
 
         JSONObject updateData = new JSONObject();
         try {
