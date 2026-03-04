@@ -27,7 +27,6 @@ import onetoone.Users.UserRepository;
 @RestController
 @RequestMapping("/api/counsellors")
 public class CounsellorProfileController {
-    int count = 0;
     @Autowired
     private UserRepository userRepository;
 
@@ -46,40 +45,66 @@ public class CounsellorProfileController {
     }
 
     @PutMapping("/{userId}/update/{counsellorstatus}")
-    public CounsellorStatus updateStatus(@PathVariable long userId, @PathVariable CounsellorStatus counsellorstatus) {
-        CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
-        if(counsellor == null)
-            throw new RuntimeException("Counsellor not found");
+    public ResponseEntity<?> updateStatus(@PathVariable long userId,
+                                          @PathVariable CounsellorStatus counsellorstatus) {
+
+        CounsellorProfile counsellor =
+                counsellorProfileRepository.findByUser_Id(userId).orElse(null);
+
+        if (counsellor == null) {
+            return ResponseEntity.status(404).body("Counsellor profile not found for userId= " + userId);
+        }
+
         counsellor.setStatus(counsellorstatus);
-
-        counsellorProfileRepository.save(counsellor);  // <-- persist
-        return ResponseEntity.ok(counsellor.getStatus()).getBody();
-    }
-
-    @PutMapping("/{userId}/rating/{ratingAverage}")
-    public String updateRating(@PathVariable long userId, @PathVariable double ratingAverage) {
-        CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
-        if(counsellor == null) {
-            throw new RuntimeException("Counsellor not found");
-        }
-        counsellor.setRatingAverage(ratingAverage);
-
-        count++;
-        counsellor.setRatingCount(count);
-
         counsellorProfileRepository.save(counsellor);
-        return "success";
+        return ResponseEntity.ok(counsellor.getStatus());
     }
 
-    @PutMapping("/{userId}/rating/{profilePictureURL}")
-    public String updateProfilepic(@PathVariable long userId, @PathVariable String profilePictureURL) {
-        CounsellorProfile counsellor = counsellorProfileRepository.findById(userId).orElse(null);
-        if(counsellor == null) {
-            throw new RuntimeException("Counsellor not found");
+    @PutMapping("/{userId}/rating/{rating}")
+    public ResponseEntity<?> updateRating(@PathVariable long userId,
+                                          @PathVariable double rating) {
+        try {
+            System.out.println("HIT updateRating userId=" + userId + " rating=" + rating);
+
+            CounsellorProfile counsellor =
+                    counsellorProfileRepository.findByUser_Id(userId).orElse(null);
+
+            if (counsellor == null) {
+                return ResponseEntity.status(404).body("Counsellor profile not found for userId=" + userId);
+            }
+
+            Integer countObj = counsellor.getRatingCount();
+            Double avgObj = counsellor.getRatingAverage();
+            int oldCount = (countObj == null) ? 0 : countObj;
+            double oldAverage = (avgObj == null) ? 0.0 : avgObj;
+
+            double newAverage = ((oldAverage * oldCount) + rating) / (oldCount + 1);
+
+            counsellor.setRatingCount(oldCount + 1);
+            counsellor.setRatingAverage(newAverage);
+
+            counsellorProfileRepository.save(counsellor);
+            return ResponseEntity.ok("Rating updated");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("ERROR: " + e.getClass().getName() + " - " + e.getMessage());
         }
+    }
+
+    @PutMapping("/{userId}/profilePicture/{profilePictureURL}")
+    public ResponseEntity<?> updateProfilepic(@PathVariable long userId,
+                                              @PathVariable String profilePictureURL) {
+        CounsellorProfile counsellor =
+                counsellorProfileRepository.findByUser_Id(userId).orElse(null);
+
+        if (counsellor == null) {
+            return ResponseEntity.status(404).body("Counsellor profile not found for userId=" + userId);
+        }
+
         counsellor.setProfilePictureUrl(profilePictureURL);
         counsellorProfileRepository.save(counsellor);
-        return "success";
+        return ResponseEntity.ok("success");
     }
 
     @GetMapping("/{userId}/profile")
@@ -104,6 +129,10 @@ public class CounsellorProfileController {
         if (profile == null) {
             profile = new CounsellorProfile();
             profile.setUser(u);
+
+            // initialize ONLY once
+            profile.setRatingAverage(0.0);
+            profile.setRatingCount(0);
         }
 
         profile.setDisplayName(req.displayName);
@@ -112,11 +141,32 @@ public class CounsellorProfileController {
         profile.setProfilePictureUrl(req.profilePictureUrl);
         profile.setStatus(req.status);
 
+
         CounsellorProfile saved = counsellorProfileRepository.save(profile);
         return ResponseEntity.ok(saved);
     }
 
     private String msg(String m) {
         return "{\"message\":\"" + m.replace("\"", "'") + "\"}";
+    }
+
+    @PutMapping("/{userId}/update")
+    public String updateProfile(@PathVariable Long userId,
+                                 @RequestBody CounsellorProfileRequest req) {
+        CounsellorProfile counsellor =
+                counsellorProfileRepository.findByUser_Id(userId).orElse(null);
+
+        if (counsellor == null) {
+            return msg("Counsellor user not found");
+        }
+
+        counsellor.setProfilePictureUrl(req.profilePictureUrl);
+        counsellor.setDisplayName(req.displayName);
+        counsellor.setSpecialization(req.specialization);
+        counsellor.setBio(req.bio);
+        counsellor.setProfilePictureUrl(req.profilePictureUrl);
+        counsellor.setStatus(req.status);
+        counsellorProfileRepository.save(counsellor);
+        return msg("success");
     }
 }

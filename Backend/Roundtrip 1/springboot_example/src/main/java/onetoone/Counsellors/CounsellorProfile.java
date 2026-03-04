@@ -28,8 +28,8 @@ public class CounsellorProfile {
 
     private String profilePictureUrl;    // stored URL, not the actual image
 
-    private Double ratingAverage;        // simple numeric average
     private Integer ratingCount;
+    private Double ratingAverage;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
