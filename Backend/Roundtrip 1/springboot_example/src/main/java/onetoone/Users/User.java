@@ -29,6 +29,13 @@ public class User {
     @Column(nullable = false)
     private String confirmPassword;
 
+    @NotBlank
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    private boolean isLoggedIn = false;
+
     private boolean active = true;
 
     // Constructors
@@ -85,5 +92,13 @@ public class User {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

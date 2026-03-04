@@ -69,6 +69,8 @@ public class UserController {
         user.setEmail(req.getEmail());
         user.setPassword(req.getPassword());
         user.setConfirmPassword(req.getConfirmPassword());
+        user.setActive(true);
+        user.setRole(req.getRole());
 
         User saved = userRepository.save(user);
 
