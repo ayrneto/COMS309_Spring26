@@ -81,31 +81,46 @@ public class SignUpActivity extends AppCompatActivity {
 
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.POST,
-                ApiConstants.USERS,
+                ApiConstants.SIGNUP,
                 body,
                 response -> {
                     try {
-                        String createdId = response.getString("id");  // get ID from Mockoon
+                        String createdId = String.valueOf(response.getLong("id"));
 
                         SharedPreferences.Editor editor =
                                 getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
-
+                        editor.putString("USER_NAME", name);
                         editor.putString("USER_EMAIL", email);
-                        editor.putString("USER_ID", createdId);   // SAVE THE ID
+                        editor.putString("USER_ID", createdId);
                         editor.apply();
 
                         Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show();
-
                         startActivity(new Intent(this, HomeActivity.class));
                         finish();
-
                     } catch (Exception e) {
-                        Toast.makeText(this, "Error reading response", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Error reading response: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 },
-                error -> Toast.makeText(this,
-                        "Signup failed: " + (error.getMessage() != null ? error.getMessage() : "unknown"),
-                        Toast.LENGTH_LONG).show()
+                error -> {
+                    String msg = "Signup failed";
+
+                    if (error.networkResponse != null) {
+                        int code = error.networkResponse.statusCode;
+                        String bodyStr = new String(error.networkResponse.data);
+
+                        if (code == 409) {
+                            msg = "Email already registered. Try logging in.";
+                        } else if (code == 400) {
+                            msg = "Passwords do not match.";
+                        } else {
+                            msg = "HTTP " + code + ": " + bodyStr;
+                        }
+                    } else {
+                        msg = error.toString();
+                    }
+
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                }
         );
 
         VolleySingleton.getInstance(this).addToRequestQueue(req);

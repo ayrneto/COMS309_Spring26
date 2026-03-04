@@ -14,10 +14,17 @@
         android:layout_marginBottom="40dp" />
 
     <EditText
-        android:id="@+id/editUsername"
+        android:id="@+id/editName"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:hint="Username"
+        android:hint="Full Name"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/editEmail"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:hint="Email"
         android:layout_marginBottom="20dp" />
 
     <EditText
@@ -27,6 +34,14 @@
         android:hint="Password"
         android:inputType="textPassword"
         android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/editConfirmPassword"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:hint="Confirm Password"
+        android:inputType="textPassword"
+        android:layout_marginBottom="20dp"/>
 
     <Button
         android:id="@+id/btnSave"
