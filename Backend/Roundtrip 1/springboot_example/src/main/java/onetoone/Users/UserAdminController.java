@@ -27,7 +27,7 @@ public class UserAdminController {
             // only update password if provided (optional)
             if (incoming.getPassword() != null && !incoming.getPassword().isBlank()) {
                 existing.setPassword(incoming.getPassword());
-                existing.setConfirmPassword(incoming.getConfirmPassword());// ideally hash
+                existing.setConfirmPassword(incoming.getPassword());// ideally hash
             }
 
             userRepository.save(existing);
