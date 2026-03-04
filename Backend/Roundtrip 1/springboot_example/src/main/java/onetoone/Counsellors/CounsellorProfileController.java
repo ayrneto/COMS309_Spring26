@@ -12,6 +12,18 @@ import java.util.Optional;
 import onetoone.Users.User;
 import onetoone.Users.UserRepository;
 
+/**
+ * @author Boudhayan Chakraborty
+ *
+ * Services:
+ * 1. Create counsellor profile - add bio, profile pic, etc.
+ * 2. Update profile as a whole
+ * 3. Update bio
+ * 4. Update profile pic via link
+ * 5. Update the availability status
+ */
+
+
 @RestController
 @RequestMapping("/api/counsellors")
 public class CounsellorProfileController {
