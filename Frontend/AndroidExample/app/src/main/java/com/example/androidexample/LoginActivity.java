@@ -1,8 +1,8 @@
 package com.example.androidexample;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,77 +26,89 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        EditText usernameInput = findViewById(R.id.inputUsername); // EditText is the default text entry
+        EditText emailInput = findViewById(R.id.inputEmail);
         EditText passwordInput = findViewById(R.id.inputPassword);
         Button loginBtn = findViewById(R.id.btnLogin);
-        LinearLayout SignUpBtn = findViewById(R.id.btnSignUp);
+        LinearLayout signUpBtn = findViewById(R.id.btnSignUp);
 
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String username = usernameInput.getText().toString();
+                String email = emailInput.getText().toString().trim();
                 String password = passwordInput.getText().toString();
 
-                // Sending to Mockoon API
-                sendLoginRequest(username, password);
+                sendLoginRequest(email, password);
             }
         });
 
-        // Go to SignUp page on click
-        SignUpBtn.setOnClickListener(new View.OnClickListener() {
+        signUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
             }
         });
     }
 
-    private void sendLoginRequest(String username, String password){
-        //String url = "http://10.27.139.8:3000/api/login";  // Mockoon port (Ayr's Mac)
-        //String url = "http://10.21.29.208:3000/api/login";  // Mockoon port (Ayr's PC)
-        String url = ApiConstants.USERS;
+    private void sendLoginRequest(String email, String password) {
 
-        // Create JSON object with username and password
+        String url = ApiConstants.LOGIN;
+
+        // Create JSON object with email and password
         JSONObject loginData = new JSONObject();
         try {
-            loginData.put("username", username);
+            loginData.put("email", email);
             loginData.put("password", password);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // Create request
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
                 url,
                 loginData,
                 response -> {
-                    // Success
-                    try{
-                        boolean success = response.getBoolean("success");
-                        if(success){
-                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
-                            intent.putExtra("username", username);
-                            intent.putExtra("password", password);
-                            startActivity(intent);
-                            finish();
-                        }
-                        else{
-                            Toast.makeText(LoginActivity.this, "Invalid Credentials", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    catch (JSONException e){
-                        e.printStackTrace();
+                    try {
+                        // Backend returns: { "id": ..., "email": ... }
+                        String userId = String.valueOf(response.getLong("id"));
+                        String emailReturned = response.getString("email");
+
+                        SharedPreferences.Editor editor =
+                                getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
+                        editor.putString("USER_ID", userId);
+                        editor.putString("USER_EMAIL", emailReturned);
+                        editor.apply();
+
+                        startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                        finish();
+
+                    } catch (Exception e) {
+                        Toast.makeText(LoginActivity.this, "Bad login response", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-                    // Error
-                    Toast.makeText(LoginActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
+
+                    if (error.networkResponse != null) {
+
+                        int statusCode = error.networkResponse.statusCode;
+
+                        if (statusCode == 401) {
+                            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        if (statusCode == 403) {
+                            Toast.makeText(this, "Account is inactive", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        Toast.makeText(this, "Login failed: HTTP " + statusCode, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "Network error. Check connection.", Toast.LENGTH_LONG).show();
+                    }
                 }
         );
 
-        // Add to request queue
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
     }
