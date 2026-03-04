@@ -81,7 +81,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.POST,
-                ApiConstants.SIGNUP,
+                ApiConstants.USERS,
                 body,
                 response -> {
                     try {
