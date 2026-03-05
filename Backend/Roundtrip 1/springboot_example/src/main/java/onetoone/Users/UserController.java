@@ -111,7 +111,7 @@ public class UserController {
 
         if(req.getRole() != user.getRole()) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "You are not a "+req.getRole()+);
+                    HttpStatus.FORBIDDEN, "You are not a "+req.getRole());
         }
 
         return ResponseEntity.ok(
