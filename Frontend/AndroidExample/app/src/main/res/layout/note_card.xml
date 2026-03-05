@@ -29,9 +29,9 @@
             android:id="@+id/worryDueDate"
             android:layout_gravity="center"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="80dp"
             android:text="Due: 2026-03-15"
-            android:layout_marginTop="60dp" />
+            android:layout_marginTop="0dp" />
 
         <TextView
             android:id="@+id/worryLabel"

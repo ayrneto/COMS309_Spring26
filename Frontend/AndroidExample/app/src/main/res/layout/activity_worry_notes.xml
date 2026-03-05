@@ -7,41 +7,71 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_green_background"
     tools:context=".WorryNotes"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
 
-    <androidx.cardview.widget.CardView
-        android:layout_gravity="center"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginTop="40dp"
-        android:layout_marginBottom="40dp"
-        android:elevation="4dp"
-        app:cardCornerRadius="20dp"
-        >
-        <TextView
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Worries"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-    </androidx.cardview.widget.CardView>
+        android:layout_marginBottom="40dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_marginStart="60dp"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
+            android:elevation="4dp"
+            app:cardCornerRadius="20dp">
+            <TextView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Worries"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </androidx.cardview.widget.CardView>
+
+        <FrameLayout
+            android:id="@+id/btnAddWorryNote"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            >
+
+            <View
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/dark_green_background" />
+
+            <TextView
+                android:includeFontPadding="false"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="+"
+                android:textSize="52sp"
+                android:textColor="#FFFFFF"
+                />
+
+        </FrameLayout>
+
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-
-        >
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:id="@+id/worriesContainer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <!-- Worry cards will be added here dynamically -->
-
 
         </LinearLayout>
     </ScrollView>
