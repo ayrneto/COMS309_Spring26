@@ -85,6 +85,7 @@ public class EditProfile extends AppCompatActivity {
             updateData.put("email", email);
             updateData.put("active", true);
             updateData.put("password", password);
+            updateData.put("confirmPassword", confirmPassword);
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;

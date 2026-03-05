@@ -9,6 +9,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -20,29 +22,41 @@ public class SignUpActivity extends AppCompatActivity {
 
     private EditText etEmail, etPassword, etConfirmPassword, etName;
     private Button btnSignup;
+    private Spinner roleSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        etName = findViewById(R.id.et_name);
-        etEmail = findViewById(R.id.et_email);
-        etPassword = findViewById(R.id.et_password);
+        etName            = findViewById(R.id.et_name);
+        etEmail           = findViewById(R.id.et_email);
+        etPassword        = findViewById(R.id.et_password);
         etConfirmPassword = findViewById(R.id.et_confirm_password);
-        btnSignup = findViewById(R.id.btn_signup);
-        TextView tvHint = findViewById(R.id.tvHint);
+        btnSignup         = findViewById(R.id.btn_signup);
+        TextView tvHint   = findViewById(R.id.tvHint);
+
+        roleSpinner = findViewById(R.id.spinner_role);
+        String[] roles = {"USER", "COUNSELLOR"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                roles
+        );
+        roleSpinner.setAdapter(adapter);
+
         btnSignup.setOnClickListener(v -> attemptSignup());
-        tvHint.setOnClickListener(v -> {
-            startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
-        });
+        tvHint.setOnClickListener(v ->
+                startActivity(new Intent(SignUpActivity.this, LoginActivity.class))
+        );
     }
 
     private void attemptSignup() {
-        String name = etName.getText().toString().trim();
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString();
-        String confirm = etConfirmPassword.getText().toString();
+        String name     = etName.getText().toString().trim();
+        String email    = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        String confirm  = etConfirmPassword.getText().toString().trim();
+        String role     = roleSpinner.getSelectedItem().toString();
 
         if (name.isEmpty()) {
             etName.setError("Enter your name");
@@ -74,6 +88,7 @@ public class SignUpActivity extends AppCompatActivity {
             body.put("email", email);
             body.put("password", password);
             body.put("confirmPassword", confirm);
+            body.put("role", role);
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
             return;
@@ -89,13 +104,27 @@ public class SignUpActivity extends AppCompatActivity {
 
                         SharedPreferences.Editor editor =
                                 getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
-                        editor.putString("USER_NAME", name);
+                        editor.putString("USER_NAME",  name);
                         editor.putString("USER_EMAIL", email);
-                        editor.putString("USER_ID", createdId);
+                        editor.putString("USER_ID",    createdId);
+                        editor.putString("USER_ROLE",  role);
+
+                        // Clear cached counselor profile from any previous user
+                        editor.remove("COUNSELOR_DISPLAY_NAME");
+                        editor.remove("COUNSELOR_SPECIALIZATION");
+                        editor.remove("COUNSELOR_BIO");
+                        editor.remove("COUNSELOR_PROFILE_PIC");
+                        editor.remove("COUNSELOR_STATUS");
+
                         editor.apply();
 
                         Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, HomeActivity.class));
+
+                        if (role.equals("COUNSELLOR")) {
+                            startActivity(new Intent(this, CounselorHomeActivity.class));
+                        } else {
+                            startActivity(new Intent(this, HomeActivity.class));
+                        }
                         finish();
                     } catch (Exception e) {
                         Toast.makeText(this, "Error reading response: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -111,7 +140,7 @@ public class SignUpActivity extends AppCompatActivity {
                         if (code == 409) {
                             msg = "Email already registered. Try logging in.";
                         } else if (code == 400) {
-                            msg = "Passwords do not match.";
+                            msg = "HTTP 400: " + bodyStr;
                         } else {
                             msg = "HTTP " + code + ": " + bodyStr;
                         }
@@ -124,10 +153,5 @@ public class SignUpActivity extends AppCompatActivity {
         );
 
         VolleySingleton.getInstance(this).addToRequestQueue(req);
-    }
-
-    private void saveUserId(String id) {
-        SharedPreferences sp = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        sp.edit().putString("user_id", id).apply();
     }
 }
