@@ -31,7 +31,6 @@ public class ProfileActivity extends AppCompatActivity {
         String username = extras != null ? extras.getString("username", "") : "";
         String password = extras != null ? extras.getString("password", "") : "";
 
-
         tvEmail = findViewById(R.id.tvEmail);
         btnDelete = findViewById(R.id.btn_delete_profile);
         btnBack = findViewById(R.id.btn_back_home);

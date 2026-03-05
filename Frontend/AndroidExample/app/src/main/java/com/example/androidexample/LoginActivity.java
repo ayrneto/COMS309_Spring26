@@ -76,9 +76,14 @@ public class LoginActivity extends AppCompatActivity {
                     try{
                         boolean success = response.getBoolean("success");
                         if(success){
+                            Long userId = response.getLong("userId"); //userId from backend
+
                             Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
+
                             intent.putExtra("username", username);
                             intent.putExtra("password", password);
+                            intent.putExtra("userId",userId);
+
                             startActivity(intent);
                             finish();
                         }
