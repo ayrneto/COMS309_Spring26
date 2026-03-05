@@ -123,7 +123,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
 
         User user = userRepository.findByEmail(req.getEmail());
         if (user == null) {
