@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signup(@Valid @RequestBody User req) {
+    public ResponseEntity<UserResponse> signup(@RequestBody User req) {
 
         // confirm password match
         if (!req.getPassword().equals(req.getConfirmPassword())) {
