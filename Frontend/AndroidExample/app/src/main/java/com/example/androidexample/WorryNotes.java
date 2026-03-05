@@ -27,7 +27,8 @@ public class WorryNotes extends AppCompatActivity {
 
         //Getting global values:
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-        Long userId = prefs.getLong("userId", -1);
+        String userIdString = prefs.getString("USER_ID", "-1");
+        Long userId = Long.parseLong(userIdString);
 
         fetchUserNotes(userId);
     }
