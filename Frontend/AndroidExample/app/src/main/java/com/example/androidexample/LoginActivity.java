@@ -1,6 +1,7 @@
 package com.example.androidexample;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -77,6 +78,10 @@ public class LoginActivity extends AppCompatActivity {
                         boolean success = response.getBoolean("success");
                         if(success){
                             Long userId = response.getLong("userId"); //userId from backend
+                            SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putLong("userId", userId);
+                            editor.apply();
 
                             Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
 

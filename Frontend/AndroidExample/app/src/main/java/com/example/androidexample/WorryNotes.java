@@ -33,7 +33,7 @@ public class WorryNotes extends AppCompatActivity {
     }
 
     private void fetchUserNotes(Long userId){
-        String url = ApiConstants.USERS + "/notes";
+        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/notes";
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
