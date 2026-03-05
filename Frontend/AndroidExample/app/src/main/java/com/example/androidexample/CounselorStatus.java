@@ -1,5 +1,5 @@
-//package com.example.androidexample;
-//
-//public enum CounselorStatus {
-//    AVAILABLE, BUSY, OFFLINE
-//}
+package com.example.androidexample;
+
+public enum CounselorStatus {
+    AVAILABLE, BUSY, OFFLINE
+}

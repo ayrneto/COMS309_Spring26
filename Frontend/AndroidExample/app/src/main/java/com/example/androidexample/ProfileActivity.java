@@ -39,7 +39,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String email = prefs.getString("USER_EMAIL", "");
-        String userId = prefs.getString("USER_ID", ""); // IMPORTANT: saved after signup
+        String userId = prefs.getString("USER_ID", "");
 
         tvEmail.setText(email == null || email.isEmpty() ? "Email: (not found)" : "Email: " + email);
 

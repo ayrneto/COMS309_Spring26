@@ -1,6 +1,7 @@
 package onetoone.Users;
 
 import java.util.List;
+import onetoone.Users.LoginResponse;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -121,9 +122,8 @@ public class UserController {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
 
         User user = userRepository.findByEmail(req.getEmail());
         if (user == null) {
@@ -136,18 +136,14 @@ public class UserController {
                     HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
-        if (!user.isActive()) {
+        if (req.getRole() != user.getRole()) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Account is inactive");
-        }
-
-        if(req.getRole() != user.getRole()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "You are not a "+req.getRole());
+                    HttpStatus.FORBIDDEN, "You are not a " + req.getRole());
         }
 
         return ResponseEntity.ok(
-                new LoginResponse(user.getId(), user.getEmail())
+                new LoginResponse(user.getId(), user.getEmail(), user.getRole().name())  // ← add role
         );
     }
+
 }

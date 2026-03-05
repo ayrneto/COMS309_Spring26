@@ -3,10 +3,11 @@ package com.example.androidexample;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +22,8 @@ import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private Spinner roleSpinner;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,26 +33,43 @@ public class LoginActivity extends AppCompatActivity {
         EditText passwordInput = findViewById(R.id.inputPassword);
         Button loginBtn = findViewById(R.id.btnLogin);
         LinearLayout signUpBtn = findViewById(R.id.btnSignUp);
+        roleSpinner            = findViewById(R.id.spinner_role);
 
-        loginBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = emailInput.getText().toString().trim();
-                String password = passwordInput.getText().toString();
+        String[] roles = {"USER", "COUNSELLOR"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                roles
+        );
+        roleSpinner.setAdapter(adapter);
 
-                sendLoginRequest(email, password);
+        loginBtn.setOnClickListener(v -> {
+            String email    = emailInput.getText().toString().trim();
+            String password = passwordInput.getText().toString();
+            String role     = roleSpinner.getSelectedItem().toString(); // ← get role from spinner
+
+            if (email.isEmpty()) {
+                emailInput.setError("Enter your email");
+                emailInput.requestFocus();
+                return;
             }
+
+            if (password.isEmpty()) {
+                passwordInput.setError("Enter your password");
+                passwordInput.requestFocus();
+                return;
+            }
+
+            sendLoginRequest(email, password, role); // ← pass role
         });
 
-        signUpBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-            }
-        });
+        signUpBtn.setOnClickListener(v ->
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class))
+        );
     }
 
-    private void sendLoginRequest(String email, String password){
+    private void sendLoginRequest(String email, String password, String role) {
+
         String url = ApiConstants.LOGIN;
 
         // Create JSON object with email and password
@@ -57,6 +77,7 @@ public class LoginActivity extends AppCompatActivity {
         try {
             loginData.put("email", email);
             loginData.put("password", password);
+            loginData.put("role", role); // ← sent to backend
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
@@ -72,18 +93,33 @@ public class LoginActivity extends AppCompatActivity {
                         // Backend returns: { "id": ..., "email": ... }
                         String userId = String.valueOf(response.getLong("id"));
                         String emailReturned = response.getString("email");
+                        String returnedRole  = response.getString("role"); // routing uses backend response
 
                         SharedPreferences.Editor editor =
                                 getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
                         editor.putString("USER_ID", userId);
                         editor.putString("USER_EMAIL", emailReturned);
+                        editor.putString("USER_ROLE",  returnedRole);
+
+                        // Clear cached counselor profile from any previous session
+                        editor.remove("COUNSELOR_DISPLAY_NAME");
+                        editor.remove("COUNSELOR_SPECIALIZATION");
+                        editor.remove("COUNSELOR_BIO");
+                        editor.remove("COUNSELOR_PROFILE_PIC");
+                        editor.remove("COUNSELOR_STATUS");
+
                         editor.apply();
 
-                        startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                        // Routing still uses backend response role
+                        if (returnedRole.equals("COUNSELLOR")) {
+                            startActivity(new Intent(LoginActivity.this, CounselorHomeActivity.class));
+                        } else {
+                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                        }
                         finish();
 
                     } catch (Exception e) {
-                        Toast.makeText(LoginActivity.this, "Bad login response", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, "Bad login response: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
