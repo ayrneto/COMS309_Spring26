@@ -18,7 +18,10 @@
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".SignUpActivity"/>
         <activity android:name=".HomeActivity"/>
-<!--        <activity android:name=".CounsellorEditProfileActivity" />-->
+        <activity android:name=".CounselorHomeActivity" />
+        <activity android:name=".CounselorProfileActivity" />
+        <activity android:name=".CounselorEditProfileActivity" />
+
         <activity
             android:name=".JsonArrReqActivity"
             android:exported="false" />
