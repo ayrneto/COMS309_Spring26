@@ -2,8 +2,14 @@ package onetoone.Users;
 
 import java.util.List;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 //import onetoone.Login.LoginPage;
+import onetoone.Counsellors.CounsellorProfile;
+import onetoone.Counsellors.CounsellorProfileController;
+import onetoone.Counsellors.CounsellorProfileRepository;
+import onetoone.Counsellors.CounsellorStatus;
+import org.hibernate.usertype.UserType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  *
- * @author Vivek Bengre
+ * @author Boudhayan Chakraborty
  *
  */
 
@@ -27,6 +33,13 @@ public class UserController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    CounsellorProfileRepository counsellorProfileRepository;
+
+    CounsellorProfileController counsellorProfileController;
+    CounsellorProfile counsellorProfile;
+    CounsellorStatus counsellorStatus;
 
     private String success = "{\"message\":\"success\"}";
     private String failure = "{\"message\":\"failure\"}";
@@ -52,10 +65,10 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signup(@Valid @RequestBody User req) {
+    @Transactional
+    public ResponseEntity<UserResponse> signup(@RequestBody User req) {
 
-        // confirm password match
-        if (!req.getPassword().equals(req.getConfirmPassword())) {
+        if (req.getPassword() == null || !req.getPassword().equals(req.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
         }
 
@@ -65,16 +78,37 @@ public class UserController {
         }
 
         User user = new User();
-        user.setName(req.getName());          // optional, if you include name
+        user.setName(req.getName());
         user.setEmail(req.getEmail());
         user.setPassword(req.getPassword());
         user.setConfirmPassword(req.getConfirmPassword());
+        user.setActive(true);
+
+        // if role can be null, default it
+        user.setRole(req.getRole() != null ? req.getRole() : Role.USER);
 
         User saved = userRepository.save(user);
+
+        // ONLY create counsellor profile when role is counsellor
+        if (saved.getRole() == Role.COUNSELLOR) {
+            CounsellorProfile profile = new CounsellorProfile();
+            profile.setUser(saved);                       // important if you have a relation
+            profile.setDisplayName(saved.getName());
+            profile.setSpecialization("");
+            profile.setBio("");
+            profile.setProfilePictureUrl("");
+            profile.setStatus(CounsellorStatus.AVAILABLE);
+            profile.setRatingCount(0);
+            profile.setRatingAverage(0.0);
+
+            saved.setCounsellorProfile(profile);  // set on user side
+            userRepository.save(saved);     // <-- save directly
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new UserResponse(saved.getId(), saved.getEmail()));
     }
+
 
     // Delete user
     @DeleteMapping("/{id}")
@@ -105,6 +139,11 @@ public class UserController {
         if (!user.isActive()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Account is inactive");
+        }
+
+        if(req.getRole() != user.getRole()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "You are not a "+req.getRole());
         }
 
         return ResponseEntity.ok(

@@ -118,7 +118,7 @@ public class CounsellorProfileController {
 
     @PutMapping("/{id}/profile")
     public ResponseEntity<?> upsert(@PathVariable Long id,
-                                    @RequestBody CounsellorProfileRequest req) {
+                                    @RequestBody CounsellorProfile req) {
 
         User u = userRepository.findById(id).orElse(null);
         if (u == null)
@@ -135,15 +135,15 @@ public class CounsellorProfileController {
             profile.setRatingCount(0);
         }
 
-        profile.setDisplayName(req.displayName);
-        profile.setSpecialization(req.specialization);
-        profile.setBio(req.bio);
-        profile.setProfilePictureUrl(req.profilePictureUrl);
-        profile.setStatus(req.status);
+        profile.setDisplayName(req.getDisplayName());
+        profile.setSpecialization(req.getSpecialization());
+        profile.setBio(req.getBio());
+        profile.setProfilePictureUrl(req.getProfilePictureUrl());
+        profile.setStatus(req.getStatus());
 
 
-        CounsellorProfile saved = counsellorProfileRepository.save(profile);
-        return ResponseEntity.ok(saved);
+        counsellorProfileRepository.save(profile);
+        return ResponseEntity.ok(service.getProfileByUserId(id)); // ← DTO, no circular ref
     }
 
     private String msg(String m) {
@@ -152,7 +152,7 @@ public class CounsellorProfileController {
 
     @PutMapping("/{userId}/update")
     public String updateProfile(@PathVariable Long userId,
-                                 @RequestBody CounsellorProfileRequest req) {
+                                 @RequestBody CounsellorProfile req) {
         CounsellorProfile counsellor =
                 counsellorProfileRepository.findByUser_Id(userId).orElse(null);
 
@@ -160,12 +160,12 @@ public class CounsellorProfileController {
             return msg("Counsellor user not found");
         }
 
-        counsellor.setProfilePictureUrl(req.profilePictureUrl);
-        counsellor.setDisplayName(req.displayName);
-        counsellor.setSpecialization(req.specialization);
-        counsellor.setBio(req.bio);
-        counsellor.setProfilePictureUrl(req.profilePictureUrl);
-        counsellor.setStatus(req.status);
+        counsellor.setProfilePictureUrl(req.getProfilePictureUrl());
+        counsellor.setDisplayName(req.getDisplayName());
+        counsellor.setSpecialization(req.getSpecialization());
+        counsellor.setBio(req.getBio());
+        counsellor.setProfilePictureUrl(req.getProfilePictureUrl());
+        counsellor.setStatus(req.getStatus());
         counsellorProfileRepository.save(counsellor);
         return msg("success");
     }

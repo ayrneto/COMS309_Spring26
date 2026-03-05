@@ -62,9 +62,14 @@ public class ProfileActivity extends AppCompatActivity {
         btnEditProfile.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, EditProfile.class);
 
-            intent.putExtra("username", username);
-            intent.putExtra("password", password);
             intent.putExtra("userId", userId);
+
+            // send email (EditProfile reads "email")
+            intent.putExtra("email", email);
+
+
+            intent.putExtra("name", prefs.getString("USER_NAME", ""));
+            intent.putExtra("password", "");
 
             startActivity(intent);
         });
@@ -80,7 +85,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void deleteUser(String userId) {
-        String url = ApiConstants.USERS + "/" + userId;
+        String url = ApiConstants.DELETE + userId;
 
         StringRequest request = new StringRequest(
                 Request.Method.DELETE,
