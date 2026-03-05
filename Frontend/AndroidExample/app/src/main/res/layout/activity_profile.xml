@@ -51,6 +51,30 @@
         app:cornerRadius="26dp"/>
 
     <Button
+        android:id="@+id/btnEditProfile"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#0025F4"
+        android:text="Edit Profile"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:cornerRadius="26dp"/>
+
+    <Button
+        android:id="@+id/btnWorryNotes"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#4A6E60"
+        android:text="Worry Notes"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:cornerRadius="26dp"/>
+
+    <Button
         android:id="@+id/btn_back_home"
         android:layout_width="match_parent"
         android:layout_height="52dp"
@@ -59,19 +83,7 @@
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:backgroundTint="#2E7D5A"
-        android:layout_marginTop="12dp"
-        app:cornerRadius="26dp"/>
-
-    <Button
-        android:id="@+id/btnEditProfile"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="76dp"
-        android:backgroundTint="#0025F4"
-        android:text="Edit Profile"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
+        android:layout_marginTop="240dp"
         app:cornerRadius="26dp"/>
 
 </LinearLayout>

@@ -35,6 +35,7 @@ public class ProfileActivity extends AppCompatActivity {
         btnDelete = findViewById(R.id.btn_delete_profile);
         btnBack = findViewById(R.id.btn_back_home);
         Button btnEditProfile = findViewById(R.id.btnEditProfile);
+        Button btnWorryNotes = findViewById(R.id.btnWorryNotes);
 
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String email = prefs.getString("USER_EMAIL", "");
@@ -67,6 +68,15 @@ public class ProfileActivity extends AppCompatActivity {
 
             startActivity(intent);
         });
+
+        btnWorryNotes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ProfileActivity.this, WorryNotes.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
     private void deleteUser(String userId) {
