@@ -1,5 +1,6 @@
 package onetoone.Counsellors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import onetoone.Users.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,11 +11,12 @@ public class CounsellorProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @JsonIgnoreProperties({"passwordHash"})
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)  // maps to the user_id column
     private User user;
 
     @Column(nullable = false)
@@ -63,4 +65,8 @@ public class CounsellorProfile {
 
     public CounsellorStatus getStatus() { return status; }
     public void setStatus(CounsellorStatus status) { this.status = status; }
+
+    public void setPassword(String password) {
+        this.user.setPassword(password);
+    }
 }

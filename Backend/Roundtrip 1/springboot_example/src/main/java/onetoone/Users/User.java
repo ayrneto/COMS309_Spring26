@@ -1,9 +1,11 @@
 package onetoone.Users;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import onetoone.Counsellors.CounsellorProfile;
 
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
@@ -25,7 +27,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Transient
+    @Column(name = "confirm_password")
     private String confirmPassword;
 
     @NotNull
@@ -37,6 +39,10 @@ public class User {
 
     private boolean active = true;
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CounsellorProfile counsellorProfile;
+
     // Constructors
     public User() {}
 
@@ -45,6 +51,10 @@ public class User {
         this.email = email;
         this.password = password;
         this.active = true;
+    }
+
+    public void setCounsellorProfile(CounsellorProfile counsellorProfile) {
+        this.counsellorProfile = counsellorProfile;
     }
 
     // Getters and Setters
