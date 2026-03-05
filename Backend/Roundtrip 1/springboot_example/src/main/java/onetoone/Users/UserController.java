@@ -109,6 +109,11 @@ public class UserController {
                     HttpStatus.FORBIDDEN, "Account is inactive");
         }
 
+        if(req.getRole() != user.getRole()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "You are not a "+req.getRole()+);
+        }
+
         return ResponseEntity.ok(
                 new LoginResponse(user.getId(), user.getEmail())
         );
