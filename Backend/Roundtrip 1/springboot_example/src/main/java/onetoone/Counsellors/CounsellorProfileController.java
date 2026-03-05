@@ -152,7 +152,7 @@ public class CounsellorProfileController {
 
     @PutMapping("/{userId}/update")
     public String updateProfile(@PathVariable Long userId,
-                                 @RequestBody CounsellorProfileRequest req) {
+                                 @RequestBody CounsellorProfile req) {
         CounsellorProfile counsellor =
                 counsellorProfileRepository.findByUser_Id(userId).orElse(null);
 
@@ -160,12 +160,12 @@ public class CounsellorProfileController {
             return msg("Counsellor user not found");
         }
 
-        counsellor.setProfilePictureUrl(req.profilePictureUrl);
-        counsellor.setDisplayName(req.displayName);
-        counsellor.setSpecialization(req.specialization);
-        counsellor.setBio(req.bio);
-        counsellor.setProfilePictureUrl(req.profilePictureUrl);
-        counsellor.setStatus(req.status);
+        counsellor.setProfilePictureUrl(req.getProfilePictureUrl());
+        counsellor.setDisplayName(req.getDisplayName());
+        counsellor.setSpecialization(req.getSpecialization());
+        counsellor.setBio(req.getBio());
+        counsellor.setProfilePictureUrl(req.getProfilePictureUrl());
+        counsellor.setStatus(req.getStatus());
         counsellorProfileRepository.save(counsellor);
         return msg("success");
     }
