@@ -135,53 +135,40 @@ public class WorryNotes extends AppCompatActivity {
         builder.show();
     }
 
-//    private void deleteNote(long noteId) {
-//        String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
-//
-//        JsonObjectRequest request = new JsonObjectRequest(
-//                Request.Method.DELETE,
-//                url,
-//                null,
-//                response -> {
-//                    Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-//                    // Refresh the list
-//                    SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-//                    String userIdString = prefs.getString("USER_ID", "-1");
-//                    Long userId = Long.parseLong(userIdString);
-//                    fetchUserNotes(userId);
-//                },
-//                error -> {
-//                    Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
-//                }
-//        );
-//
-//        RequestQueue queue = Volley.newRequestQueue(this);
-//        queue.add(request);
-//    }
-private void deleteNote(long noteId) {
-    String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
+    private void deleteNote(long noteId) {
+        String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
 
-    StringRequest request = new StringRequest(
-            Request.Method.DELETE,
-            url,
-            response -> {
-                Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-                // Refresh the list
-                SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-                String userIdString = prefs.getString("USER_ID", "-1");
-                Long userId = Long.parseLong(userIdString);
-                fetchUserNotes(userId);
-            },
-            error -> {
-                Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
-            }
-    );
+        StringRequest request = new StringRequest(
+                Request.Method.DELETE,
+                url,
+                response -> {
+                    Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+                    // Refresh the list
+                    SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+                    String userIdString = prefs.getString("USER_ID", "-1");
+                    Long userId = Long.parseLong(userIdString);
+                    fetchUserNotes(userId);
+                },
+                error -> {
+                    Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+                }
+        );
 
-    RequestQueue queue = Volley.newRequestQueue(this);
-    queue.add(request);
-}
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
+    }
 
+    // Causes the WorryNotes page to refresh right away when updating or adding notes
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+        // Refresh the notes list
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String userIdString = prefs.getString("USER_ID", "-1");
+        Long userId = Long.parseLong(userIdString);
+        fetchUserNotes(userId);
+    }
 
 
 }
