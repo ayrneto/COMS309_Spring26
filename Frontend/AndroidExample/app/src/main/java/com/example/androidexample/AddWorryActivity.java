@@ -23,6 +23,9 @@ import android.app.DatePickerDialog;
 import java.util.Calendar;
 
 public class AddWorryActivity extends AppCompatActivity{
+    private boolean isEditMode = false;
+    private long noteId = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -39,6 +42,26 @@ public class AddWorryActivity extends AppCompatActivity{
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, labels);
         labelSpinner.setAdapter(adapter);
 
+        // Check if editing existing note
+        Bundle extras = getIntent().getExtras();
+        if (extras != null && extras.containsKey("noteId")) {
+            isEditMode = true;
+            noteId = extras.getLong("noteId");
+
+            // Pre-fill the fields
+            titleInput.setText(extras.getString("title"));
+            contentInput.setText(extras.getString("content"));
+            dueDateInput.setText(extras.getString("dueDate"));
+
+            String label = extras.getString("label");
+            int spinnerPosition = adapter.getPosition(label);
+            if (spinnerPosition >= 0) {
+                labelSpinner.setSelection(spinnerPosition);
+            }
+
+            saveBtn.setText("Update");  // Change button text
+        }
+
         saveBtn.setOnClickListener(v -> {
             String title = titleInput.getText().toString();
             String content = contentInput.getText().toString();
@@ -50,7 +73,11 @@ public class AddWorryActivity extends AppCompatActivity{
                 return;
             }
 
-            saveWorry(title, content, dueDate, label);
+            if (isEditMode) {
+                updateWorry(title, content, dueDate, label);
+            } else {
+                saveWorry(title, content, dueDate, label);
+            }
         });
 
         // Due Date Picker
@@ -77,6 +104,7 @@ public class AddWorryActivity extends AppCompatActivity{
 
     }
 
+    // Used only for when saving a NEW Worry Note
     private void saveWorry(String title, String content, String dueDate, String label) {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
@@ -104,6 +132,39 @@ public class AddWorryActivity extends AppCompatActivity{
                 },
                 error -> {
                     Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show();
+                }
+        );
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
+    }
+
+
+    // Used only when updating an existing note
+    private void updateWorry(String title, String content, String dueDate, String label) {
+        String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
+
+        JSONObject noteData = new JSONObject();
+        try {
+            noteData.put("title", title);
+            noteData.put("content", content);
+            //ToDo: uncomment these after backend:
+            //noteData.put("dueDate", dueDate);
+            //noteData.put("label", label);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.PUT,
+                url,
+                noteData,
+                response -> {
+                    Toast.makeText(this, "Worry updated!", Toast.LENGTH_SHORT).show();
+                    finish();
+                },
+                error -> {
+                    Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show();
                 }
         );
 
