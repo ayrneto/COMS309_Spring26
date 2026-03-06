@@ -73,22 +73,24 @@
         android:id="@+id/btnSignUp"
         android:clickable="true"
         android:focusable="true"
+        android:layout_marginTop="70dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="135dp"
+            android:layout_marginTop="10dp"
             android:text="Click here to"
             android:textColor="#000000"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="135dp"
+            android:layout_marginTop="10dp"
             android:text=" Sign Up"
             android:fontFamily="sans-serif-black"
             android:textColor="#4A6E60"

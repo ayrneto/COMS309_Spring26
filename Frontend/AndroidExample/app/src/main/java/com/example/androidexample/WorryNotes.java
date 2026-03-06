@@ -1,9 +1,11 @@
 package com.example.androidexample;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,8 +31,14 @@ public class WorryNotes extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userIdString = prefs.getString("USER_ID", "-1");
         Long userId = Long.parseLong(userIdString);
-
+        FrameLayout btnAddWorryNote = findViewById(R.id.btnAddWorryNote);
         fetchUserNotes(userId);
+
+        btnAddWorryNote.setOnClickListener(view -> {
+            Intent intent = new Intent(WorryNotes.this, AddWorryActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void fetchUserNotes(Long userId){

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/offwhite_background"
+    android:orientation="vertical"
+    tools:context=".AddWorryActivity"
+    >
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:text="New Worry Note"
+        android:textSize="48sp"
+        />
+
+    <EditText
+        android:id="@+id/inputTitle"
+        android:layout_marginTop="80dp"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint=" Worry Title"
+        android:textSize="24sp"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/inputContent"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:hint=" What should you worry about?"
+        android:textSize="24sp"
+        android:gravity="top"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose your label:"
+        android:textSize="24sp"
+        />
+
+    <Spinner
+        android:id="@+id/spinnerLabel"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/inputDueDate"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:hint=" Due Date (YYYY-MM-DD)"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnSaveWorry"
+        android:layout_marginTop="360dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:textSize="32sp"
+        android:layout_gravity="center" />
+
+    </LinearLayout>
