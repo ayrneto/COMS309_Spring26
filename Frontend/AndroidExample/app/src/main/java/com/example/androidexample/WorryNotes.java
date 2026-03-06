@@ -18,6 +18,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -75,8 +76,11 @@ public class WorryNotes extends AppCompatActivity {
                 long noteId = note.getLong("id");
                 String title = note.getString("title");
                 String content = note.getString("content");
-                String dueDate = note.getString("dueDate");
-                String label = note.getString("label");
+                //ToDo: uncomment when backend is ready
+                //String dueDate = note.getString("dueDate");
+                //String label = note.getString("label");
+                String dueDate = "No date";
+                String label = "Label";
 
                 addNoteCard(container, title, content, dueDate, label, noteId);
             }
@@ -131,29 +135,51 @@ public class WorryNotes extends AppCompatActivity {
         builder.show();
     }
 
-    private void deleteNote(long noteId) {
-        String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
+//    private void deleteNote(long noteId) {
+//        String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
+//
+//        JsonObjectRequest request = new JsonObjectRequest(
+//                Request.Method.DELETE,
+//                url,
+//                null,
+//                response -> {
+//                    Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+//                    // Refresh the list
+//                    SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+//                    String userIdString = prefs.getString("USER_ID", "-1");
+//                    Long userId = Long.parseLong(userIdString);
+//                    fetchUserNotes(userId);
+//                },
+//                error -> {
+//                    Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+//                }
+//        );
+//
+//        RequestQueue queue = Volley.newRequestQueue(this);
+//        queue.add(request);
+//    }
+private void deleteNote(long noteId) {
+    String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
 
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.DELETE,
-                url,
-                null,
-                response -> {
-                    Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-                    // Refresh the list
-                    SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-                    String userIdString = prefs.getString("USER_ID", "-1");
-                    Long userId = Long.parseLong(userIdString);
-                    fetchUserNotes(userId);
-                },
-                error -> {
-                    Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
-                }
-        );
+    StringRequest request = new StringRequest(
+            Request.Method.DELETE,
+            url,
+            response -> {
+                Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+                // Refresh the list
+                SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+                String userIdString = prefs.getString("USER_ID", "-1");
+                Long userId = Long.parseLong(userIdString);
+                fetchUserNotes(userId);
+            },
+            error -> {
+                Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+            }
+    );
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-        queue.add(request);
-    }
+    RequestQueue queue = Volley.newRequestQueue(this);
+    queue.add(request);
+}
 
 
 
