@@ -65,15 +65,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <GridLayout
             android:id="@+id/worriesContainer"
+            android:columnCount="2"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:alignmentMode="alignMargins"
             android:orientation="vertical">
 
             <!-- Worry cards will be added here dynamically -->
 
-        </LinearLayout>
+        </GridLayout>
     </ScrollView>
 
 </LinearLayout>

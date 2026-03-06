@@ -17,7 +17,7 @@
         <activity android:name=".AddWorryActivity"/>
         <activity android:name=".WorryNotes"/>
         <activity android:name=".EditProfile"/>
-        <activity android:name=".ProfileActivity"/>
+        <!-- <activity android:name=".ProfileActivity"/> -->
         <activity android:name=".SignUpActivity"/>
         <activity android:name=".HomeActivity"/>
         <activity android:name=".CounselorHomeActivity" />
@@ -38,7 +38,7 @@
             android:exported="false" />
         <activity android:name=".LoginActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ProfileActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

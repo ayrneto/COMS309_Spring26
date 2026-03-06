@@ -26,12 +26,23 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/worryDueDate"
+            android:id="@+id/worryContent"
             android:layout_gravity="center"
             android:layout_width="wrap_content"
-            android:layout_height="80dp"
-            android:text="Due: 2026-03-15"
+            android:layout_height="70dp"
+            android:text="This is a placeholder"
             android:layout_marginTop="0dp" />
+
+        <TextView
+            android:id="@+id/worryDueDate"
+            android:background="@drawable/light_green_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="wrap_content"
+            android:text="Due: 2026-03-15"
+            android:textColor="#000000"
+            android:layout_marginTop="12dp" />
 
         <TextView
             android:id="@+id/worryLabel"
@@ -39,9 +50,9 @@
             android:gravity="center"
             android:textColor="#FFFFFF"
             android:layout_width="168dp"
-            android:layout_height="30dp"
+            android:layout_height="25dp"
             android:text="Work"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="0dp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
