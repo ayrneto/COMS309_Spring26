@@ -11,7 +11,7 @@
     >
 
     <TextView
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="0dp"
         android:layout_gravity="center"
         android:gravity="center"
         android:background="@drawable/light_green_background_flat"
@@ -23,13 +23,13 @@
 
     <EditText
         android:id="@+id/inputTitle"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="36dp"
         android:background="@drawable/light_green_background_flat"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:hint=" Worry Title"
         android:textSize="24sp"
-        android:layout_marginBottom="16dp" />
+        />
 
     <EditText
         android:id="@+id/inputContent"
@@ -40,11 +40,12 @@
         android:hint=" What should you worry about?"
         android:textSize="24sp"
         android:gravity="top"
-        android:layout_marginBottom="16dp" />
+        />
 
     <TextView
         android:layout_marginTop="20dp"
-        android:layout_width="wrap_content"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Choose your label:"
         android:textSize="24sp"
@@ -55,7 +56,7 @@
         android:background="@drawable/light_green_background_flat"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_marginBottom="16dp" />
+        />
 
     <EditText
         android:id="@+id/inputDueDate"
@@ -63,13 +64,15 @@
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:hint=" Due Date (YYYY-MM-DD)"
-        android:layout_marginBottom="16dp" />
+        android:hint=" Due Date"
+        />
 
     <Button
         android:id="@+id/btnSaveWorry"
-        android:layout_marginTop="360dp"
-        android:layout_width="match_parent"
+        android:focusable="false"
+        android:clickable="true"
+        android:layout_marginTop="120dp"
+        android:layout_width="360dp"
         android:layout_height="wrap_content"
         android:text="Save"
         android:textSize="32sp"

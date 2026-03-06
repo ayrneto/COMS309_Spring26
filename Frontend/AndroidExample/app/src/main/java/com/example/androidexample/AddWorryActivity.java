@@ -19,6 +19,9 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.DatePickerDialog;
+import java.util.Calendar;
+
 public class AddWorryActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -48,6 +51,28 @@ public class AddWorryActivity extends AppCompatActivity{
             }
 
             saveWorry(title, content, dueDate, label);
+        });
+
+        // Due Date Picker
+        dueDateInput.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    AddWorryActivity.this,
+                    (view, selectedYear, selectedMonth, selectedDay) -> {
+                        // Format as YYYY-MM-DD (or whatever backend expects)
+                        String date = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
+                        dueDateInput.setText(date);
+                    },
+                    year,
+                    month,
+                    day
+            );
+
+            datePickerDialog.show();
         });
 
     }
