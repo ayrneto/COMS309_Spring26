@@ -14,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidExample"
         tools:targetApi="31">
+        <activity android:name=".AddWorryActivity"/>
         <activity android:name=".WorryNotes"/>
         <activity android:name=".EditProfile"/>
         <activity android:name=".ProfileActivity"/>
@@ -22,22 +23,9 @@
         <activity android:name=".CounselorHomeActivity" />
         <activity android:name=".CounselorProfileActivity" />
         <activity android:name=".CounselorEditProfileActivity" />
-
+        <!-- <activity android:name=".LoginActivity" /> -->
         <activity
-            android:name=".JsonArrReqActivity"
-            android:exported="false" />
-        <activity
-            android:name=".JsonObjReqActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ImageReqActivity"
-            android:exported="false" />
-        <activity
-            android:name=".StringReqActivity"
-            android:exported="false" />
-        <activity android:name=".LoginActivity" />
-        <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
