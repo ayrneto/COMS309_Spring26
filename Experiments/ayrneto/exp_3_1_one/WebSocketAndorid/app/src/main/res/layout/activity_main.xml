@@ -25,7 +25,7 @@
         android:id="@+id/serverEdt"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="ws://10.0.2.2:8080/chat/"
+        android:text="ws://10.0.2.2:8080/chat/1/"
         android:textSize="16sp"
         android:padding="10dp"
         android:background="@android:drawable/edit_text"

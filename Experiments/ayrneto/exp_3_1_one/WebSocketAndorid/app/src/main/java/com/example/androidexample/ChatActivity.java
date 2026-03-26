@@ -89,4 +89,11 @@ public class ChatActivity extends AppCompatActivity implements WebSocketListener
 
     @Override
     public void onWebSocketError(Exception ex) {}
+
+    // Auto called by Android when the Activity is destroyed (exiting the page)
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        WebSocketManager.getInstance().disconnectWebSocket();
+    }
 }

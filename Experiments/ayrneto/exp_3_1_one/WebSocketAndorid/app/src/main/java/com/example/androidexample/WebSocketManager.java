@@ -62,6 +62,10 @@ public class WebSocketManager {
      */
     public void connectWebSocket(String serverUrl) {
         try {
+            if(webSocketClient != null && !webSocketClient.isClosed()){
+                webSocketClient.close(); // Close old connection
+            }
+
             URI serverUri = URI.create(serverUrl);
             webSocketClient = new MyWebSocketClient(serverUri);
             webSocketClient.connect();
