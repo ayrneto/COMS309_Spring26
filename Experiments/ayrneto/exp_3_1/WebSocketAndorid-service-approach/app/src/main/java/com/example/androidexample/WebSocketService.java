@@ -17,6 +17,12 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
+import androidx.core.app.NotificationCompat;
+
 public class WebSocketService extends Service {
 
     // key to WebSocketClient obj mapping - for multiple WebSocket connections
@@ -83,6 +89,7 @@ public class WebSocketService extends Service {
                     intent.putExtra("key", key);
                     intent.putExtra("message", message);
                     LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                    showNotification("New Message", message);
                 }
 
                 @Override
@@ -122,5 +129,25 @@ public class WebSocketService extends Service {
     private void disconnectWebSocket(String key) {
         if (webSockets.containsKey(key))
             webSockets.get(key).close();
+    }
+
+    private void showNotification(String title, String message) {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // required for Android 8+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "ws_channel", "WebSocket Notifications", NotificationManager.IMPORTANCE_DEFAULT);
+            manager.createNotificationChannel(channel);
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, "ws_channel")
+                .setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setAutoCancel(true)
+                .build();
+
+        manager.notify((int) System.currentTimeMillis(), notification);
     }
 }
