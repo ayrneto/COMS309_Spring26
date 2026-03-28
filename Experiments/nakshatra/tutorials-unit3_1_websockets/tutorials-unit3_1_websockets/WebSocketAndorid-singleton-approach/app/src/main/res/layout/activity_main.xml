@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    MODIFICATIONS by Nakshatra Gupta:
+    - Changed Connect buttons to teal color
+    - Changed Back buttons to deep purple
+    - Updated title text to include name
+    - Added background color to layout
+-->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,7 +13,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="20dp"
+    android:background="#F0F4F8">
+
+    <!-- App Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nakshatra's WebSocket Chat"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#37474F"
+        android:gravity="center"
+        android:paddingBottom="20dp"/>
 
     <!-- Server 1 Section -->
     <TextView
@@ -15,6 +34,7 @@
         android:text="Server 1 URL (default to):"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:textColor="#37474F"
         android:paddingBottom="5dp"/>
 
     <EditText
@@ -34,21 +54,24 @@
         android:textSize="16sp"
         android:background="@android:drawable/editbox_background"/>
 
+    <!-- Teal connect button -->
     <Button
         android:id="@+id/connectBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:text="Connect to Chat Server 1"
+        android:backgroundTint="#00897B"
         android:textColor="@android:color/white"/>
 
+    <!-- Purple back button -->
     <Button
         android:id="@+id/backBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="Back to Chat Server 1"
-        android:backgroundTint="@android:color/darker_gray"
+        android:backgroundTint="#4527A0"
         android:textColor="@android:color/white"/>
 
     <!-- Spacer -->
@@ -63,6 +86,7 @@
         android:text="Server 2 URL (default to):"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:textColor="#37474F"
         android:paddingBottom="5dp"/>
 
     <EditText
@@ -82,20 +106,24 @@
         android:textSize="16sp"
         android:background="@android:drawable/editbox_background"/>
 
+    <!-- Teal connect button -->
     <Button
         android:id="@+id/connectBtn2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:text="Connect to Chat Server 2"
+        android:backgroundTint="#00897B"
         android:textColor="@android:color/white"/>
 
+    <!-- Purple back button -->
     <Button
         android:id="@+id/backBtn2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="Back to Chat Server 2"
-        android:backgroundTint="@android:color/darker_gray"
+        android:backgroundTint="#4527A0"
         android:textColor="@android:color/white"/>
+
 </LinearLayout>
