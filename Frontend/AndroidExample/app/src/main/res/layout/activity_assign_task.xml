@@ -83,7 +83,7 @@
         android:layout_gravity="left"
         android:layout_width="380dp"
         android:layout_height="wrap_content"
-        android:minLines="4"
+        android:minLines="2"
         android:inputType="textMultiLine"
         android:hint="Enter the description"
         android:layout_marginBottom="0dp" />

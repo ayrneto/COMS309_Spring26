@@ -31,7 +31,7 @@ public class AssignTaskActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_assign_task);
 
-        // Force light mode
+        // Force light mode for colors to show correctly
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         EditText emailInput = findViewById(R.id.taskEmail);
