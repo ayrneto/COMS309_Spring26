@@ -1,145 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/offwhite_background"
-    android:orientation="vertical"
-    tools:context=".AssignTaskActivity"
-    >
-
-    <TextView
-        android:layout_marginTop="0dp"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:background="@drawable/light_green_background_flat"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:text="Task Assignment"
-        android:textSize="48sp"
-        />
-
-    <TextView
-        android:layout_marginTop="0dp"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:background="@drawable/light_green_background_flat"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:text="Assign a task for a user to complete"
-        android:textSize="20sp"
-        />
-
-    <TextView
-        android:layout_marginTop="20dp"
-        android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="User's Email"
-        android:textSize="20sp"
-        />
-
-    <EditText
-        android:id="@+id/taskEmail"
-        android:layout_marginStart="10dp"
-        android:layout_gravity="left"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:hint="email@example.com"
-        android:layout_marginBottom="20dp" />
-
-    <TextView
-        android:layout_marginTop="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Task Title"
-        android:textSize="20sp"
-        />
-
-    <EditText
-        android:id="@+id/taskTitle"
-        android:layout_marginStart="10dp"
-        android:layout_gravity="left"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter the task's title"
-        android:layout_marginBottom="0dp" />
-
-    <TextView
-        android:layout_marginTop="20dp"
-        android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Description"
-        android:textSize="20sp"
-        />
-
-    <EditText
-        android:id="@+id/taskDescription"
-        android:layout_marginStart="10dp"
-        android:layout_gravity="left"
-        android:layout_width="380dp"
-        android:layout_height="wrap_content"
-        android:minLines="2"
-        android:inputType="textMultiLine"
-        android:hint="Enter the description"
-        android:layout_marginBottom="0dp" />
-
-    <EditText
-        android:id="@+id/taskDueDate"
-        android:layout_marginTop="20dp"
-        android:layout_marginStart="10dp"
-        android:layout_width="380dp"
-        android:layout_height="52dp"
-        android:hint=" Task Due Date"
-        />
-
-    <TextView
-        android:layout_marginTop="40dp"
-        android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Reminder Date and Time"
-        android:textSize="20sp"
-        />
+    android:background="@drawable/offwhite_background">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/offwhite_background"
+        android:orientation="vertical"
+        tools:context=".AssignTaskActivity"
+        >
 
-        <EditText
-            android:id="@+id/taskReminderDate"
+        <TextView
+            android:layout_marginTop="0dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@drawable/light_green_background_flat"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:text="Task Assignment"
+            android:textSize="48sp"
+            />
+
+        <TextView
+            android:layout_marginTop="0dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@drawable/light_green_background_flat"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Assign a task for a user to complete"
+            android:textSize="20sp"
+            />
+
+        <TextView
             android:layout_marginTop="20dp"
             android:layout_marginStart="10dp"
-            android:layout_width="190dp"
-            android:layout_height="52dp"
-            android:hint="Reminder Date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User's Email"
+            android:textSize="20sp"
             />
 
         <EditText
-            android:id="@+id/taskReminderTime"
+            android:id="@+id/taskEmail"
+            android:layout_marginStart="10dp"
+            android:layout_gravity="left"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:hint="email@example.com"
+            android:layout_marginBottom="20dp" />
+
+        <TextView
+            android:layout_marginTop="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Task Title"
+            android:textSize="20sp"
+            />
+
+        <EditText
+            android:id="@+id/taskTitle"
+            android:layout_marginStart="10dp"
+            android:layout_gravity="left"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:hint="Enter the task's title"
+            android:layout_marginBottom="0dp" />
+
+        <TextView
             android:layout_marginTop="20dp"
             android:layout_marginStart="10dp"
-            android:layout_width="190dp"
-            android:layout_height="52dp"
-            android:hint="Reminder Time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Description"
+            android:textSize="20sp"
             />
+
+        <EditText
+            android:id="@+id/taskDescription"
+            android:layout_marginStart="10dp"
+            android:layout_gravity="left"
+            android:layout_width="380dp"
+            android:layout_height="wrap_content"
+            android:minLines="2"
+            android:inputType="textMultiLine"
+            android:hint="Enter the description"
+            android:layout_marginBottom="0dp" />
+
+        <EditText
+            android:id="@+id/taskDueDate"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="10dp"
+            android:layout_width="380dp"
+            android:layout_height="52dp"
+            android:hint=" Task Due Date"
+            />
+
+        <TextView
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reminder Date and Time"
+            android:textSize="20sp"
+            />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/taskReminderDate"
+                android:layout_marginTop="20dp"
+                android:layout_marginStart="10dp"
+                android:layout_width="190dp"
+                android:layout_height="52dp"
+                android:hint="Reminder Date"
+                />
+
+            <EditText
+                android:id="@+id/taskReminderTime"
+                android:layout_marginTop="20dp"
+                android:layout_marginStart="10dp"
+                android:layout_width="190dp"
+                android:layout_height="52dp"
+                android:hint="Reminder Time"
+                />
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/btnSaveTask"
+            android:focusable="false"
+            android:clickable="true"
+            android:layout_marginTop="20dp"
+            android:layout_width="360dp"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:textSize="32sp"
+            android:layout_gravity="center" />
+
     </LinearLayout>
-
-
-    <Button
-        android:id="@+id/btnSaveTask"
-        android:focusable="false"
-        android:clickable="true"
-        android:layout_marginTop="20dp"
-        android:layout_width="360dp"
-        android:layout_height="wrap_content"
-        android:text="Save"
-        android:textSize="32sp"
-        android:layout_gravity="center" />
-
-</LinearLayout>
+</ScrollView>
