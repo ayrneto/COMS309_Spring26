@@ -1,8 +1,10 @@
 package onetoone.Users;
 
 import onetoone.Users.dto.CreateCounsellorRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -12,6 +14,17 @@ public class UserAdminController {
 
     public UserAdminController(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/update/{id}")
