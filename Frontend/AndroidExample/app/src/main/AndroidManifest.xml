@@ -25,6 +25,7 @@
         <activity android:name=".CounselorEditProfileActivity" />
         <activity android:name=".AssignTaskActivity" />
         <activity android:name=".TasksOverview" />
+        <activity android:name=".TaskDetailsActivity"/>
         <!-- <activity android:name=".LoginActivity" /> -->
         <activity
             android:name=".LoginActivity"
