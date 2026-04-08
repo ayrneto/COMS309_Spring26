@@ -23,6 +23,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 /**
  *
  * @author Boudhayan Chakraborty
@@ -30,6 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 
 @RestController
+@Tag(name = "User Controller", description = "Handles user authentication and user management APIs")
 public class UserController {
 
     @Autowired
@@ -49,9 +56,15 @@ public class UserController {
 //    List<User> getAllUsers(){
 //        return userRepository.findAll();
 //    }
-
+     @Operation(summary = "Get user by email", description = "Fetch user details using email")
+     @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+     })
     @GetMapping("/LoginPage/user/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable("email") String email) {
+    public ResponseEntity<User> getUserByEmail(
+            @Parameter(description = "User email", example = "test@example.com")
+            @PathVariable("email") String email) {
         User user = userRepository.findByEmail(email.toLowerCase().trim());
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -59,15 +72,31 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Get user by ID", description = "Fetch user using unique ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
+    public User getUserById(
+            @Parameter(description = "User ID", example = "1")
+            @PathVariable Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
+
+    @Operation(summary = "Register user", description = "Creates a new user account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created"),
+            @ApiResponse(responseCode = "400", description = "Passwords do not match"),
+            @ApiResponse(responseCode = "409", description = "Email already exists")
+    })
     @PostMapping("/signup")
     @Transactional
-    public ResponseEntity<UserResponse> signup(@RequestBody User req) {
+    public ResponseEntity<UserResponse> signup(
+            @Parameter(description = "User signup details")
+            @RequestBody User req) {
 
         if (req.getPassword() == null || !req.getPassword().equals(req.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
@@ -112,8 +141,16 @@ public class UserController {
 
 
     // Delete user
+
+    @Operation(summary = "Delete user", description = "Deletes user by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(description = "User ID", example = "1")
+            @PathVariable Long id) {
 
         if (!userRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
@@ -122,8 +159,19 @@ public class UserController {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+
+    // ===================== LOGIN =====================
+    @Operation(summary = "Login user", description = "Authenticate using email, password, and role")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "403", description = "Role mismatch")
+    })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<LoginResponse> login(
+            @Parameter(description = "Login credentials")
+            @RequestBody LoginRequest req) {
 
         User user = userRepository.findByEmail(req.getEmail());
         if (user == null) {

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import onetoone.Users.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 
 @Entity
 @Table(name = "counsellor_profiles")
@@ -12,29 +14,38 @@ public class CounsellorProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Schema(description = "Counsellor profile ID", example = "1")
     private Long id;
 
     @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)  // maps to the user_id column
+    @Schema(description = "User associated with the counsellor profile")
     private User user;
 
     @Column(nullable = false)
+    @Schema(description = "Display name of the counsellor", example = "Dr. Jane Doe")
     private String displayName;          // what they want shown publicly
 
     @Column(nullable = false)
+    @Schema(description = "Specialization of the counsellor", example = "Anxiety & Depression")
     private String specialization;       // e.g., "Anxiety & Depression"
 
     @Column(length = 1500)
+    @Schema(description = "Bio or description text of the counsellor", example = "10+ years experience in cognitive therapy")
     private String bio;                  // advertising/about text
 
+    @Schema(description = "URL to counsellor's profile picture", example = "https://example.com/image.jpg")
     private String profilePictureUrl;    // stored URL, not the actual image
 
+    @Schema(description = "Number of ratings received", example = "20")
     private Integer ratingCount;
+    @Schema(description = "Average rating of the counsellor", example = "4.8")
     private Double ratingAverage;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Schema(description = "Availability status of the counsellor")
     private CounsellorStatus status;
 
     public CounsellorProfile() {}
