@@ -25,6 +25,7 @@
         <activity android:name=".CounselorProfileActivity" />
         <activity android:name=".CounselorEditProfileActivity" />
         <activity android:name=".ChatActivity" />
+        <activity android:name=".ChatListActivity" />
         <activity android:name=".CounsellorSearchActivity" />
         <activity android:name=".AdminDashboardActivity" />
         <activity android:name=".AdminEditUserActivity" />

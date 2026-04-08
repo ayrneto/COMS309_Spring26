@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -51,20 +50,10 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, WorryNotes.class));
         });
 
-        // ── Chat with Counselor ───────────────────────────────────────────────
+        // ── Chat with Counselor → shows list of accepted counselors ───────────
         findViewById(R.id.drawerItemChat).setOnClickListener(v -> {
             drawerLayout.close();
-            long assignedCounselorId = prefs.getLong("ASSIGNED_COUNSELOR_ID", -1L);
-            if (assignedCounselorId == -1L) {
-                Toast.makeText(this,
-                        "No counselor assigned yet — book one first!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("partnerUserId", assignedCounselorId);
-            intent.putExtra("partnerName",
-                    prefs.getString("ASSIGNED_COUNSELOR_NAME", "Counselor"));
-            startActivity(intent);
+            startActivity(new Intent(this, ChatListActivity.class));
         });
 
         // ── Edit Profile ──────────────────────────────────────────────────────

@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -34,13 +33,12 @@ public class CounselorHomeActivity extends AppCompatActivity {
         String profilePicUrl  = prefs.getString("COUNSELOR_PROFILE_PIC", "");
         String status         = prefs.getString("COUNSELOR_STATUS", "AVAILABLE");
 
-        drawerLayout        = findViewById(R.id.drawerLayout);
-        tvAppointmentBadge  = findViewById(R.id.tvAppointmentBadge);
+        drawerLayout       = findViewById(R.id.drawerLayout);
+        tvAppointmentBadge = findViewById(R.id.tvAppointmentBadge);
 
         // Welcome text
         String name = displayName.isEmpty() ? "Counsellor" : displayName;
-        ((TextView) findViewById(R.id.tvWelcome))
-                .setText("Welcome,\n" + name);
+        ((TextView) findViewById(R.id.tvWelcome)).setText("Welcome,\n" + name);
 
         // Drawer header
         ((TextView) findViewById(R.id.drawerName))
@@ -57,21 +55,10 @@ public class CounselorHomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, AppointmentRequestsActivity.class));
         });
 
-        // ── Chat with User ────────────────────────────────────────────────────
+        // ── Chat with User → shows list of accepted users ─────────────────────
         findViewById(R.id.drawerItemChat).setOnClickListener(v -> {
             drawerLayout.close();
-            long assignedUserId = prefs.getLong("ASSIGNED_USER_ID", -1L);
-            if (assignedUserId == -1L) {
-                Toast.makeText(this,
-                        "No accepted appointments yet — accept a request first",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("partnerUserId", assignedUserId);
-            intent.putExtra("partnerName",
-                    prefs.getString("ASSIGNED_USER_NAME", "User"));
-            startActivity(intent);
+            startActivity(new Intent(this, ChatListActivity.class));
         });
 
         // ── Edit Profile ──────────────────────────────────────────────────────
@@ -108,9 +95,6 @@ public class CounselorHomeActivity extends AppCompatActivity {
         fetchPendingCount(prefs.getString("USER_ID", ""));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Fetch pending appointment count to show badge
-    // ─────────────────────────────────────────────────────────────────────────
     private void fetchPendingCount(String counselorId) {
         if (counselorId.isEmpty()) return;
 
@@ -129,7 +113,6 @@ public class CounselorHomeActivity extends AppCompatActivity {
                             }
                         } catch (Exception e) { e.printStackTrace(); }
                     }
-
                     if (pendingCount > 0) {
                         tvAppointmentBadge.setText(String.valueOf(pendingCount));
                         tvAppointmentBadge.setVisibility(android.view.View.VISIBLE);
