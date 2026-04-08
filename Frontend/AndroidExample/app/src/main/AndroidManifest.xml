@@ -23,10 +23,11 @@
         <activity android:name=".CounselorHomeActivity" />
         <activity android:name=".CounselorProfileActivity" />
         <activity android:name=".CounselorEditProfileActivity" />
-        <!-- <activity android:name=".AssignTaskActivity" /> -->
+        <activity android:name=".AssignTaskActivity" />
+        <activity android:name=".TasksOverview" />
         <!-- <activity android:name=".LoginActivity" /> -->
         <activity
-            android:name=".AssignTaskActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
