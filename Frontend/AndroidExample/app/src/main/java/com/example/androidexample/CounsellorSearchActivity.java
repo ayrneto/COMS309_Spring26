@@ -253,7 +253,7 @@ public class CounsellorSearchActivity extends AppCompatActivity {
     // ─────────────────────────────────────────────────────────────────────────
     private void bookAppointment(CounsellorItem counsellor,
                                  String date, String timeSlot, String notes) {
-        String url = ApiConstants.BASE_URL + "/api/appointments";
+        String url = ApiConstants.APPOINTMENTS;
 
         JSONObject body = new JSONObject();
         try {

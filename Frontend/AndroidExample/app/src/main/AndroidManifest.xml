@@ -14,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidExample"
         tools:targetApi="31">
+
         <activity android:name=".AddWorryActivity"/>
         <activity android:name=".WorryNotes"/>
         <activity android:name=".EditProfile"/>
@@ -25,6 +26,9 @@
         <activity android:name=".CounselorEditProfileActivity" />
         <activity android:name=".ChatActivity" />
         <activity android:name=".CounsellorSearchActivity" />
+        <activity android:name=".AdminDashboardActivity" />
+        <activity android:name=".AdminEditUserActivity" />
+
         <activity
             android:name=".LoginActivity"
             android:exported="true">

@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity {
         LinearLayout signUpBtn = findViewById(R.id.btnSignUp);
         roleSpinner            = findViewById(R.id.spinner_role);
 
-        String[] roles = {"USER", "COUNSELLOR"};
+        String[] roles = {"USER", "COUNSELLOR", "ADMIN"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -93,26 +93,32 @@ public class LoginActivity extends AppCompatActivity {
                         SharedPreferences.Editor editor =
                                 getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
 
-                        // ── Clear ALL previous session data first ──────────────
+                        // Clear ALL previous session data first
                         editor.clear();
 
-                        // ── Save new session ───────────────────────────────────
                         editor.putString("USER_ID",    userId);
                         editor.putString("USER_EMAIL", emailReturned);
                         editor.putString("USER_ROLE",  returnedRole);
-
                         editor.apply();
 
-                        if (returnedRole.equals("COUNSELLOR")) {
-                            startActivity(new Intent(LoginActivity.this, CounselorHomeActivity.class));
-                        } else {
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                        // Route based on role
+                        switch (returnedRole) {
+                            case "COUNSELLOR":
+                                startActivity(new Intent(this, CounselorHomeActivity.class));
+                                break;
+                            case "ADMIN":
+                                startActivity(new Intent(this, AdminDashboardActivity.class));
+                                break;
+                            default:
+                                startActivity(new Intent(this, HomeActivity.class));
+                                break;
                         }
                         finish();
 
                     } catch (Exception e) {
-                        Toast.makeText(LoginActivity.this,
-                                "Bad login response: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                "Bad login response: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
