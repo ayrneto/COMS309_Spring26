@@ -28,7 +28,7 @@
         <TextView
             android:id="@+id/taskDescription"
             android:layout_width="155dp"
-            android:layout_height="88dp"
+            android:layout_height="80dp"
             android:layout_gravity="center"
             android:layout_marginTop="0dp"
             android:text="This is a placeholder" />
@@ -39,10 +39,21 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_width="168dp"
-            android:layout_height="28dp"
+            android:layout_height="24dp"
             android:text="Due: 2026-03-15"
             android:textColor="#FFFFFF"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="0dp" />
+
+        <TextView
+            android:id="@+id/taskStatus"
+            android:background="@drawable/red_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="24dp"
+            android:text="Not Started"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="3dp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
