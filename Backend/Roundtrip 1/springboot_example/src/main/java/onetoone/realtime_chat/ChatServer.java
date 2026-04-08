@@ -27,7 +27,7 @@ import java.util.Map;
 @Component
 public class ChatServer {
 
-    private static Map<Long, Session> userSessionMap = new Hashtable<>();
+    public static Map<Long, Session> userSessionMap = new Hashtable<>();
     private static Map<Session, Long> sessionUserMap = new Hashtable<>();
 
     private static ChatService chatService;
