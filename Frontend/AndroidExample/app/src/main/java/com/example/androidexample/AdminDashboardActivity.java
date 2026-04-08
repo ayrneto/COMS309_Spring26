@@ -25,24 +25,14 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AdminDashboardActivity
- *
- * Shows all users and counsellors in two tabs.
- * Tap any row to open AdminEditUserActivity.
- *
- * Endpoints used:
- *   GET /users            — all users (add this to Boudhayan's UserController)
- *   GET /api/counsellors  — all counsellors (already exists)
- */
 public class AdminDashboardActivity extends AppCompatActivity {
 
     private RecyclerView recyclerAdminList;
     private TextView tvAdminCount, tabUsers, tabCounsellors;
     private EditText etAdminSearch;
 
-    private final List<AdminUserItem> allItems    = new ArrayList<>();
-    private final List<AdminUserItem> filtered    = new ArrayList<>();
+    private final List<AdminUserItem> allItems = new ArrayList<>();
+    private final List<AdminUserItem> filtered = new ArrayList<>();
     private AdminUserAdapter adapter;
 
     private boolean showingUsers = true;
@@ -71,16 +61,18 @@ public class AdminDashboardActivity extends AppCompatActivity {
         // Adapter
         adapter = new AdminUserAdapter(filtered, item -> {
             Intent intent = new Intent(this, AdminEditUserActivity.class);
-            intent.putExtra("userId",       item.id);
-            intent.putExtra("userName",     item.name);
-            intent.putExtra("userEmail",    item.email);
-            intent.putExtra("userRole",     item.role);
-            intent.putExtra("userActive",   item.active);
+            intent.putExtra("userId",           item.id);
+            intent.putExtra("userName",         item.name);
+            intent.putExtra("userEmail",        item.email);
+            intent.putExtra("userRole",         item.role);
+            intent.putExtra("userActive",       item.active);
+            intent.putExtra("userPassword",     item.password);
+            intent.putExtra("userConfirmPassword", item.confirmPassword);
             // counsellor extras
-            intent.putExtra("cDisplayName",    item.displayName);
-            intent.putExtra("cSpecialization", item.specialization);
-            intent.putExtra("cBio",            item.bio);
-            intent.putExtra("cStatus",         item.status);
+            intent.putExtra("cDisplayName",     item.displayName);
+            intent.putExtra("cSpecialization",  item.specialization);
+            intent.putExtra("cBio",             item.bio);
+            intent.putExtra("cStatus",          item.status);
             startActivity(intent);
         });
         recyclerAdminList.setLayoutManager(new LinearLayoutManager(this));
@@ -113,37 +105,36 @@ public class AdminDashboardActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        // Default: load users
         fetchUsers();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh after coming back from edit screen
         if (showingUsers) fetchUsers(); else fetchCounsellors();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GET /users — fetch all users
-    // Boudhayan needs to add: @GetMapping("/users") List<User> getAllUsers()
+    // GET /users
     // ─────────────────────────────────────────────────────────────────────────
     private void fetchUsers() {
-        String url = ApiConstants.USERS;
-
         JsonArrayRequest req = new JsonArrayRequest(
-                Request.Method.GET, url, null,
+                Request.Method.GET, ApiConstants.USERS, null,
                 response -> {
                     allItems.clear();
                     for (int i = 0; i < response.length(); i++) {
                         try {
                             JSONObject obj = response.getJSONObject(i);
                             AdminUserItem item = new AdminUserItem();
-                            item.id     = obj.getLong("id");
-                            item.name   = obj.optString("name",   "");
-                            item.email  = obj.optString("email",  "");
-                            item.role   = obj.optString("role",   "USER");
-                            item.active = obj.optBoolean("active", true);
+                            item.id              = obj.getLong("id");
+                            item.name            = obj.optString("name",            "");
+                            item.email           = obj.optString("email",           "");
+                            item.password        = obj.optString("password",        "");
+                            item.confirmPassword = obj.optString("confirmPassword", "");
+                            item.role            = obj.optString("role",            "USER");
+                            item.active          = obj.optBoolean("active",         true);
+                            // skip counsellors — they appear in the Counsellors tab
+                            if ("COUNSELLOR".equals(item.role)) continue;
                             allItems.add(item);
                         } catch (JSONException e) { e.printStackTrace(); }
                     }
@@ -151,34 +142,32 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 },
                 error -> Toast.makeText(this, "Failed to load users", Toast.LENGTH_SHORT).show()
         );
-
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/counsellors — fetch all counsellors
-    // Already exists in CounsellorProfileController
+    // GET /api/counsellors
     // ─────────────────────────────────────────────────────────────────────────
     private void fetchCounsellors() {
-        String url = ApiConstants.COUNSELLORS;
-
         JsonArrayRequest req = new JsonArrayRequest(
-                Request.Method.GET, url, null,
+                Request.Method.GET, ApiConstants.COUNSELLORS, null,
                 response -> {
                     allItems.clear();
                     for (int i = 0; i < response.length(); i++) {
                         try {
                             JSONObject obj = response.getJSONObject(i);
                             AdminUserItem item = new AdminUserItem();
-                            item.id             = obj.optLong("userId", -1);
-                            item.name           = obj.optString("displayName",    "");
-                            item.email          = "";  // not in counsellor response
-                            item.role           = "COUNSELLOR";
-                            item.active         = true;
-                            item.displayName    = obj.optString("displayName",    "");
-                            item.specialization = obj.optString("specialization", "");
-                            item.bio            = obj.optString("bio",            "");
-                            item.status         = obj.optString("status",         "AVAILABLE");
+                            item.id              = obj.optLong("userId",            -1);
+                            item.name            = obj.optString("displayName",     "");
+                            item.email           = obj.optString("email",           "");
+                            item.password        = obj.optString("password",        "");
+                            item.confirmPassword = obj.optString("confirmPassword", "");
+                            item.role            = "COUNSELLOR";
+                            item.active          = obj.optBoolean("active",         true);
+                            item.displayName     = obj.optString("displayName",     "");
+                            item.specialization  = obj.optString("specialization",  "");
+                            item.bio             = obj.optString("bio",             "");
+                            item.status          = obj.optString("status",          "AVAILABLE");
                             allItems.add(item);
                         } catch (JSONException e) { e.printStackTrace(); }
                     }
@@ -186,7 +175,6 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 },
                 error -> Toast.makeText(this, "Failed to load counsellors", Toast.LENGTH_SHORT).show()
         );
-
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
@@ -206,16 +194,15 @@ public class AdminDashboardActivity extends AppCompatActivity {
                 (filtered.size() == 1 ? "" : "s") + " found");
     }
 
-    // ── Model ──────────────────────────────────────────────────────────────
+    // ── Model ─────────────────────────────────────────────────────────────────
     static class AdminUserItem {
         long    id;
-        String  name, email, role, status;
+        String  name, email, password, confirmPassword, role, status;
         boolean active;
-        // counsellor-only
         String  displayName = "", specialization = "", bio = "";
     }
 
-    // ── Adapter ────────────────────────────────────────────────────────────
+    // ── Adapter ───────────────────────────────────────────────────────────────
     interface OnRowClick { void onClick(AdminUserItem item); }
 
     static class AdminUserAdapter
@@ -243,7 +230,6 @@ public class AdminDashboardActivity extends AppCompatActivity {
             h.tvEmail.setText(item.email.isEmpty() ? item.role : item.email);
             h.tvRole.setText(item.role);
 
-            // Active badge
             if (item.active) {
                 h.tvActive.setText("Active");
                 h.tvActive.setBackgroundResource(R.drawable.dark_green_background);

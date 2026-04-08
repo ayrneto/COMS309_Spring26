@@ -28,7 +28,7 @@ public class AdminEditUserActivity extends AppCompatActivity {
     private String userRole = "USER";
 
     // User fields
-    private EditText etName, etEmail, etPassword;
+    private EditText etName, etEmail, etPassword, etConfirmPassword;
     private Switch   switchActive;
 
     // Counsellor fields
@@ -46,6 +46,7 @@ public class AdminEditUserActivity extends AppCompatActivity {
         etName                   = findViewById(R.id.etEditName);
         etEmail                  = findViewById(R.id.etEditEmail);
         etPassword               = findViewById(R.id.etEditPassword);
+        etConfirmPassword        = findViewById(R.id.etEditConfirmPassword);
         switchActive             = findViewById(R.id.switchActive);
         counsellorSection        = findViewById(R.id.counsellorFieldsSection);
         etCDisplayName           = findViewById(R.id.etCDisplayName);
@@ -71,6 +72,8 @@ public class AdminEditUserActivity extends AppCompatActivity {
 
             etName.setText(extras.getString("userName",  ""));
             etEmail.setText(extras.getString("userEmail", ""));
+            etPassword.setText(extras.getString("userPassword", ""));
+            etConfirmPassword.setText(extras.getString("userConfirmPassword", ""));
             switchActive.setChecked(extras.getBoolean("userActive", true));
 
             tvTitle.setText("Edit " + userRole.charAt(0) +
@@ -92,7 +95,6 @@ public class AdminEditUserActivity extends AppCompatActivity {
             }
         }
 
-        // Guard — if userId is still -1 something went wrong
         if (userId == -1) {
             Toast.makeText(this, "Error: user ID missing", Toast.LENGTH_LONG).show();
             finish();
@@ -101,16 +103,21 @@ public class AdminEditUserActivity extends AppCompatActivity {
 
         // ── Save user ─────────────────────────────────────────────────────────
         btnSaveUser.setOnClickListener(v -> {
-            String name     = etName.getText().toString().trim();
-            String email    = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-            boolean active  = switchActive.isChecked();
+            String name            = etName.getText().toString().trim();
+            String email           = etEmail.getText().toString().trim();
+            String password        = etPassword.getText().toString().trim();
+            String confirmPassword = etConfirmPassword.getText().toString().trim();
+            boolean active         = switchActive.isChecked();
 
             if (name.isEmpty() || email.isEmpty()) {
                 Toast.makeText(this, "Name and email required", Toast.LENGTH_SHORT).show();
                 return;
             }
-            updateUser(name, email, password, active);
+            if (!password.isEmpty() && !password.equals(confirmPassword)) {
+                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            updateUser(name, email, password, confirmPassword, active);
         });
 
         // ── Save counsellor profile ───────────────────────────────────────────
@@ -135,7 +142,7 @@ public class AdminEditUserActivity extends AppCompatActivity {
                         .setPositiveButton("Deactivate", (d, w) -> {
                             String name  = etName.getText().toString().trim();
                             String email = etEmail.getText().toString().trim();
-                            updateUser(name, email, "", false);
+                            updateUser(name, email, "", "", false);
                         })
                         .setNegativeButton("Cancel", null)
                         .show()
@@ -156,7 +163,8 @@ public class AdminEditUserActivity extends AppCompatActivity {
     // PUT /api/admin/update/{id}
     // ─────────────────────────────────────────────────────────────────────────
     private void updateUser(String name, String email,
-                            String password, boolean active) {
+                            String password, String confirmPassword,
+                            boolean active) {
         String url = ApiConstants.EDIT + userId;
 
         JSONObject body = new JSONObject();
@@ -166,7 +174,7 @@ public class AdminEditUserActivity extends AppCompatActivity {
             body.put("active", active);
             if (!password.isEmpty()) {
                 body.put("password",        password);
-                body.put("confirmPassword", password);
+                body.put("confirmPassword", confirmPassword);
             }
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
@@ -244,14 +252,12 @@ public class AdminEditUserActivity extends AppCompatActivity {
         String url = ApiConstants.ADMIN_DELETE + userId;
 
         StringRequest req = new StringRequest(
-                Request.Method.DELETE,
-                url,
+                Request.Method.DELETE, url,
                 response -> {
                     Toast.makeText(this, "Account deleted", Toast.LENGTH_SHORT).show();
                     finish();
                 },
                 error -> {
-                    // 200 with a body or 204 with no body — both count as success for DELETE
                     if (error.networkResponse != null &&
                             (error.networkResponse.statusCode == 200 ||
                                     error.networkResponse.statusCode == 204)) {

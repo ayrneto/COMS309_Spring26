@@ -10,9 +10,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+
+import org.json.JSONObject;
+
 public class CounselorHomeActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private TextView tvAppointmentBadge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,39 +26,45 @@ public class CounselorHomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_counsellor_home);
 
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-        String userId = prefs.getString("USER_ID",    "");
-        String email  = prefs.getString("USER_EMAIL", "");
-        String name   = prefs.getString("USER_NAME",  "");
-
-        // Counselor-specific cached profile fields
-        String displayName    = prefs.getString("COUNSELOR_DISPLAY_NAME", name);
+        String userId         = prefs.getString("USER_ID",    "");
+        String email          = prefs.getString("USER_EMAIL", "");
+        String displayName    = prefs.getString("COUNSELOR_DISPLAY_NAME", "");
         String specialization = prefs.getString("COUNSELOR_SPECIALIZATION", "");
         String bio            = prefs.getString("COUNSELOR_BIO", "");
         String profilePicUrl  = prefs.getString("COUNSELOR_PROFILE_PIC", "");
         String status         = prefs.getString("COUNSELOR_STATUS", "AVAILABLE");
 
-        drawerLayout = findViewById(R.id.drawerLayout);
+        drawerLayout        = findViewById(R.id.drawerLayout);
+        tvAppointmentBadge  = findViewById(R.id.tvAppointmentBadge);
 
         // Welcome text
-        TextView tvWelcome = findViewById(R.id.tvWelcome);
-        tvWelcome.setText("Welcome,\n" + (displayName.isEmpty() ? "Counsellor" : displayName));
+        String name = displayName.isEmpty() ? "Counsellor" : displayName;
+        ((TextView) findViewById(R.id.tvWelcome))
+                .setText("Welcome,\n" + name);
 
         // Drawer header
-        ((TextView) findViewById(R.id.drawerName)).setText(
-                displayName.isEmpty() ? "Hello!" : "Hi, " + displayName);
+        ((TextView) findViewById(R.id.drawerName))
+                .setText(displayName.isEmpty() ? "Hello!" : "Hi, " + displayName);
         ((TextView) findViewById(R.id.drawerEmail)).setText(email);
 
         // Hamburger
         ((ImageButton) findViewById(R.id.btnHamburger))
                 .setOnClickListener(v -> drawerLayout.open());
 
+        // ── Appointment Requests ──────────────────────────────────────────────
+        findViewById(R.id.drawerItemAppointments).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, AppointmentRequestsActivity.class));
+        });
+
         // ── Chat with User ────────────────────────────────────────────────────
         findViewById(R.id.drawerItemChat).setOnClickListener(v -> {
             drawerLayout.close();
-            // TODO: replace with real assigned user ID once Shrey's endpoint is ready
             long assignedUserId = prefs.getLong("ASSIGNED_USER_ID", -1L);
             if (assignedUserId == -1L) {
-                Toast.makeText(this, "No user assigned yet", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "No accepted appointments yet — accept a request first",
+                        Toast.LENGTH_SHORT).show();
                 return;
             }
             Intent intent = new Intent(this, ChatActivity.class);
@@ -66,12 +78,12 @@ public class CounselorHomeActivity extends AppCompatActivity {
         findViewById(R.id.drawerItemEditProfile).setOnClickListener(v -> {
             drawerLayout.close();
             Intent intent = new Intent(this, CounselorEditProfileActivity.class);
-            intent.putExtra("userId",          Long.parseLong(userId.isEmpty() ? "-1" : userId));
-            intent.putExtra("displayName",     displayName);
-            intent.putExtra("specialization",  specialization);
-            intent.putExtra("bio",             bio);
+            intent.putExtra("userId",           Long.parseLong(userId.isEmpty() ? "-1" : userId));
+            intent.putExtra("displayName",      displayName);
+            intent.putExtra("specialization",   specialization);
+            intent.putExtra("bio",              bio);
             intent.putExtra("profilePictureUrl", profilePicUrl);
-            intent.putExtra("status",          status);
+            intent.putExtra("status",           status);
             startActivity(intent);
         });
 
@@ -84,5 +96,50 @@ public class CounselorHomeActivity extends AppCompatActivity {
             startActivity(intent);
             finishAffinity();
         });
+
+        // Load pending request count for badge
+        fetchPendingCount(userId);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        fetchPendingCount(prefs.getString("USER_ID", ""));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Fetch pending appointment count to show badge
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchPendingCount(String counselorId) {
+        if (counselorId.isEmpty()) return;
+
+        String url = ApiConstants.BASE_URL +
+                "/api/appointments/counsellor/" + counselorId;
+
+        JsonArrayRequest req = new JsonArrayRequest(
+                Request.Method.GET, url, null,
+                response -> {
+                    int pendingCount = 0;
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject obj = response.getJSONObject(i);
+                            if ("PENDING".equalsIgnoreCase(obj.optString("status"))) {
+                                pendingCount++;
+                            }
+                        } catch (Exception e) { e.printStackTrace(); }
+                    }
+
+                    if (pendingCount > 0) {
+                        tvAppointmentBadge.setText(String.valueOf(pendingCount));
+                        tvAppointmentBadge.setVisibility(android.view.View.VISIBLE);
+                    } else {
+                        tvAppointmentBadge.setVisibility(android.view.View.GONE);
+                    }
+                },
+                error -> tvAppointmentBadge.setVisibility(android.view.View.GONE)
+        );
+
+        VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 }

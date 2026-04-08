@@ -62,7 +62,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- USER FIELDS -->
+            <!-- Full Name -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -82,6 +82,7 @@
                 android:paddingEnd="16dp"
                 android:layout_marginBottom="16dp" />
 
+            <!-- Email -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -102,6 +103,7 @@
                 android:paddingEnd="16dp"
                 android:layout_marginBottom="16dp" />
 
+            <!-- Password -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -117,6 +119,27 @@
                 android:background="@color/aa_input_bg"
                 android:fontFamily="@font/alata"
                 android:hint="New Password"
+                android:inputType="textPassword"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Confirm Password -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Confirm Password"
+                android:textSize="12sp"
+                android:textColor="#6B6B6B"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etEditConfirmPassword"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@color/aa_input_bg"
+                android:fontFamily="@font/alata"
+                android:hint="Confirm Password"
                 android:inputType="textPassword"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
@@ -150,7 +173,7 @@
 
             </LinearLayout>
 
-            <!-- Save button -->
+            <!-- Save user button -->
             <Button
                 android:id="@+id/btnSaveUser"
                 android:layout_width="match_parent"
@@ -162,7 +185,7 @@
                 android:backgroundTint="#4A6E60"
                 app:cornerRadius="26dp" />
 
-            <!-- COUNSELLOR FIELDS — only visible when role is COUNSELLOR -->
+            <!-- Counsellor fields — only shown when role is COUNSELLOR -->
             <LinearLayout
                 android:id="@+id/counsellorFieldsSection"
                 android:layout_width="match_parent"
@@ -170,7 +193,6 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -265,7 +287,6 @@
                     android:padding="14dp"
                     android:layout_marginBottom="28dp" />
 
-                <!-- Save counsellor profile button -->
                 <Button
                     android:id="@+id/btnSaveCounsellor"
                     android:layout_width="match_parent"

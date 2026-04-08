@@ -28,6 +28,7 @@
         <activity android:name=".CounsellorSearchActivity" />
         <activity android:name=".AdminDashboardActivity" />
         <activity android:name=".AdminEditUserActivity" />
+        <activity android:name=".AppointmentRequestsActivity" />
 
         <activity
             android:name=".LoginActivity"
