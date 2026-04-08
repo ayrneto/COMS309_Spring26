@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:layout_marginBottom="16dp"
+    android:layout_marginStart="5dp"
+    android:elevation="4dp"
+    app:cardCornerRadius="20dp"
+    >
+
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/taskTitle"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/taskDescription"
+            android:layout_width="155dp"
+            android:layout_height="88dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="0dp"
+            android:text="This is a placeholder" />
+
+        <TextView
+            android:id="@+id/taskDueDate"
+            android:background="@drawable/dark_green_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="28dp"
+            android:text="Due: 2026-03-15"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="10dp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
