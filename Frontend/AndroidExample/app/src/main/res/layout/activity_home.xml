@@ -12,7 +12,6 @@
         android:layout_height="match_parent"
         android:background="#F5F7F6">
 
-        <!-- Top bar -->
         <androidx.cardview.widget.CardView
             android:id="@+id/topBar"
             android:layout_width="0dp"
@@ -58,7 +57,6 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Welcome text -->
         <TextView
             android:id="@+id/tvWelcome"
             android:layout_width="0dp"
@@ -139,6 +137,29 @@
             android:orientation="vertical"
             android:paddingTop="8dp">
 
+            <!-- Find a Counselor -->
+            <LinearLayout
+                android:id="@+id/drawerItemFindCounsellor"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Find a Counselor"
+                    android:textSize="16sp"
+                    android:textColor="#1B1B1B"
+                    android:fontFamily="@font/alata" />
+
+            </LinearLayout>
+
             <!-- Worry Notes -->
             <LinearLayout
                 android:id="@+id/drawerItemWorryNotes"
@@ -210,13 +231,13 @@
 
         </LinearLayout>
 
-        <!-- Divider above logout -->
+        <!-- Divider -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#E0E0E0" />
 
-        <!-- Logout pinned at bottom -->
+        <!-- Logout -->
         <LinearLayout
             android:id="@+id/drawerItemLogout"
             android:layout_width="match_parent"

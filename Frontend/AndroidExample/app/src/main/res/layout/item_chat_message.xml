@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    item_chat_message.xml
-    Single row in the chat RecyclerView.
-    ChatAdapter shows layoutSent (right) or layoutReceived (left) depending
-    on whether the message belongs to the current user.
--->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -51,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textSize="10sp"
-            android:textColor="#9BB5A7"
+            android:textColor="#6B6B6B"
             android:layout_marginTop="2dp"
             android:layout_marginEnd="4dp" />
 
@@ -67,13 +61,12 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="64dp">
 
-        <!-- Optional sender name — shown for group chats; hidden 1:1 -->
         <TextView
             android:id="@+id/tvSenderName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="11sp"
-            android:textColor="#9BB5A7"
+            android:textColor="#4A6E60"
             android:textStyle="bold"
             android:layout_marginBottom="2dp"
             android:layout_marginStart="4dp" />
@@ -107,7 +100,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:textSize="10sp"
-            android:textColor="#9BB5A7"
+            android:textColor="#6B6B6B"
             android:layout_marginTop="2dp"
             android:layout_marginStart="4dp" />
 

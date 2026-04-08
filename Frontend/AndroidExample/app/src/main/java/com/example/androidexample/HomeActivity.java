@@ -27,17 +27,23 @@ public class HomeActivity extends AppCompatActivity {
         drawerLayout = findViewById(R.id.drawerLayout);
 
         // Welcome text
-        TextView tvWelcome = findViewById(R.id.tvWelcome);
-        tvWelcome.setText("Welcome" + (name.isEmpty() ? "" : ",\n" + name));
+        ((TextView) findViewById(R.id.tvWelcome))
+                .setText("Welcome" + (name.isEmpty() ? "" : ",\n" + name));
 
         // Drawer header
-        ((TextView) findViewById(R.id.drawerName)).setText(
-                name.isEmpty() ? "Hello!" : "Hi, " + name);
+        ((TextView) findViewById(R.id.drawerName))
+                .setText(name.isEmpty() ? "Hello!" : "Hi, " + name);
         ((TextView) findViewById(R.id.drawerEmail)).setText(email);
 
         // Hamburger
         ((ImageButton) findViewById(R.id.btnHamburger))
                 .setOnClickListener(v -> drawerLayout.open());
+
+        // ── Find a Counselor ──────────────────────────────────────────────────
+        findViewById(R.id.drawerItemFindCounsellor).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, CounsellorSearchActivity.class));
+        });
 
         // ── Worry Notes ───────────────────────────────────────────────────────
         findViewById(R.id.drawerItemWorryNotes).setOnClickListener(v -> {
@@ -50,7 +56,8 @@ public class HomeActivity extends AppCompatActivity {
             drawerLayout.close();
             long assignedCounselorId = prefs.getLong("ASSIGNED_COUNSELOR_ID", -1L);
             if (assignedCounselorId == -1L) {
-                Toast.makeText(this, "No counselor assigned yet", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,
+                        "No counselor assigned yet — book one first!", Toast.LENGTH_SHORT).show();
                 return;
             }
             Intent intent = new Intent(this, ChatActivity.class);

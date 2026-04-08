@@ -24,7 +24,7 @@
         <activity android:name=".CounselorProfileActivity" />
         <activity android:name=".CounselorEditProfileActivity" />
         <activity android:name=".ChatActivity" />
-        <!-- <activity android:name=".LoginActivity" /> -->
+        <activity android:name=".CounsellorSearchActivity" />
         <activity
             android:name=".LoginActivity"
             android:exported="true">
