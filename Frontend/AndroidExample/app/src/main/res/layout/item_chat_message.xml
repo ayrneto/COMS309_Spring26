@@ -13,29 +13,30 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:orientation="vertical"
-        android:layout_marginStart="64dp"
-        android:layout_marginEnd="8dp">
+        android:layout_marginStart="72dp"
+        android:layout_marginEnd="12dp">
 
         <androidx.cardview.widget.CardView
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="#4A6E60">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="#2F6F5E">
 
             <TextView
                 android:id="@+id/tvSentMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:fontFamily="@font/alata"
-                android:maxWidth="260dp" />
+                android:maxWidth="260dp"
+                android:lineSpacingExtra="2dp" />
 
         </androidx.cardview.widget.CardView>
 
@@ -46,7 +47,7 @@
             android:layout_gravity="end"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="3dp"
             android:layout_marginEnd="4dp">
 
             <TextView
@@ -54,9 +55,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="10sp"
-                android:textColor="#6B6B6B" />
+                android:textColor="#8AAAA0" />
 
-            <!-- Read receipt: "✓✓ Read" or "✓ Sent" -->
             <TextView
                 android:id="@+id/tvReadReceipt"
                 android:layout_width="wrap_content"
@@ -77,8 +77,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="64dp">
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="72dp">
 
         <TextView
             android:id="@+id/tvSenderName"
@@ -94,22 +94,23 @@
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="1dp"
             app:cardBackgroundColor="#FFFFFF">
 
             <TextView
                 android:id="@+id/tvReceivedMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
                 android:textColor="#1B1B1B"
                 android:textSize="15sp"
                 android:fontFamily="@font/alata"
-                android:maxWidth="260dp" />
+                android:maxWidth="260dp"
+                android:lineSpacingExtra="2dp" />
 
         </androidx.cardview.widget.CardView>
 
@@ -119,8 +120,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:textSize="10sp"
-            android:textColor="#6B6B6B"
-            android:layout_marginTop="2dp"
+            android:textColor="#8AAAA0"
+            android:layout_marginTop="3dp"
             android:layout_marginStart="4dp" />
 
     </LinearLayout>

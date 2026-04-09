@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_green_background">
+    android:background="@drawable/chat_background">
 
     <!-- Top bar -->
     <androidx.cardview.widget.CardView
@@ -36,7 +36,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
-            <!-- Name + availability stacked vertically in centre -->
+            <!-- Name + availability stacked -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -60,7 +60,6 @@
                     android:ellipsize="end"
                     android:maxLines="1" />
 
-                <!-- Counsellor availability status -->
                 <TextView
                     android:id="@+id/tvAvailabilityStatus"
                     android:layout_width="wrap_content"
@@ -72,7 +71,7 @@
 
             </LinearLayout>
 
-            <!-- WS connection status on the right -->
+            <!-- WS connection status -->
             <TextView
                 android:id="@+id/tvOnlineStatus"
                 android:layout_width="wrap_content"
@@ -92,7 +91,7 @@
         android:id="@+id/recyclerMessages"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingTop="8dp"
+        android:paddingTop="12dp"
         android:paddingBottom="8dp"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
@@ -110,7 +109,7 @@
         android:layout_height="wrap_content"
         android:text=""
         android:textSize="12sp"
-        android:textColor="#9BB5A7"
+        android:textColor="#6B9E8A"
         android:fontFamily="@font/alata"
         android:paddingStart="16dp"
         android:paddingBottom="4dp"
