@@ -76,6 +76,15 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Get user by ID", description = "Fetch user using unique ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found"),
