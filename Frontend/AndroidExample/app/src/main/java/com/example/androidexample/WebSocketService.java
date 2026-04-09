@@ -80,6 +80,12 @@ public class WebSocketService extends Service {
         try {
             JSONObject json = new JSONObject(message);
 
+            // Check if this is a task assignment event
+            String eventType = json.optString("eventType", "");
+            if (!eventType.equals("TASK_ASSIGNED")) {
+                return; // Ignore other event types
+            }
+
             long taskId = json.getLong("taskId");
             String title = json.getString("title");
             String description = json.getString("description");
