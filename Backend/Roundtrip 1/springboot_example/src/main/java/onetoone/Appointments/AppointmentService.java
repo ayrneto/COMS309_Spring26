@@ -103,6 +103,8 @@ public class AppointmentService {
         r.timeSlot = a.getTimeSlot();
         r.notes = a.getNotes();
         r.status = a.getStatus();
+        r.userName       = a.getUser().getName();
+        r.counsellorName = a.getCounsellor().getName();
         return r;
     }
 }
