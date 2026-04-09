@@ -30,11 +30,11 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_media_previous"
-                android:tint="#FFFFFF"
                 android:contentDescription="Back"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:tint="#FFFFFF" />
 
             <!-- Name + availability stacked -->
             <LinearLayout
