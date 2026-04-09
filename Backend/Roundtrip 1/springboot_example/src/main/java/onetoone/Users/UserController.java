@@ -1,15 +1,16 @@
 package onetoone.Users;
 
 import java.util.List;
-import onetoone.Users.LoginResponse;
+
+import onetoone.Assignments.UserCounsellorAssignmentRepository;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import onetoone.Counsellors.CounsellorProfile;
 import onetoone.Counsellors.CounsellorProfileController;
 import onetoone.Counsellors.CounsellorProfileRepository;
 import onetoone.Counsellors.CounsellorStatus;
 import onetoone.Notification.NotificationService;
+import onetoone.realtime_chat.ChatMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,10 +43,19 @@ public class UserController {
     UserRepository userRepository;
 
     @Autowired
+    DailyCheckInRepository dailyCheckInRepository;
+
+    @Autowired
     CounsellorProfileRepository counsellorProfileRepository;
 
     @Autowired
     NotificationService notificationService;
+
+    @Autowired
+    ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    UserCounsellorAssignmentRepository assignmentRepository;
 
     CounsellorProfileController counsellorProfileController;
     CounsellorProfile counsellorProfile;
@@ -76,6 +86,92 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/{userId}/checkins")
+    public ResponseEntity<List<DailyCheckIn>> getAllCheckIns(@PathVariable Long userId) {
+
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        List<DailyCheckIn> checkIns = dailyCheckInRepository.findByUserId(userId);
+
+        return ResponseEntity.ok(checkIns);
+    }
+
+    @PutMapping("/checkins/{checkInId}")
+    public ResponseEntity<DailyCheckIn> updateCheckIn(
+            @PathVariable Long checkInId,
+            @RequestBody Map<String, Object> body) {
+
+        DailyCheckIn checkIn = dailyCheckInRepository.findById(checkInId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Check-in not found"));
+
+        // Validate rating
+        if (!body.containsKey("rating")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating is required (1-5)");
+        }
+
+        int rating;
+        try {
+            rating = Integer.parseInt(body.get("rating").toString());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be a number");
+        }
+
+        if (rating < 1 || rating > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5");
+        }
+
+        // Update fields
+        checkIn.setRating(rating);
+
+        if (body.containsKey("description")) {
+            checkIn.setDescription(body.get("description").toString());
+        }
+
+        if (body.containsKey("reminderTime")) {
+            checkIn.setReminderTime(body.get("reminderTime").toString());
+        }
+
+        if (body.containsKey("date")) {
+            try {
+                checkIn.setDate(LocalDate.parse(body.get("date").toString()));
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date format");
+            }
+        }
+
+        dailyCheckInRepository.save(checkIn);
+
+        return ResponseEntity.ok(checkIn);
+    }
+
+    @DeleteMapping("/checkins/{checkInId}")
+    public ResponseEntity<Void> deleteCheckIn(@PathVariable Long checkInId) {
+
+        DailyCheckIn checkIn = dailyCheckInRepository.findById(checkInId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Check-in not found"));
+
+        dailyCheckInRepository.delete(checkIn);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        // Delete assignments where this user is the patient or the counsellor
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Get user by ID", description = "Fetch user using unique ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found"),
@@ -96,63 +192,76 @@ public class UserController {
      * POST /users/{id}/checkin
      * Body: { "anxietyLevel": 7, "note": "Feeling stressed about exams" }
      */
-    @PostMapping("/{id}/checkin")
-    public ResponseEntity<?> dailyCheckIn(
-            @PathVariable Long id,
+    @PostMapping("/users/{userId}/checkins")
+    public ResponseEntity<?> createCheckIn(
+            @PathVariable Long userId,
             @RequestBody Map<String, Object> body) {
 
-        // Validate user exists
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        // ✅ Validate user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
 
-        // Validate anxiety level is present
-        if (!body.containsKey("anxietyLevel")) {
+        // ✅ Validate rating
+        if (!body.containsKey("rating")) {
             return ResponseEntity.badRequest()
-                    .body("{\"message\":\"anxietyLevel is required (1-10)\"}");
+                    .body("{\"message\":\"rating is required (1-5)\"}");
         }
 
-        int anxietyLevel;
+        int rating;
         try {
-            anxietyLevel = Integer.parseInt(body.get("anxietyLevel").toString());
+            rating = Integer.parseInt(body.get("rating").toString());
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest()
-                    .body("{\"message\":\"anxietyLevel must be a number\"}");
+                    .body("{\"message\":\"rating must be a number\"}");
         }
 
-        // Validate range
-        if (anxietyLevel < 1 || anxietyLevel > 10) {
+        if (rating < 1 || rating > 5) {
             return ResponseEntity.badRequest()
-                    .body("{\"message\":\"anxietyLevel must be between 1 and 10\"}");
+                    .body("{\"message\":\"rating must be between 1 and 5\"}");
         }
 
-        String note = body.containsKey("note") ? body.get("note").toString() : "";
-        String anxietyCategory;
-        String message;
 
-        if (anxietyLevel <= 3) {
-            anxietyCategory = "LOW";
-            message = "Your anxiety level is low today. Keep it up!";
-        } else if (anxietyLevel <= 6) {
-            anxietyCategory = "MEDIUM";
-            message = "Your anxiety level is moderate. Remember to take breaks and breathe.";
-        } else {
-            anxietyCategory = "HIGH";
-            message = "Your anxiety level is high. Please reach out to your counsellor for support.";
+        String description = body.containsKey("description")
+                ? body.get("description").toString()
+                : "";
+
+        String reminderTime = body.containsKey("reminderTime")
+                ? body.get("reminderTime").toString()
+                : null;
+
+        // ✅ Validate & parse date
+        if (!body.containsKey("date")) {
+            return ResponseEntity.badRequest()
+                    .body("{\"message\":\"date is required (yyyy-MM-dd)\"}");
         }
 
-        // Build response
-        Map<String, Object> response = new HashMap<>();
-        response.put("userId", id);
-        response.put("userName", user.getName());
-        response.put("date", LocalDate.now().toString());
-        response.put("anxietyLevel", anxietyLevel);
-        response.put("anxietyCategory", anxietyCategory);
-        response.put("note", note);
-        response.put("message", message);
+        LocalDate date;
+        try {
+            date = LocalDate.parse(body.get("date").toString());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body("{\"message\":\"Invalid date format (yyyy-MM-dd)\"}");
+        }
 
-        return ResponseEntity.ok(response);
+        // ✅ OPTIONAL: Prevent duplicate check-ins for same day
+        if (dailyCheckInRepository.findByUserIdAndDate(userId, date).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("{\"message\":\"Check-in already exists for this date\"}");
+        }
+
+        // ✅ Create entity
+        DailyCheckIn checkIn = new DailyCheckIn();
+        checkIn.setUser(user);
+        checkIn.setRating(rating);
+        checkIn.setDescription(description);
+        checkIn.setReminderTime(reminderTime);
+        checkIn.setDate(date);
+
+        dailyCheckInRepository.save(checkIn);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(checkIn);
     }
-
 
 
     @Operation(summary = "Register user", description = "Creates a new user account")
@@ -228,6 +337,9 @@ public class UserController {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
+
+        if(!user.isActive())
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account deactivated");
 
         if (!user.getPassword().equals(req.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");

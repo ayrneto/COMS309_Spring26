@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class WorryNotes extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,44 +34,39 @@ public class WorryNotes extends AppCompatActivity {
 
         //Getting global values:
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-        String userIdString = prefs.getString("USER_ID", "-1");
-        Long userId = Long.parseLong(userIdString);
+        Long userId = Long.parseLong(prefs.getString("USER_ID", "-1"));
+
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
+        // Add note button
         FrameLayout btnAddWorryNote = findViewById(R.id.btnAddWorryNote);
+        btnAddWorryNote.setOnClickListener(view ->
+                startActivity(new Intent(WorryNotes.this, AddWorryActivity.class))
+        );
+
         fetchUserNotes(userId);
-
-        btnAddWorryNote.setOnClickListener(view -> {
-            Intent intent = new Intent(WorryNotes.this, AddWorryActivity.class);
-            startActivity(intent);
-        });
-
     }
 
-    private void fetchUserNotes(Long userId){
+    private void fetchUserNotes(Long userId) {
         String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/notes";
 
         JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET,
-                url,
-                null,
-                response -> {
-                    displayNotes(response);
-                },
-                error -> {
-                    Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();
-                }
+                Request.Method.GET, url, null,
+                response -> displayNotes(response),
+                error -> Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show()
         );
 
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
     }
 
-
-    private void displayNotes(JSONArray notes){
+    private void displayNotes(JSONArray notes) {
         GridLayout container = findViewById(R.id.worriesContainer);
         container.removeAllViews(); // This resets all the worries in view
 
-        try{
-            for(int i = notes.length() - 1; i >= 0; i--){
+        try {
+            for (int i = notes.length() - 1; i >= 0; i--) {
                 JSONObject note = notes.getJSONObject(i);
 
                 long noteId = note.getLong("id");
@@ -78,34 +74,26 @@ public class WorryNotes extends AppCompatActivity {
                 String content = note.getString("content");
                 String dueDate = note.getString("dueDate");
                 String label = note.getString("label");
-                // Placeholders waiting for backend
-                //String dueDate = "No date";
-                //String label = "Label";
+
 
                 addNoteCard(container, title, content, dueDate, label, noteId);
             }
-        }catch(JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private void addNoteCard(GridLayout container, String title, String content, String dueDate, String label, long noteId){
+    private void addNoteCard(GridLayout container, String title, String content,
+                             String dueDate, String label, long noteId) {
         View cardView = getLayoutInflater().inflate(R.layout.note_card, container, false);
 
-        TextView titleView = cardView.findViewById(R.id.worryTitle);
-        TextView contentView = cardView.findViewById(R.id.worryContent);
-        TextView dueDateView = cardView.findViewById(R.id.worryDueDate);
-        TextView labelView = cardView.findViewById(R.id.worryLabel);
+        ((TextView) cardView.findViewById(R.id.worryTitle)).setText(title);
+        ((TextView) cardView.findViewById(R.id.worryContent)).setText(content);
+        ((TextView) cardView.findViewById(R.id.worryDueDate)).setText("Due: " + dueDate);
+        ((TextView) cardView.findViewById(R.id.worryLabel)).setText(label);
 
-        titleView.setText(title);
-        contentView.setText(content);
-        dueDateView.setText("Due: " + dueDate);
-        labelView.setText(label);
-
-        // Makes the card summary clickable
-        cardView.setOnClickListener(v -> {
-            showEditDeleteDialog(noteId, title, content, dueDate, label);
-        });
+        cardView.setOnClickListener(v ->
+                showEditDeleteDialog(noteId, title, content, dueDate, label));
 
         container.addView(cardView);
     }

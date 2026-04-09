@@ -202,7 +202,7 @@ public class CheckInActivity extends AppCompatActivity {
 
         if (checkInId == null) {
             // Create new
-            url = ApiConstants.BASE_URL + "/api/users/" + userId + "/checkins";
+            url = ApiConstants.BASE_URL + "/users/users/" + userId + "/checkins";
             method = Request.Method.POST;
         } else {
             // Update existing

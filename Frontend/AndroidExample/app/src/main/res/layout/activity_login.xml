@@ -12,7 +12,7 @@
         android:id="@+id/tvBrand"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Anti Anxiety"
+        android:text="Calmify"
         android:textStyle="bold"
         android:textSize="18sp"
         android:textColor="@color/aa_primary"
