@@ -338,6 +338,9 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
+        if(!user.isActive())
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account deactivated");
+
         if (!user.getPassword().equals(req.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
