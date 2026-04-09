@@ -52,10 +52,11 @@ public class UserController {
     private String success = "{\"message\":\"success\"}";
     private String failure = "{\"message\":\"failure\"}";
 
-//    @GetMapping(path = "/LoginPage/user")
-//    List<User> getAllUsers(){
-//        return userRepository.findAll();
-//    }
+    @Operation(summary = "Get all users", description = "Admin only - returns all users")
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
      @Operation(summary = "Get user by email", description = "Fetch user details using email")
      @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found"),

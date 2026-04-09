@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AppointmentService {
@@ -24,6 +26,7 @@ public class AppointmentService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // Book appointment
     public AppointmentResponse bookAppointment(AppointmentRequest req) {
         User user = userRepository.findById(req.userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + req.userId));
@@ -40,13 +43,39 @@ public class AppointmentService {
         appointment.setStatus("PENDING");
 
         Appointment saved = appointmentRepository.save(appointment);
-
-        // Notify counsellor via WebSocket if they are online
         notifyCounsellor(req);
-
         return toResponse(saved);
     }
 
+    // Get all appointments for a counsellor (PENDING + CONFIRMED + CANCELLED)
+    public List<AppointmentResponse> getAppointmentsByCounsellor(Long counsellorId) {
+        return appointmentRepository.findByCounsellor_Id(counsellorId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // Get only CONFIRMED appointments for counsellor (chat list)
+    public List<AppointmentResponse> getAcceptedByCounsellor(Long counsellorId) {
+        return appointmentRepository.findByCounsellor_IdAndStatus(counsellorId, "CONFIRMED")
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // Get only CONFIRMED appointments for user (chat list)
+    public List<AppointmentResponse> getAcceptedByUser(Long userId) {
+        return appointmentRepository.findByUser_IdAndStatus(userId, "CONFIRMED")
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // Accept or decline
+    public AppointmentResponse updateStatus(Long appointmentId, String status) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
+
+        appointment.setStatus(status.toUpperCase());
+        Appointment saved = appointmentRepository.save(appointment);
+        return toResponse(saved);
+    }
+
+    // WebSocket notify counsellor on new booking
     private void notifyCounsellor(AppointmentRequest req) {
         try {
             Session counsellorSession = ChatServer.userSessionMap.get(req.counsellorId);
@@ -58,11 +87,9 @@ public class AppointmentService {
                 notification.put("timeSlot", req.timeSlot);
                 notification.put("notes", req.notes);
 
-                String json = objectMapper.writeValueAsString(notification);
-                counsellorSession.getBasicRemote().sendText(json);
+                counsellorSession.getBasicRemote().sendText(objectMapper.writeValueAsString(notification));
             }
         } catch (Exception e) {
-            // Don't fail the booking if notification fails
             System.err.println("[AppointmentService] WS notify failed: " + e.getMessage());
         }
     }
