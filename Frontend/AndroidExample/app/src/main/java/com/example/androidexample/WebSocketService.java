@@ -80,11 +80,8 @@ public class WebSocketService extends Service {
         try {
             JSONObject json = new JSONObject(message);
 
-            // Check if this is a task assignment event
+            // Check event type
             String eventType = json.optString("eventType", "");
-            if (!eventType.equals("TASK_ASSIGNED")) {
-                return; // Ignore other event types
-            }
 
             long taskId = json.getLong("taskId");
             String title = json.getString("title");
@@ -92,14 +89,65 @@ public class WebSocketService extends Service {
             String dueDate = json.optString("dueDate", "No due date");
             String status = json.optString("status", "Not Started");
 
-            showNotification(taskId, title, description, dueDate, status);
+            if (eventType.equals("TASK_ASSIGNED")) {
+                showNotification(taskId, title, description, dueDate, status);
+            } else if (eventType.equals("TASK_REMINDER")) {
+                showReminderNotification(taskId, title, description, dueDate);
+            }
 
         } catch (JSONException e) {
             Log.e(TAG, "Error parsing notification: " + e.getMessage());
         }
     }
 
+    private void showReminderNotification(long taskId, String title, String description, String dueDate) {
+        Intent intent = new Intent(this, TaskDetailsActivity.class);
+        intent.putExtra("taskId", taskId);
+        intent.putExtra("title", title);
+        intent.putExtra("description", description);
+        intent.putExtra("dueDate", dueDate);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                (int) taskId + 1000,  // Different request code for reminders
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "TASK_CHANNEL")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Task Reminder")
+                .setContentText(title + " - Due: " + dueDate)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(description))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "TASK_CHANNEL",
+                    "Task Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        notificationManager.notify((int) taskId + 1000, builder.build());
+    }
+
     private void showNotification(long taskId, String title, String description, String dueDate, String status) {
+        // Check notification permission (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Notification permission not granted");
+                return;
+            }
+        }
+
         Intent intent = new Intent(this, TaskDetailsActivity.class);
         intent.putExtra("taskId", taskId);
         intent.putExtra("title", title);
