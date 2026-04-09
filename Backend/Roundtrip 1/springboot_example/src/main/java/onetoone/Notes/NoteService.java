@@ -19,12 +19,14 @@ public class NoteService {
     @Autowired
     UserRepository userRepository;
 
-    public Note createNote(Long userId, NoteCreateRequest req) {  // ← NoteCreateRequest not Note
+    public Note createNote(Long userId, NoteCreateRequest req) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId));
-        Note note = new Note();                  // ← create fresh Note from request
+        Note note = new Note();
         note.setTitle(req.getTitle());
         note.setContent(req.getContent());
+        note.setLabel(req.getLabel());         // NEW
+        note.setDueDate(req.getDueDate());     // NEW
         note.setUser(user);
         return noteRepository.save(note);
     }
@@ -41,10 +43,12 @@ public class NoteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found: " + noteId));
     }
 
-    public Note updateNote(Long noteId, NoteUpdateRequest req) {  // ← NoteUpdateRequest not Note
+    public Note updateNote(Long noteId, NoteUpdateRequest req) {
         Note note = getNote(noteId);
         if (req.getTitle() != null) note.setTitle(req.getTitle());
         if (req.getContent() != null) note.setContent(req.getContent());
+        if (req.getLabel() != null) note.setLabel(req.getLabel());       // NEW
+        if (req.getDueDate() != null) note.setDueDate(req.getDueDate()); // NEW
         return noteRepository.save(note);
     }
 
