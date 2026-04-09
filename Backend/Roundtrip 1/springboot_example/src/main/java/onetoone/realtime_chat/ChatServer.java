@@ -115,19 +115,38 @@ public class ChatServer {
             return;
         }
 
-        // ── REGULAR MESSAGE ───────────────────────────────────────────────────
+        // ── REGULAR MESSAGE (text or file) ────────────────────────────────────
 
-        // 2. Save to database
+        // Extract optional file fields — null for plain text messages
+        String fileUrl  = dto.getFileUrl();
+        String fileName = dto.getFileName();
+        String fileType = dto.getFileType();
+
+        boolean isFileMessage = fileUrl != null && !fileUrl.isEmpty();
+        if (isFileMessage) {
+            logger.info("[onMessage] File message from " + senderId
+                    + " → " + dto.getReceiverId()
+                    + " file=" + fileName + " (" + fileType + ")");
+        }
+
+        // 2. Save to database (with file fields if present)
         ChatMessage saved;
         try {
-            saved = chatService.saveMessage(dto.getSenderId(), dto.getReceiverId(), dto.getContent());
+            saved = chatService.saveMessage(
+                    dto.getSenderId(),
+                    dto.getReceiverId(),
+                    dto.getContent(),
+                    fileUrl,
+                    fileName,
+                    fileType
+            );
         } catch (Exception e) {
             logger.error("[onMessage] DB save failed: " + e.getMessage());
             sendToUser(senderId, buildError("Failed to save message"));
             return;
         }
 
-        // 3. Build response JSON
+        // 3. Build response JSON (ChatMessageResponse now includes file fields)
         String responseJson = objectMapper.writeValueAsString(new ChatMessageResponse(saved));
 
         // 4. Forward to receiver if online
@@ -152,7 +171,6 @@ public class ChatServer {
 
         logger.info("[onClose] user " + senderId + " disconnected");
 
-        // Clear any stuck typing indicator on the other side
         Map<String, Object> offlinePayload = new HashMap<>();
         offlinePayload.put("type", "typing");
         offlinePayload.put("senderId", senderId);
@@ -176,25 +194,20 @@ public class ChatServer {
     // ── Command handler ───────────────────────────────────────────────────────
 
     private void handleCommand(String command, Long senderId, Long receiverId) {
-        // grab first word only so "/help extra args" still works
         String cmd = command.split("\\s+")[0].toLowerCase();
 
         switch (cmd) {
-
             case "/help":
-                // Send the help text back to sender only — never stored in DB
                 sendToUser(senderId, buildSystem(HELP_TEXT));
                 logger.info("[command] /help used by user " + senderId);
                 break;
 
             case "/clear":
-                // Tell the client to wipe its local view — no DB rows are deleted
                 sendToUser(senderId, buildCommand("clear", null));
                 logger.info("[command] /clear used by user " + senderId);
                 break;
 
             case "/status":
-                // Report connection status of both sides
                 boolean senderOnline   = userSessionMap.containsKey(senderId);
                 boolean receiverOnline = userSessionMap.containsKey(receiverId);
                 String statusMsg = "You are " + (senderOnline ? "online" : "offline") +
@@ -205,7 +218,6 @@ public class ChatServer {
                 break;
 
             case "/ping":
-                // Quick reachability check for the other user
                 boolean isOnline = userSessionMap.containsKey(receiverId);
                 String pingResult = isOnline
                         ? "User " + receiverId + " is online."
@@ -223,10 +235,6 @@ public class ChatServer {
 
     // ── Payload builders ──────────────────────────────────────────────────────
 
-    /**
-     * System info bubble — shown only to the recipient, never saved to DB.
-     * { "type": "system", "text": "..." }
-     */
     private String buildSystem(String text) {
         try {
             Map<String, Object> m = new HashMap<>();
@@ -238,10 +246,6 @@ public class ChatServer {
         }
     }
 
-    /**
-     * Command action for the frontend to act on (e.g. wipe local view).
-     * { "type": "command", "action": "clear", "data": null }
-     */
     private String buildCommand(String action, Object data) {
         try {
             Map<String, Object> m = new HashMap<>();

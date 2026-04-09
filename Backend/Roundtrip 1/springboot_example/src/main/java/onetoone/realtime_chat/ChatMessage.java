@@ -26,6 +26,19 @@ public class ChatMessage {
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
+    // ── File attachment fields (all nullable — regular text messages leave these null) ──
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "file_type")
+    private String fileType;
+
+    // ── Getters / Setters ─────────────────────────────────────────────────────
+
     public Long getId() { return id; }
 
     public User getSender() { return sender; }
@@ -39,4 +52,13 @@ public class ChatMessage {
 
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
+
+    public String getFileUrl() { return fileUrl; }
+    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+
+    public String getFileType() { return fileType; }
+    public void setFileType(String fileType) { this.fileType = fileType; }
 }
