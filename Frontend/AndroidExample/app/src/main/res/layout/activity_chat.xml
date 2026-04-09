@@ -135,7 +135,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/offwhite_background"
+            android:background="@drawable/chat_input_bg"
             android:fontFamily="@font/alata"
             android:hint="Type a message…"
             android:textSize="15sp"
