@@ -12,6 +12,11 @@ import java.util.Optional;
 import onetoone.Users.User;
 import onetoone.Users.UserRepository;
 
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 /**
  * @author Boudhayan Chakraborty
  *
@@ -26,6 +31,7 @@ import onetoone.Users.UserRepository;
 
 @RestController
 @RequestMapping("/api/counsellors")
+@Tag(name = "Counsellor Profile Controller", description = "APIs for managing counsellor profiles")
 public class CounsellorProfileController {
     @Autowired
     private UserRepository userRepository;
@@ -39,11 +45,20 @@ public class CounsellorProfileController {
         this.service = service;
     }
 
+
+    @Operation(summary = "List all counsellors", description = "Retrieves all counsellor profiles")
+    @ApiResponse(responseCode = "200", description = "Counsellors retrieved successfully")
     @GetMapping
     public List<CounsellorProfileResponse> listAll() {
         return service.listAllCounsellors();
     }
 
+
+    @Operation(summary = "Update counsellor status", description = "Updates availability status (AVAILABLE, BUSY, OFFLINE)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Counsellor not found")
+    })
     @PutMapping("/{userId}/update/{counsellorstatus}")
     public ResponseEntity<?> updateStatus(@PathVariable long userId,
                                           @PathVariable CounsellorStatus counsellorstatus) {
@@ -60,6 +75,13 @@ public class CounsellorProfileController {
         return ResponseEntity.ok(counsellor.getStatus());
     }
 
+
+    @Operation(summary = "Update counsellor rating", description = "Adds a new rating and recalculates average rating")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Rating updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Counsellor not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/{userId}/rating/{rating}")
     public ResponseEntity<?> updateRating(@PathVariable long userId,
                                           @PathVariable double rating) {
@@ -92,6 +114,12 @@ public class CounsellorProfileController {
         }
     }
 
+
+    @Operation(summary = "Update profile picture", description = "Updates counsellor profile picture URL")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile picture updated"),
+            @ApiResponse(responseCode = "404", description = "Counsellor not found")
+    })
     @PutMapping("/{userId}/profilePicture/{profilePictureURL}")
     public ResponseEntity<?> updateProfilepic(@PathVariable long userId,
                                               @PathVariable String profilePictureURL) {
@@ -107,6 +135,13 @@ public class CounsellorProfileController {
         return ResponseEntity.ok("success");
     }
 
+
+
+    @Operation(summary = "Get counsellor profile", description = "Fetches profile details by user ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid user ID")
+    })
     @GetMapping("/{userId}/profile")
     public ResponseEntity<?> getProfileByUserId(@PathVariable Long userId) {
         try {
@@ -116,6 +151,12 @@ public class CounsellorProfileController {
         }
     }
 
+
+    @Operation(summary = "Create or update profile", description = "Creates or updates a counsellor profile")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile created/updated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PutMapping("/{id}/profile")
     public ResponseEntity<?> upsert(@PathVariable Long id,
                                     @RequestBody CounsellorProfile req) {
@@ -150,6 +191,12 @@ public class CounsellorProfileController {
         return "{\"message\":\"" + m.replace("\"", "'") + "\"}";
     }
 
+
+    @Operation(summary = "Update full profile", description = "Updates all profile fields for a counsellor")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Counsellor not found")
+    })
     @PutMapping("/{userId}/update")
     public String updateProfile(@PathVariable Long userId,
                                  @RequestBody CounsellorProfile req) {
