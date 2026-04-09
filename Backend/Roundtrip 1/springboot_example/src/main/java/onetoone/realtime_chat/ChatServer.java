@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -42,6 +43,14 @@ public class ChatServer {
 
     private final Logger logger = LoggerFactory.getLogger(ChatServer.class);
 
+    // ── Commands ──────────────────────────────────────────────────────────────
+    private static final String HELP_TEXT =
+            "Available commands:\n" +
+                    "  /help    — Show this list\n" +
+                    "  /clear   — Clear chat history from your view\n" +
+                    "  /status  — Show your connection status\n" +
+                    "  /ping    — Check if the other user is online";
+
     @OnOpen
     public void onOpen(Session session,
                        @PathParam("senderId") Long senderId,
@@ -52,8 +61,7 @@ public class ChatServer {
         userSessionMap.put(senderId, session);
         sessionUserMap.put(session, senderId);
 
-        sendToUser(senderId, "{\"system\": \"Connected as user " + senderId + "\"}");
-
+        sendToUser(senderId, buildSystem("Connected as user " + senderId));
         logger.info("[onOpen] Active sessions: " + userSessionMap.keySet());
     }
 
@@ -72,9 +80,42 @@ public class ChatServer {
             dto = objectMapper.readValue(messageJson, ChatMessageRequest.class);
         } catch (Exception e) {
             logger.error("[onMessage] Failed to parse JSON: " + e.getMessage());
-            sendToUser(senderId, "{\"error\": \"Invalid JSON format\"}");
+            sendToUser(senderId, buildError("Invalid JSON format"));
             return;
         }
+
+        String type = dto.getType() != null ? dto.getType() : "message";
+
+        // ── TYPING indicator ──────────────────────────────────────────────────
+        if ("typing".equals(type)) {
+            Map<String, Object> typingPayload = new HashMap<>();
+            typingPayload.put("type", "typing");
+            typingPayload.put("senderId", senderId);
+            typingPayload.put("isTyping", Boolean.TRUE.equals(dto.getIsTyping()));
+            forwardToReceiver(dto.getReceiverId(), typingPayload);
+            logger.info("[onMessage] Typing indicator from " + senderId
+                    + " → " + dto.getReceiverId() + " isTyping=" + dto.getIsTyping());
+            return;
+        }
+
+        // ── READ receipt ──────────────────────────────────────────────────────
+        if ("read".equals(type)) {
+            Map<String, Object> readPayload = new HashMap<>();
+            readPayload.put("type", "read");
+            readPayload.put("senderId", senderId);
+            forwardToReceiver(dto.getReceiverId(), readPayload);
+            logger.info("[onMessage] Read receipt from " + senderId + " → " + dto.getReceiverId());
+            return;
+        }
+
+        // ── COMMAND ───────────────────────────────────────────────────────────
+        String content = dto.getContent() != null ? dto.getContent().trim() : "";
+        if (content.startsWith("/")) {
+            handleCommand(content, senderId, receiverId);
+            return;
+        }
+
+        // ── REGULAR MESSAGE ───────────────────────────────────────────────────
 
         // 2. Save to database
         ChatMessage saved;
@@ -82,23 +123,22 @@ public class ChatServer {
             saved = chatService.saveMessage(dto.getSenderId(), dto.getReceiverId(), dto.getContent());
         } catch (Exception e) {
             logger.error("[onMessage] DB save failed: " + e.getMessage());
-            sendToUser(senderId, "{\"error\": \"Failed to save message\"}");
+            sendToUser(senderId, buildError("Failed to save message"));
             return;
         }
 
-        // 3. Build response JSON using response DTO
+        // 3. Build response JSON
         String responseJson = objectMapper.writeValueAsString(new ChatMessageResponse(saved));
 
-        // 4. Forward to receiver if they are online
-        Long targetReceiverId = dto.getReceiverId();
-        if (userSessionMap.containsKey(targetReceiverId)) {
-            Session receiverSession = userSessionMap.get(targetReceiverId);
+        // 4. Forward to receiver if online
+        if (userSessionMap.containsKey(receiverId)) {
+            Session receiverSession = userSessionMap.get(receiverId);
             if (receiverSession.isOpen()) {
                 receiverSession.getBasicRemote().sendText(responseJson);
-                logger.info("[onMessage] Forwarded to user " + targetReceiverId);
+                logger.info("[onMessage] Forwarded to user " + receiverId);
             }
         } else {
-            logger.info("[onMessage] User " + targetReceiverId + " not connected — saved to DB only");
+            logger.info("[onMessage] User " + receiverId + " not connected — saved to DB only");
         }
 
         // 5. Echo back to sender
@@ -112,6 +152,13 @@ public class ChatServer {
 
         logger.info("[onClose] user " + senderId + " disconnected");
 
+        // Clear any stuck typing indicator on the other side
+        Map<String, Object> offlinePayload = new HashMap<>();
+        offlinePayload.put("type", "typing");
+        offlinePayload.put("senderId", senderId);
+        offlinePayload.put("isTyping", false);
+        forwardToReceiver(receiverId, offlinePayload);
+
         userSessionMap.remove(senderId);
         sessionUserMap.remove(session);
     }
@@ -122,9 +169,100 @@ public class ChatServer {
                         @PathParam("receiverId") Long receiverId) {
 
         logger.error("[onError] user " + senderId + ": " + throwable.getMessage());
-
         userSessionMap.remove(senderId);
         sessionUserMap.remove(session);
+    }
+
+    // ── Command handler ───────────────────────────────────────────────────────
+
+    private void handleCommand(String command, Long senderId, Long receiverId) {
+        // grab first word only so "/help extra args" still works
+        String cmd = command.split("\\s+")[0].toLowerCase();
+
+        switch (cmd) {
+
+            case "/help":
+                // Send the help text back to sender only — never stored in DB
+                sendToUser(senderId, buildSystem(HELP_TEXT));
+                logger.info("[command] /help used by user " + senderId);
+                break;
+
+            case "/clear":
+                // Tell the client to wipe its local view — no DB rows are deleted
+                sendToUser(senderId, buildCommand("clear", null));
+                logger.info("[command] /clear used by user " + senderId);
+                break;
+
+            case "/status":
+                // Report connection status of both sides
+                boolean senderOnline   = userSessionMap.containsKey(senderId);
+                boolean receiverOnline = userSessionMap.containsKey(receiverId);
+                String statusMsg = "You are " + (senderOnline ? "online" : "offline") +
+                        ". User " + receiverId + " is " +
+                        (receiverOnline ? "online" : "offline") + ".";
+                sendToUser(senderId, buildSystem(statusMsg));
+                logger.info("[command] /status used by user " + senderId);
+                break;
+
+            case "/ping":
+                // Quick reachability check for the other user
+                boolean isOnline = userSessionMap.containsKey(receiverId);
+                String pingResult = isOnline
+                        ? "User " + receiverId + " is online."
+                        : "User " + receiverId + " is offline.";
+                sendToUser(senderId, buildSystem(pingResult));
+                logger.info("[command] /ping used by user " + senderId);
+                break;
+
+            default:
+                sendToUser(senderId, buildSystem(
+                        "Unknown command: " + cmd + ". Type /help for available commands."));
+                break;
+        }
+    }
+
+    // ── Payload builders ──────────────────────────────────────────────────────
+
+    /**
+     * System info bubble — shown only to the recipient, never saved to DB.
+     * { "type": "system", "text": "..." }
+     */
+    private String buildSystem(String text) {
+        try {
+            Map<String, Object> m = new HashMap<>();
+            m.put("type", "system");
+            m.put("text", text);
+            return objectMapper.writeValueAsString(m);
+        } catch (Exception e) {
+            return "{\"type\":\"system\",\"text\":\"" + text + "\"}";
+        }
+    }
+
+    /**
+     * Command action for the frontend to act on (e.g. wipe local view).
+     * { "type": "command", "action": "clear", "data": null }
+     */
+    private String buildCommand(String action, Object data) {
+        try {
+            Map<String, Object> m = new HashMap<>();
+            m.put("type", "command");
+            m.put("action", action);
+            m.put("data", data);
+            return objectMapper.writeValueAsString(m);
+        } catch (Exception e) {
+            return "{\"type\":\"command\",\"action\":\"" + action + "\"}";
+        }
+    }
+
+    private String buildError(String msg) {
+        try {
+            Map<String, Object> m = new HashMap<>();
+            m.put("type", "error");
+            m.put("text", msg);
+            return objectMapper.writeValueAsString(m);
+        } catch (Exception e) {
+            return "{\"type\":\"error\",\"text\":\"" + msg + "\"}";
+        }
     }
 
     private void sendToUser(Long userId, String message) {
@@ -135,6 +273,18 @@ public class ChatServer {
             } catch (IOException e) {
                 logger.error("[sendToUser] Failed for user " + userId + ": " + e.getMessage());
             }
+        }
+    }
+
+    private void forwardToReceiver(Long receiverId, Map<String, Object> payload) {
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            Session receiverSession = userSessionMap.get(receiverId);
+            if (receiverSession != null && receiverSession.isOpen()) {
+                receiverSession.getBasicRemote().sendText(json);
+            }
+        } catch (Exception e) {
+            logger.error("[forwardToReceiver] Failed for user " + receiverId + ": " + e.getMessage());
         }
     }
 }
