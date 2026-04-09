@@ -1,6 +1,8 @@
 package onetoone.Users;
 
 import java.util.List;
+
+import onetoone.Assignments.UserCounsellorAssignmentRepository;
 import onetoone.Users.LoginResponse;
 
 import jakarta.transaction.Transactional;
@@ -10,6 +12,7 @@ import onetoone.Counsellors.CounsellorProfileController;
 import onetoone.Counsellors.CounsellorProfileRepository;
 import onetoone.Counsellors.CounsellorStatus;
 import onetoone.Notification.NotificationService;
+import onetoone.realtime_chat.ChatMessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +50,12 @@ public class UserController {
     @Autowired
     NotificationService notificationService;
 
+    @Autowired
+    ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    UserCounsellorAssignmentRepository assignmentRepository;
+
     CounsellorProfileController counsellorProfileController;
     CounsellorProfile counsellorProfile;
     CounsellorStatus counsellorStatus;
@@ -77,10 +86,14 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
         if (!userRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
+
+        // Delete assignments where this user is the patient or the counsellor
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

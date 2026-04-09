@@ -13,4 +13,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             "ORDER BY m.sentAt ASC")
     List<ChatMessage> findConversation(@Param("userA") Long userA,
                                        @Param("userB") Long userB);
+
+    void deleteBySenderId(Long senderId);
+    void deleteByReceiverId(Long receiverId);
 }

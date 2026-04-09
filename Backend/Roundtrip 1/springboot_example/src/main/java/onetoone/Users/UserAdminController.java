@@ -1,6 +1,7 @@
 package onetoone.Users;
 
 import onetoone.Users.dto.CreateCounsellorRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +36,19 @@ public class UserAdminController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        try {
+            if (!userRepository.existsById(id)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
 
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            userRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User has related data");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting user");
         }
-
-        userRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 
     @Operation(
