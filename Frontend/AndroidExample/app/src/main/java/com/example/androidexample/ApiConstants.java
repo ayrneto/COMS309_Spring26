@@ -9,7 +9,7 @@ public class ApiConstants {
 
     public static final String SIGNUP       = BASE_URL + "/users/signup";
     public static final String LOGIN        = BASE_URL + "/users/login";
-    public static final String USERS        = BASE_URL + "/users";
+    public static final String USERS        = BASE_URL + "/api/admin/users";
     public static final String DELETE       = BASE_URL + "/users/";
     public static final String EDIT         = BASE_URL + "/api/admin/update/";
     public static final String ADMIN_DELETE = BASE_URL + "/api/admin/";
@@ -61,7 +61,7 @@ public class ApiConstants {
 //    public static final String WS_BASE_URL  = "ws://REDACTED";
 //    public static final String SIGNUP       = BASE_URL + "/users/signup";
 //    public static final String LOGIN        = BASE_URL + "/users/login";
-//    public static final String USERS        = BASE_URL + "/users";
+//    public static final String USERS        = BASE_URL + "/api/admin/users";
 //    public static final String DELETE       = BASE_URL + "/users/";
 //    public static final String EDIT         = BASE_URL + "/api/admin/update/";
 //    public static final String ADMIN_DELETE = BASE_URL + "/api/admin/";
