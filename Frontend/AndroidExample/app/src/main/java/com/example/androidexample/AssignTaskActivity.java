@@ -143,7 +143,7 @@ public class AssignTaskActivity extends AppCompatActivity{
         // Combine reminderDate and reminderTime
         String reminderDateTime = reminderDate + "T" + reminderTime + ":00Z";  // ISO format
 
-        String url = ApiConstants.BASE_URL + "/api/tasks";  // TODO: Check with backend for correct endpoint
+        String url = ApiConstants.BASE_URL + "/api/tasks/" ;  // TODO: Check with backend for correct endpoint
 
         JSONObject taskData = new JSONObject();
         try {
