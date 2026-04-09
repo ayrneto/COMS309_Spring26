@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONException;
@@ -23,26 +22,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AppointmentRequestsActivity
- *
- * Counselor sees all PENDING appointment requests.
- * They can Accept or Decline each one.
- *
- * On Accept:
- *   - PATCH /api/appointments/{id}/accept  → sets status to ACCEPTED
- *   - Saves the user's ID + name to SharedPreferences so Chat works
- *
- * On Decline:
- *   - PATCH /api/appointments/{id}/decline → sets status to DECLINED
- *
- * Launched from CounselorHomeActivity drawer → "Appointment Requests"
- *
- * Tell Shrey:
- *   GET  /api/appointments/counsellor/{counsellorId}  → list of appointments for this counselor
- *   PATCH /api/appointments/{id}/accept               → set status=ACCEPTED, create assignment
- *   PATCH /api/appointments/{id}/decline              → set status=DECLINED
- */
 public class AppointmentRequestsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerRequests;
@@ -78,15 +57,8 @@ public class AppointmentRequestsActivity extends AppCompatActivity {
 
     // ─────────────────────────────────────────────────────────────────────────
     // GET /api/appointments/counsellor/{counsellorId}
-    // Returns all appointments for this counselor (any status)
+    // Shrey's backend returns status as "PENDING" / "CONFIRMED" / "CANCELLED"
     // Frontend shows only PENDING ones
-    // Expected JSON array:
-    // [
-    //   { "id": 1, "userId": 3, "userName": "Test User 1",
-    //     "date": "2026-04-10", "timeSlot": "2:00 PM",
-    //     "notes": "Feeling anxious", "status": "PENDING" },
-    //   ...
-    // ]
     // ─────────────────────────────────────────────────────────────────────────
     private void fetchRequests() {
         String url = ApiConstants.BASE_URL +
@@ -128,46 +100,20 @@ public class AppointmentRequestsActivity extends AppCompatActivity {
 
     // ─────────────────────────────────────────────────────────────────────────
     // PATCH /api/appointments/{id}/accept
-    // Backend should:
-    //   1. Set appointment status = ACCEPTED
-    //   2. Create a UserCounsellorAssignment (userId ↔ counsellorId)
+    // Shrey's backend sets status = "CONFIRMED"
     // ─────────────────────────────────────────────────────────────────────────
     private void acceptRequest(AppointmentRequest r) {
         String url = ApiConstants.BASE_URL + "/api/appointments/" + r.id + "/accept";
 
         StringRequest req = new StringRequest(
                 Request.Method.PATCH, url,
-                response -> {
-                    // Save assigned user to SharedPreferences so Chat works immediately
-                    getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit()
-                            .putLong("ASSIGNED_USER_ID",    r.userId)
-                            .putString("ASSIGNED_USER_NAME", r.userName)
-                            .apply();
-
-                    Toast.makeText(this,
-                            "Accepted! You can now chat with " + r.userName,
-                            Toast.LENGTH_SHORT).show();
-
-                    // Remove from list
-                    requestList.remove(r);
-                    adapter.notifyDataSetChanged();
-                    updateEmptyState();
-                },
+                response -> onAcceptSuccess(r),
                 error -> {
-                    // Treat 200/204 as success (Volley quirk with no-body responses)
                     if (error.networkResponse != null &&
                             (error.networkResponse.statusCode == 200 ||
+                                    error.networkResponse.statusCode == 201 ||
                                     error.networkResponse.statusCode == 204)) {
-                        getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit()
-                                .putLong("ASSIGNED_USER_ID",    r.userId)
-                                .putString("ASSIGNED_USER_NAME", r.userName)
-                                .apply();
-                        Toast.makeText(this,
-                                "Accepted! You can now chat with " + r.userName,
-                                Toast.LENGTH_SHORT).show();
-                        requestList.remove(r);
-                        adapter.notifyDataSetChanged();
-                        updateEmptyState();
+                        onAcceptSuccess(r);
                         return;
                     }
                     String msg = "Failed to accept";
@@ -180,28 +126,30 @@ public class AppointmentRequestsActivity extends AppCompatActivity {
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
+    private void onAcceptSuccess(AppointmentRequest r) {
+        Toast.makeText(this,
+                "Accepted! You can now chat with " + r.userName,
+                Toast.LENGTH_SHORT).show();
+        requestList.remove(r);
+        adapter.notifyDataSetChanged();
+        updateEmptyState();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // PATCH /api/appointments/{id}/decline
+    // Shrey's backend sets status = "CANCELLED"
     // ─────────────────────────────────────────────────────────────────────────
     private void declineRequest(AppointmentRequest r) {
         String url = ApiConstants.BASE_URL + "/api/appointments/" + r.id + "/decline";
 
         StringRequest req = new StringRequest(
                 Request.Method.PATCH, url,
-                response -> {
-                    Toast.makeText(this, "Request declined", Toast.LENGTH_SHORT).show();
-                    requestList.remove(r);
-                    adapter.notifyDataSetChanged();
-                    updateEmptyState();
-                },
+                response -> onDeclineSuccess(r),
                 error -> {
                     if (error.networkResponse != null &&
                             (error.networkResponse.statusCode == 200 ||
                                     error.networkResponse.statusCode == 204)) {
-                        Toast.makeText(this, "Request declined", Toast.LENGTH_SHORT).show();
-                        requestList.remove(r);
-                        adapter.notifyDataSetChanged();
-                        updateEmptyState();
+                        onDeclineSuccess(r);
                         return;
                     }
                     String msg = "Failed to decline";
@@ -212,6 +160,13 @@ public class AppointmentRequestsActivity extends AppCompatActivity {
         );
 
         VolleySingleton.getInstance(this).addToRequestQueue(req);
+    }
+
+    private void onDeclineSuccess(AppointmentRequest r) {
+        Toast.makeText(this, "Request declined", Toast.LENGTH_SHORT).show();
+        requestList.remove(r);
+        adapter.notifyDataSetChanged();
+        updateEmptyState();
     }
 
     private void updateEmptyState() {
@@ -255,12 +210,10 @@ public class AppointmentRequestsActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(VH h, int pos) {
             AppointmentRequest r = list.get(pos);
-
             h.tvUserName.setText(r.userName);
             h.tvDateTime.setText(r.date + "  ·  " + r.timeSlot);
             h.tvNotes.setText(r.notes.isEmpty() ? "No notes" : r.notes);
             h.tvStatus.setText(r.status);
-
             h.btnAccept.setOnClickListener(v  -> onAccept.accept(r));
             h.btnDecline.setOnClickListener(v -> onDecline.decline(r));
         }

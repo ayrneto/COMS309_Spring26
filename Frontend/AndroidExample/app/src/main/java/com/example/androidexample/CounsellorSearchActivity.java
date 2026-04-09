@@ -24,7 +24,6 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,47 +32,29 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * CounsellorSearchActivity
- *
- * Shows all counsellors. User can:
- *  - Search by name or specialization (live filter)
- *  - Filter by status (ALL / AVAILABLE / BUSY)
- *  - Filter by minimum rating (Any / 1★ / 2★ / 3★ / 4★)
- *  - Tap "Book" on a card to open a booking dialog
- *
- * Launch from HomeActivity drawer:
- *   startActivity(new Intent(this, CounsellorSearchActivity.class));
- */
 public class CounsellorSearchActivity extends AppCompatActivity {
 
-    // ── Time slots offered in the booking dialog ──────────────────────────────
     private static final String[] TIME_SLOTS = {
             "9:00 AM", "10:00 AM", "11:00 AM",
             "1:00 PM", "2:00 PM",  "3:00 PM",
             "4:00 PM", "5:00 PM"
     };
 
-    // ── Views ─────────────────────────────────────────────────────────────────
     private RecyclerView recyclerCounsellors;
     private TextView tvResultCount;
     private EditText etSearch;
     private Spinner spinnerStatus, spinnerRating;
 
-    // ── Data ──────────────────────────────────────────────────────────────────
-    private final List<CounsellorItem> allCounsellors  = new ArrayList<>();
-    private final List<CounsellorItem> filteredList    = new ArrayList<>();
+    private final List<CounsellorItem> allCounsellors = new ArrayList<>();
+    private final List<CounsellorItem> filteredList   = new ArrayList<>();
     private CounsellorAdapter adapter;
 
-    // ── Filters ───────────────────────────────────────────────────────────────
-    private String filterStatus = "ALL";
+    private String filterStatus   = "ALL";
     private double filterMinRating = 0.0;
-    private String searchQuery = "";
+    private String searchQuery    = "";
 
-    // ── Session ───────────────────────────────────────────────────────────────
     private long myUserId;
 
-    // ─────────────────────────────────────────────────────────────────────────
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,7 +63,6 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         myUserId = Long.parseLong(prefs.getString("USER_ID", "-1"));
 
-        // Bind views
         recyclerCounsellors = findViewById(R.id.recyclerCounsellors);
         tvResultCount       = findViewById(R.id.tvResultCount);
         etSearch            = findViewById(R.id.etSearch);
@@ -91,7 +71,6 @@ public class CounsellorSearchActivity extends AppCompatActivity {
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        // RecyclerView
         adapter = new CounsellorAdapter(filteredList, this::openBookingDialog);
         recyclerCounsellors.setLayoutManager(new LinearLayoutManager(this));
         recyclerCounsellors.setAdapter(adapter);
@@ -130,21 +109,13 @@ public class CounsellorSearchActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        // Load counsellors from backend
         fetchCounsellors();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Fetch all counsellors
-    // GET /api/counsellors
-    // Returns array of CounsellorProfileResponse (already exists in backend)
-    // ─────────────────────────────────────────────────────────────────────────
     private void fetchCounsellors() {
-        String url = ApiConstants.COUNSELLORS;
-
         JsonArrayRequest req = new JsonArrayRequest(
                 Request.Method.GET,
-                url,
+                ApiConstants.COUNSELLORS,
                 null,
                 response -> {
                     allCounsellors.clear();
@@ -159,57 +130,40 @@ public class CounsellorSearchActivity extends AppCompatActivity {
                 },
                 error -> Toast.makeText(this, "Failed to load counsellors", Toast.LENGTH_SHORT).show()
         );
-
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Filter logic (runs entirely on the client — no extra API call needed)
-    // ─────────────────────────────────────────────────────────────────────────
     private void applyFilters() {
         filteredList.clear();
-
         for (CounsellorItem c : allCounsellors) {
-            // Search filter
             if (!searchQuery.isEmpty()) {
                 boolean nameMatch = c.displayName.toLowerCase().contains(searchQuery);
                 boolean specMatch = c.specialization.toLowerCase().contains(searchQuery);
                 if (!nameMatch && !specMatch) continue;
             }
-
-            // Status filter
             if (!filterStatus.equals("ALL") && !c.status.equalsIgnoreCase(filterStatus)) continue;
-
-            // Rating filter
             if (c.ratingAverage < filterMinRating) continue;
-
             filteredList.add(c);
         }
-
         adapter.notifyDataSetChanged();
         tvResultCount.setText(filteredList.size() + " counsellor" +
                 (filteredList.size() == 1 ? "" : "s") + " found");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Booking dialog
-    // ─────────────────────────────────────────────────────────────────────────
     private void openBookingDialog(CounsellorItem counsellor) {
         View dialogView = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_book_appointment, null);
 
-        TextView tvName      = dialogView.findViewById(R.id.tvDialogCounsellorName);
-        EditText etDate      = dialogView.findViewById(R.id.etDate);
-        Spinner  spTimeSlot  = dialogView.findViewById(R.id.spinnerTimeSlot);
-        EditText etNotes     = dialogView.findViewById(R.id.etNotes);
+        TextView tvName     = dialogView.findViewById(R.id.tvDialogCounsellorName);
+        EditText etDate     = dialogView.findViewById(R.id.etDate);
+        Spinner  spTimeSlot = dialogView.findViewById(R.id.spinnerTimeSlot);
+        EditText etNotes    = dialogView.findViewById(R.id.etNotes);
 
         tvName.setText("with " + counsellor.displayName);
 
-        // Time slot spinner
         spTimeSlot.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item, TIME_SLOTS));
 
-        // Date picker
         etDate.setOnClickListener(v -> {
             Calendar cal = Calendar.getInstance();
             new DatePickerDialog(this,
@@ -247,10 +201,6 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Book appointment
-    // POST /api/appointments
-    // ─────────────────────────────────────────────────────────────────────────
     private void bookAppointment(CounsellorItem counsellor,
                                  String date, String timeSlot, String notes) {
         String url = ApiConstants.APPOINTMENTS;
@@ -272,17 +222,12 @@ public class CounsellorSearchActivity extends AppCompatActivity {
                 url,
                 body,
                 response -> {
-                    // Save assigned counsellor to SharedPreferences
-                    // so Chat with Counselor in the drawer works straight away
-                    getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit()
-                            .putLong("ASSIGNED_COUNSELOR_ID",    counsellor.userId)
-                            .putString("ASSIGNED_COUNSELOR_NAME", counsellor.displayName)
-                            .apply();
-
                     new AlertDialog.Builder(this)
-                            .setTitle("Appointment Booked!")
-                            .setMessage("Your appointment with " + counsellor.displayName
-                                    + " on " + date + " at " + timeSlot + " is confirmed.")
+                            .setTitle("Request Sent!")
+                            .setMessage("Your appointment request has been sent to "
+                                    + counsellor.displayName + " for " + date
+                                    + " at " + timeSlot
+                                    + ". Please wait for them to accept.")
                             .setPositiveButton("OK", null)
                             .show();
                 },
@@ -305,25 +250,20 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Parse a counsellor JSON object
-    // ─────────────────────────────────────────────────────────────────────────
     private CounsellorItem parseCounsellor(JSONObject obj) throws JSONException {
         CounsellorItem c = new CounsellorItem();
-        c.id            = obj.optLong("id", -1);
-        c.userId        = obj.optLong("userId", -1);
-        c.displayName   = obj.optString("displayName", "");
+        c.id             = obj.optLong("id",             -1);
+        c.userId         = obj.optLong("userId",         -1);
+        c.displayName    = obj.optString("displayName",  "");
         c.specialization = obj.optString("specialization", "");
-        c.bio           = obj.optString("bio", "");
-        c.status        = obj.optString("status", "OFFLINE");
-        c.ratingAverage = obj.optDouble("ratingAverage", 0.0);
-        c.ratingCount   = obj.optInt("ratingCount", 0);
+        c.bio            = obj.optString("bio",          "");
+        c.status         = obj.optString("status",       "OFFLINE");
+        c.ratingAverage  = obj.optDouble("ratingAverage", 0.0);
+        c.ratingCount    = obj.optInt("ratingCount",     0);
         return c;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // CounsellorItem model
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Model ─────────────────────────────────────────────────────────────────
     static class CounsellorItem {
         long   id, userId;
         String displayName, specialization, bio, status;
@@ -331,9 +271,7 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         int    ratingCount;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // RecyclerView Adapter
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Adapter ───────────────────────────────────────────────────────────────
     interface OnBookClick { void onBook(CounsellorItem c); }
 
     static class CounsellorAdapter
@@ -364,25 +302,21 @@ public class CounsellorSearchActivity extends AppCompatActivity {
             h.tvRating.setText(String.format(Locale.getDefault(),
                     "★ %.1f (%d reviews)", c.ratingAverage, c.ratingCount));
 
-            // Status badge color
             h.tvStatus.setText(c.status);
             if (c.status.equalsIgnoreCase("AVAILABLE")) {
                 h.tvStatus.setBackgroundResource(R.drawable.dark_green_background);
             } else if (c.status.equalsIgnoreCase("BUSY")) {
-                h.tvStatus.setBackgroundColor(0xFFE65100); // deep orange
+                h.tvStatus.setBackgroundColor(0xFFE65100);
             } else {
-                h.tvStatus.setBackgroundColor(0xFF9E9E9E); // grey for OFFLINE
+                h.tvStatus.setBackgroundColor(0xFF9E9E9E);
             }
 
             h.btnBook.setOnClickListener(v -> onBookClick.onBook(c));
-
-            // Disable booking if counsellor is not available
             h.btnBook.setEnabled(c.status.equalsIgnoreCase("AVAILABLE"));
             h.btnBook.setAlpha(c.status.equalsIgnoreCase("AVAILABLE") ? 1f : 0.4f);
         }
 
-        @Override
-        public int getItemCount() { return list.size(); }
+        @Override public int getItemCount() { return list.size(); }
 
         static class VH extends RecyclerView.ViewHolder {
             TextView tvName, tvSpecialization, tvBio, tvRating, tvStatus;

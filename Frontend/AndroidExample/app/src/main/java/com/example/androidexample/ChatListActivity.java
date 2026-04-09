@@ -22,28 +22,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ChatListActivity
- *
- * Used by BOTH user and counsellor sides.
- *
- * USER side:
- *   Shows all counsellors the user has an ACCEPTED appointment with.
- *   Endpoint: GET /api/appointments/user/{userId}/accepted
- *   Response: [{ "partnerId": 7, "partnerName": "Dr. Sarah Jones",
- *                "partnerSubtitle": "Anxiety & Depression" }]
- *
- * COUNSELLOR side:
- *   Shows all users who have an ACCEPTED appointment with this counsellor.
- *   Endpoint: GET /api/appointments/counsellor/{counsellorId}/accepted
- *   Response: [{ "partnerId": 3, "partnerName": "Test User 1",
- *                "partnerSubtitle": "Appointment on 2026-04-10" }]
- *
- * Launch with:
- *   Intent intent = new Intent(this, ChatListActivity.class);
- *   startActivity(intent);
- *   // Role is read from SharedPreferences automatically
- */
 public class ChatListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerChatList;
@@ -68,12 +46,7 @@ public class ChatListActivity extends AppCompatActivity {
         tvEmpty          = findViewById(R.id.tvChatListEmpty);
         tvTitle          = findViewById(R.id.tvChatListTitle);
 
-        // Set title based on role
-        if ("COUNSELLOR".equals(myRole)) {
-            tvTitle.setText("Chats with Users");
-        } else {
-            tvTitle.setText("Chats with Counselors");
-        }
+        tvTitle.setText("COUNSELLOR".equals(myRole) ? "Chats with Users" : "Chats with Counselors");
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
@@ -89,17 +62,12 @@ public class ChatListActivity extends AppCompatActivity {
         fetchChatPartners();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Fetch accepted appointment partners
-    // ─────────────────────────────────────────────────────────────────────────
     private void fetchChatPartners() {
         String url;
         if ("COUNSELLOR".equals(myRole)) {
-            // GET /api/appointments/counsellor/{counsellorId}/accepted
             url = ApiConstants.BASE_URL +
                     "/api/appointments/counsellor/" + myUserId + "/accepted";
         } else {
-            // GET /api/appointments/user/{userId}/accepted
             url = ApiConstants.BASE_URL +
                     "/api/appointments/user/" + myUserId + "/accepted";
         }
@@ -112,10 +80,22 @@ public class ChatListActivity extends AppCompatActivity {
                         try {
                             JSONObject obj = response.getJSONObject(i);
                             ChatPerson p = new ChatPerson();
-                            p.partnerId    = obj.getLong("partnerId");
-                            p.partnerName  = obj.optString("partnerName",    "");
-                            p.subtitle     = obj.optString("partnerSubtitle", "");
-                            personList.add(p);
+
+                            if ("COUNSELLOR".equals(myRole)) {
+                                // Counsellor sees users — partner is the user
+                                p.partnerId   = obj.optLong("userId", -1);
+                                p.partnerName = obj.optString("userName", "Unknown User");
+                                p.subtitle    = obj.optString("date", "") + "  ·  " +
+                                        obj.optString("timeSlot", "");
+                            } else {
+                                // User sees counsellors — partner is the counsellor
+                                p.partnerId   = obj.optLong("counsellorId", -1);
+                                p.partnerName = obj.optString("counsellorName", "Unknown Counsellor");
+                                p.subtitle    = obj.optString("date", "") + "  ·  " +
+                                        obj.optString("timeSlot", "");
+                            }
+
+                            if (p.partnerId != -1) personList.add(p);
                         } catch (JSONException e) { e.printStackTrace(); }
                     }
                     adapter.notifyDataSetChanged();
@@ -166,15 +146,11 @@ public class ChatListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(VH h, int pos) {
             ChatPerson p = list.get(pos);
-
             h.tvName.setText(p.partnerName);
             h.tvSubtitle.setText(p.subtitle);
-
-            // Avatar — first letter of name
             String initial = p.partnerName.isEmpty() ? "?" :
                     String.valueOf(p.partnerName.charAt(0)).toUpperCase();
             h.tvAvatar.setText(initial);
-
             h.itemView.setOnClickListener(v -> cb.onClick(p));
         }
 
@@ -182,7 +158,6 @@ public class ChatListActivity extends AppCompatActivity {
 
         static class VH extends RecyclerView.ViewHolder {
             TextView tvAvatar, tvName, tvSubtitle;
-
             VH(View v) {
                 super(v);
                 tvAvatar   = v.findViewById(R.id.tvAvatar);
