@@ -8,4 +8,6 @@ public class AppointmentResponse {
     public String timeSlot;
     public String notes;
     public String status;
+    public String userName;       // name of the user who booked
+    public String counsellorName;
 }
