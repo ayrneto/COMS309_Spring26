@@ -1,8 +1,12 @@
 package onetoone.Users;
 
 import onetoone.Users.dto.CreateCounsellorRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +25,24 @@ public class UserAdminController {
         this.userRepository = userRepository;
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        if (users.isEmpty())
+            return ResponseEntity.ok("{\"message\":\"No users found\"}");
+        return ResponseEntity.ok(users);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(
             summary = "Update user",
@@ -30,6 +52,7 @@ public class UserAdminController {
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+    
     @PutMapping("/update/{id}")
     public String updateUser(@RequestBody User incoming, @PathVariable long id) {
 
