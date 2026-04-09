@@ -85,7 +85,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
     }
 
     private void updateTaskStatus(String newStatus) {
-        String url = ApiConstants.BASE_URL + "/api/tasks/" + taskId + "/status";  // Check endpoint with backend
+        String url = ApiConstants.BASE_URL + "/api/tasks/" + taskId + "/status";  // TODO: Check endpoint with backend
 
         JSONObject statusData = new JSONObject();
         try {

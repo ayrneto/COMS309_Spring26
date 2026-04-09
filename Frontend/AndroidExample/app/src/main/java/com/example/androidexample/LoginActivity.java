@@ -110,6 +110,10 @@ public class LoginActivity extends AppCompatActivity {
 
                         editor.apply();
 
+                        // Start WebSocket service
+                        Intent serviceIntent = new Intent(LoginActivity.this, WebSocketService.class);
+                        startService(serviceIntent);
+
                         // Routing still uses backend response role
                         if (returnedRole.equals("COUNSELLOR")) {
                             startActivity(new Intent(LoginActivity.this, CounselorHomeActivity.class));

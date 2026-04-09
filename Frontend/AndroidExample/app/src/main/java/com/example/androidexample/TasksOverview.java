@@ -43,7 +43,7 @@ public class TasksOverview extends AppCompatActivity {
     }
 
     private void fetchUserTasks(String userId) {
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/tasks";  // Check endpoint with backend
+        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/tasks";  // TODO: Check endpoint with backend
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
