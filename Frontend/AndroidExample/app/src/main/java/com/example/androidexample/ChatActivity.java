@@ -4,6 +4,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -15,10 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,169 +32,171 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * ChatActivity — live WebSocket chat between a user and their assigned counselor.
- *
- * How to launch from HomeActivity (user side):
- *   Intent intent = new Intent(this, ChatActivity.class);
- *   intent.putExtra("partnerUserId", counselorUserId);  // long
- *   intent.putExtra("partnerName", "Dr. Smith");
- *   startActivity(intent);
- *
- * How to launch from CounselorHomeActivity:
- *   Intent intent = new Intent(this, ChatActivity.class);
- *   intent.putExtra("partnerUserId", targetUserId);
- *   intent.putExtra("partnerName", userName);
- *   startActivity(intent);
- */
 public class ChatActivity extends AppCompatActivity {
 
     // ── Views ─────────────────────────────────────────────────────────────────
     private RecyclerView recyclerMessages;
-    private EditText etMessage;
-    private TextView tvChatPartnerName;
-    private TextView tvOnlineStatus;
+    private EditText     etMessage;
+    private TextView     tvChatPartnerName;
+    private TextView     tvOnlineStatus;
+    private TextView     tvAvailabilityStatus;
+    private TextView     tvTypingIndicator;
 
     // ── Data ──────────────────────────────────────────────────────────────────
     private final List<ChatMessage> messageList = new ArrayList<>();
     private ChatAdapter chatAdapter;
 
     // ── Session ───────────────────────────────────────────────────────────────
-    private long myUserId;
-    private long partnerUserId;
+    private long   myUserId;
+    private long   partnerUserId;
     private String partnerName = "Chat";
+    private String myRole      = "USER";
 
     // ── WebSocket ─────────────────────────────────────────────────────────────
     private WebSocketClient wsClient;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    // ── Typing indicator ──────────────────────────────────────────────────────
+    private final Runnable hideTypingRunnable  = () ->
+            tvTypingIndicator.setVisibility(View.INVISIBLE);
+    private final Runnable sendTypingRunnable  = this::sendTypingEvent;
 
     // ── Time formatter ────────────────────────────────────────────────────────
     private final SimpleDateFormat timeFmt =
             new SimpleDateFormat("h:mm a", Locale.getDefault());
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        // Read session
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-        myUserId = Long.parseLong(prefs.getString("USER_ID", "-1"));
+        myUserId = Long.parseLong(prefs.getString("USER_ID",   "-1"));
+        myRole   = prefs.getString("USER_ROLE", "USER");
 
-        // Read Intent extras
         partnerUserId = getIntent().getLongExtra("partnerUserId", -1L);
         partnerName   = getIntent().getStringExtra("partnerName");
         if (partnerName == null || partnerName.isEmpty()) partnerName = "Chat";
 
         // Bind views
-        recyclerMessages  = findViewById(R.id.recyclerMessages);
-        etMessage         = findViewById(R.id.etMessage);
-        tvChatPartnerName = findViewById(R.id.tvChatPartnerName);
-        tvOnlineStatus    = findViewById(R.id.tvOnlineStatus);
-        ImageButton btnBack = findViewById(R.id.btnBack);
+        recyclerMessages     = findViewById(R.id.recyclerMessages);
+        etMessage            = findViewById(R.id.etMessage);
+        tvChatPartnerName    = findViewById(R.id.tvChatPartnerName);
+        tvOnlineStatus       = findViewById(R.id.tvOnlineStatus);
+        tvAvailabilityStatus = findViewById(R.id.tvAvailabilityStatus);
+        tvTypingIndicator    = findViewById(R.id.tvTypingIndicator);
+        ImageButton btnBack  = findViewById(R.id.btnBack);
 
         tvChatPartnerName.setText(partnerName);
         btnBack.setOnClickListener(v -> finish());
         findViewById(R.id.btnSend).setOnClickListener(v -> sendMessage());
 
-        // Set up RecyclerView
+        // RecyclerView
         chatAdapter = new ChatAdapter(messageList, myUserId);
         LinearLayoutManager llm = new LinearLayoutManager(this);
-        llm.setStackFromEnd(true); // newest messages at the bottom
+        llm.setStackFromEnd(true);
         recyclerMessages.setLayoutManager(llm);
         recyclerMessages.setAdapter(chatAdapter);
+
+        // Typing detection
+        etMessage.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void afterTextChanged(Editable s) {}
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
+                mainHandler.removeCallbacks(sendTypingRunnable);
+                if (s.length() > 0) mainHandler.postDelayed(sendTypingRunnable, 500);
+            }
+        });
 
         if (partnerUserId == -1) {
             Toast.makeText(this, "Error: partner ID missing", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // Load history first, then open WebSocket
+        // Fetch counsellor availability only on the USER side
+        if ("USER".equals(myRole)) fetchAvailability();
+
         fetchHistory();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mainHandler.removeCallbacks(hideTypingRunnable);
+        mainHandler.removeCallbacks(sendTypingRunnable);
         disconnectWebSocket();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // REST — load chat history
+    // Fetch counsellor availability status
+    // GET /api/counsellors/{userId}/profile
     // ─────────────────────────────────────────────────────────────────────────
+    private void fetchAvailability() {
+        String url = ApiConstants.counselorProfile(partnerUserId);
 
-    /**
-     * GET /api/chat/history?userA={myUserId}&userB={partnerUserId}
-     *
-     * Expected JSON array:
-     * [
-     *   { "id": 1, "senderId": 3, "receiverId": 7,
-     *     "content": "Hello!", "sentAt": "2026-04-04T14:23:00" },
-     *   ...
-     * ]
-     */
-    private void fetchHistory() {
-        String url = ApiConstants.chatHistory(myUserId, partnerUserId);
-
-        JsonArrayRequest req = new JsonArrayRequest(
-                Request.Method.GET,
-                url,
-                null,
+        JsonObjectRequest req = new JsonObjectRequest(
+                Request.Method.GET, url, null,
                 response -> {
-                    messageList.clear();
-                    for (int i = 0; i < response.length(); i++) {
-                        try {
-                            messageList.add(parseMessage(response.getJSONObject(i)));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    String status = response.optString("status", "");
+                    switch (status.toUpperCase()) {
+                        case "AVAILABLE":
+                            tvAvailabilityStatus.setText("● Available");
+                            tvAvailabilityStatus.setTextColor(0xFF81C784); // light green
+                            break;
+                        case "BUSY":
+                            tvAvailabilityStatus.setText("● Busy");
+                            tvAvailabilityStatus.setTextColor(0xFFFFB74D); // amber
+                            break;
+                        case "OFFLINE":
+                            tvAvailabilityStatus.setText("● Offline");
+                            tvAvailabilityStatus.setTextColor(0xFFB0BEC5); // grey
+                            break;
+                        default:
+                            tvAvailabilityStatus.setText("");
                     }
-                    chatAdapter.notifyDataSetChanged();
-                    scrollToBottom();
-                    connectWebSocket(); // connect after history is loaded
                 },
-                error -> {
-                    // History failed — still connect so live chat works
-                    Toast.makeText(this, "Could not load history", Toast.LENGTH_SHORT).show();
-                    connectWebSocket();
-                }
+                error -> tvAvailabilityStatus.setText("")
         );
 
         VolleySingleton.getInstance(this).addToRequestQueue(req);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // REST — load chat history
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchHistory() {
+        JsonArrayRequest req = new JsonArrayRequest(
+                Request.Method.GET,
+                ApiConstants.chatHistory(myUserId, partnerUserId),
+                null,
+                response -> {
+                    messageList.clear();
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            messageList.add(parseMessage(response.getJSONObject(i)));
+                        } catch (JSONException e) { e.printStackTrace(); }
+                    }
+                    chatAdapter.notifyDataSetChanged();
+                    scrollToBottom();
+                    connectWebSocket();
+                },
+                error -> {
+                    Toast.makeText(this, "Could not load history", Toast.LENGTH_SHORT).show();
+                    connectWebSocket();
+                }
+        );
+        VolleySingleton.getInstance(this).addToRequestQueue(req);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // WebSocket
     // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Connects to: ws://HOST:8080/ws/chat/{senderId}/{receiverId}
-     *
-     * The server should:
-     *   1. Accept the connection and map (senderId, receiverId) → this session.
-     *   2. On receiving a text frame, persist the message and forward it to
-     *      the receiverId's open session (if any).
-     *   3. Echo back the saved message with a "sentAt" timestamp so both sides
-     *      have a canonical time.
-     *
-     * JSON the client sends:
-     *   { "senderId": Long, "receiverId": Long, "content": String }
-     *
-     * JSON the server echoes / forwards:
-     *   { "senderId": Long, "receiverId": Long, "content": String, "sentAt": String }
-     */
     private void connectWebSocket() {
-        String wsUrl = ApiConstants.wsChat(myUserId, partnerUserId);
-
         try {
-            wsClient = new WebSocketClient(URI.create(wsUrl)) {
-
+            wsClient = new WebSocketClient(URI.create(ApiConstants.wsChat(myUserId, partnerUserId))) {
                 @Override
-                public void onOpen(ServerHandshake handshake) {
+                public void onOpen(ServerHandshake h) {
                     mainHandler.post(() -> tvOnlineStatus.setText("● Connected"));
                 }
 
@@ -204,7 +209,6 @@ public class ChatActivity extends AppCompatActivity {
                 public void onClose(int code, String reason, boolean remote) {
                     mainHandler.post(() -> {
                         tvOnlineStatus.setText("○ Disconnected");
-                        // Reconnect after 3 s
                         mainHandler.postDelayed(() -> {
                             if (!isDestroyed()) connectWebSocket();
                         }, 3000);
@@ -216,25 +220,19 @@ public class ChatActivity extends AppCompatActivity {
                     mainHandler.post(() -> tvOnlineStatus.setText("○ Error"));
                 }
             };
-
             wsClient.connect();
-
         } catch (Exception e) {
-            Toast.makeText(this, "WebSocket error: " + e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "WebSocket error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void disconnectWebSocket() {
-        if (wsClient != null && wsClient.isOpen()) {
-            wsClient.close();
-        }
+        if (wsClient != null && wsClient.isOpen()) wsClient.close();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Sending a message
+    // Send message
     // ─────────────────────────────────────────────────────────────────────────
-
     private void sendMessage() {
         String text = etMessage.getText().toString().trim();
         if (text.isEmpty()) return;
@@ -247,48 +245,105 @@ public class ChatActivity extends AppCompatActivity {
 
         JSONObject payload = new JSONObject();
         try {
+            payload.put("type",       "message");
             payload.put("senderId",   myUserId);
             payload.put("receiverId", partnerUserId);
             payload.put("content",    text);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return;
-        }
+        } catch (JSONException e) { e.printStackTrace(); return; }
 
         wsClient.send(payload.toString());
 
-        // Optimistic local append — don't wait for echo
-        appendMessage(new ChatMessage(
-                myUserId, partnerUserId, text, timeFmt.format(new Date())
-        ));
-
+        // Optimistic local append — starts as "sent" (✓)
+        ChatMessage msg = new ChatMessage(myUserId, partnerUserId, text,
+                timeFmt.format(new Date()), false);
+        appendMessage(msg);
         etMessage.setText("");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Receiving a message
+    // Send typing event
+    // { "type": "typing", "senderId": Long, "receiverId": Long }
+    // Shrey: forward to receiver only, do NOT persist
     // ─────────────────────────────────────────────────────────────────────────
+    private void sendTypingEvent() {
+        if (wsClient == null || !wsClient.isOpen()) return;
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("type",       "typing");
+            payload.put("senderId",   myUserId);
+            payload.put("receiverId", partnerUserId);
+        } catch (JSONException e) { e.printStackTrace(); }
+        wsClient.send(payload.toString());
+    }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Send read receipt when a message is received
+    // { "type": "read", "senderId": Long, "receiverId": Long }
+    // Shrey: forward to receiver only, do NOT persist
+    // ─────────────────────────────────────────────────────────────────────────
+    private void sendReadReceipt() {
+        if (wsClient == null || !wsClient.isOpen()) return;
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("type",       "read");
+            payload.put("senderId",   myUserId);
+            payload.put("receiverId", partnerUserId);
+        } catch (JSONException e) { e.printStackTrace(); }
+        wsClient.send(payload.toString());
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handle incoming WebSocket frame
+    // ─────────────────────────────────────────────────────────────────────────
     private void handleIncomingMessage(String text) {
         try {
-            ChatMessage msg = parseMessage(new JSONObject(text));
-            // Skip our own messages — already appended optimistically
+            JSONObject obj  = new JSONObject(text);
+            String     type = obj.optString("type", "message");
+
+            if ("typing".equals(type)) {
+                tvTypingIndicator.setText(partnerName + " is typing…");
+                tvTypingIndicator.setVisibility(View.VISIBLE);
+                mainHandler.removeCallbacks(hideTypingRunnable);
+                mainHandler.postDelayed(hideTypingRunnable, 3000);
+                return;
+            }
+
+            if ("read".equals(type)) {
+                // Mark the last sent message as read
+                for (int i = messageList.size() - 1; i >= 0; i--) {
+                    if (messageList.get(i).senderId == myUserId) {
+                        messageList.get(i).isRead = true;
+                        chatAdapter.notifyItemChanged(i);
+                        break;
+                    }
+                }
+                return;
+            }
+
+            // Regular message
+            ChatMessage msg = parseMessage(obj);
             if (msg.senderId == myUserId) return;
+
+            // Hide typing indicator
+            tvTypingIndicator.setVisibility(View.INVISIBLE);
+            mainHandler.removeCallbacks(hideTypingRunnable);
+
             appendMessage(msg);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+            // Send read receipt back to the sender
+            sendReadReceipt();
+
+        } catch (JSONException e) { e.printStackTrace(); }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
-
     private ChatMessage parseMessage(JSONObject obj) throws JSONException {
-        long   senderId  = obj.getLong("senderId");
+        long   senderId   = obj.getLong("senderId");
         long   receiverId = obj.getLong("receiverId");
-        String content   = obj.getString("content");
-        String rawTime   = obj.optString("sentAt", "");
+        String content    = obj.getString("content");
+        String rawTime    = obj.optString("sentAt", "");
 
         String displayTime;
         try {
@@ -296,11 +351,9 @@ public class ChatActivity extends AppCompatActivity {
                     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             Date d = iso.parse(rawTime);
             displayTime = (d != null) ? timeFmt.format(d) : rawTime;
-        } catch (Exception e) {
-            displayTime = rawTime;
-        }
+        } catch (Exception e) { displayTime = rawTime; }
 
-        return new ChatMessage(senderId, receiverId, content, displayTime);
+        return new ChatMessage(senderId, receiverId, content, displayTime, false);
     }
 
     private void appendMessage(ChatMessage msg) {
@@ -310,33 +363,27 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void scrollToBottom() {
-        if (!messageList.isEmpty()) {
+        if (!messageList.isEmpty())
             recyclerMessages.smoothScrollToPosition(messageList.size() - 1);
-        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // ChatMessage model
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // ── ChatMessage model ─────────────────────────────────────────────────────
     static class ChatMessage {
-        final long   senderId;
-        final long   receiverId;
-        final String content;
-        final String displayTime;
+        final long   senderId, receiverId;
+        final String content, displayTime;
+        boolean      isRead; // true = partner has read this message
 
-        ChatMessage(long senderId, long receiverId, String content, String displayTime) {
+        ChatMessage(long senderId, long receiverId,
+                    String content, String displayTime, boolean isRead) {
             this.senderId    = senderId;
             this.receiverId  = receiverId;
             this.content     = content;
             this.displayTime = displayTime;
+            this.isRead      = isRead;
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // RecyclerView Adapter
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // ── Adapter ───────────────────────────────────────────────────────────────
     static class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MsgViewHolder> {
 
         private final List<ChatMessage> messages;
@@ -360,25 +407,33 @@ public class ChatActivity extends AppCompatActivity {
             boolean isMine  = (msg.senderId == myUserId);
 
             if (isMine) {
-                h.layoutSent.setVisibility(android.view.View.VISIBLE);
-                h.layoutReceived.setVisibility(android.view.View.GONE);
+                h.layoutSent.setVisibility(View.VISIBLE);
+                h.layoutReceived.setVisibility(View.GONE);
                 h.tvSentMessage.setText(msg.content);
                 h.tvSentTime.setText(msg.displayTime);
+
+                // Read receipt: ✓✓ Read (green) or ✓ Sent (grey)
+                if (msg.isRead) {
+                    h.tvReadReceipt.setText("✓✓ Read");
+                    h.tvReadReceipt.setTextColor(0xFF4A6E60);
+                } else {
+                    h.tvReadReceipt.setText("✓");
+                    h.tvReadReceipt.setTextColor(0xFF9BB5A7);
+                }
             } else {
-                h.layoutSent.setVisibility(android.view.View.GONE);
-                h.layoutReceived.setVisibility(android.view.View.VISIBLE);
+                h.layoutSent.setVisibility(View.GONE);
+                h.layoutReceived.setVisibility(View.VISIBLE);
                 h.tvReceivedMessage.setText(msg.content);
                 h.tvReceivedTime.setText(msg.displayTime);
-                h.tvSenderName.setVisibility(android.view.View.GONE);
+                h.tvSenderName.setVisibility(View.GONE);
             }
         }
 
-        @Override
-        public int getItemCount() { return messages.size(); }
+        @Override public int getItemCount() { return messages.size(); }
 
         static class MsgViewHolder extends RecyclerView.ViewHolder {
             android.view.View       layoutSent, layoutReceived;
-            android.widget.TextView tvSentMessage, tvSentTime;
+            android.widget.TextView tvSentMessage, tvSentTime, tvReadReceipt;
             android.widget.TextView tvReceivedMessage, tvReceivedTime, tvSenderName;
 
             MsgViewHolder(android.view.View v) {
@@ -387,6 +442,7 @@ public class ChatActivity extends AppCompatActivity {
                 layoutReceived    = v.findViewById(R.id.layoutReceived);
                 tvSentMessage     = v.findViewById(R.id.tvSentMessage);
                 tvSentTime        = v.findViewById(R.id.tvSentTime);
+                tvReadReceipt     = v.findViewById(R.id.tvReadReceipt);
                 tvReceivedMessage = v.findViewById(R.id.tvReceivedMessage);
                 tvReceivedTime    = v.findViewById(R.id.tvReceivedTime);
                 tvSenderName      = v.findViewById(R.id.tvSenderName);

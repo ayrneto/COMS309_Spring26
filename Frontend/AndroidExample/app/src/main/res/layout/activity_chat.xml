@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_green_background">
 
-    <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+    <!-- Top bar -->
     <androidx.cardview.widget.CardView
         android:id="@+id/topBar"
         android:layout_width="0dp"
@@ -36,30 +36,50 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
-            <TextView
-                android:id="@+id/tvChatPartnerName"
+            <!-- Name + availability stacked vertically in centre -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Chat"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/alata"
-                android:ellipsize="end"
-                android:maxLines="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/btnBack"
                 app:layout_constraintEnd_toStartOf="@id/tvOnlineStatus"
-                android:layout_marginStart="4dp" />
+                android:layout_marginStart="4dp">
 
+                <TextView
+                    android:id="@+id/tvChatPartnerName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chat"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/alata"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+
+                <!-- Counsellor availability status -->
+                <TextView
+                    android:id="@+id/tvAvailabilityStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="#A8D5C2"
+                    android:textSize="11sp"
+                    android:fontFamily="@font/alata" />
+
+            </LinearLayout>
+
+            <!-- WS connection status on the right -->
             <TextView
                 android:id="@+id/tvOnlineStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="● Connecting…"
                 android:textColor="#A8D5C2"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -67,7 +87,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- ── Message list ────────────────────────────────────────────────────── -->
+    <!-- Message list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMessages"
         android:layout_width="0dp"
@@ -79,11 +99,26 @@
         android:clipToPadding="false"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/topBar"
-        app:layout_constraintBottom_toTopOf="@id/inputBar"
+        app:layout_constraintBottom_toTopOf="@id/tvTypingIndicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ── Input bar ───────────────────────────────────────────────────────── -->
+    <!-- Typing indicator -->
+    <TextView
+        android:id="@+id/tvTypingIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="12sp"
+        android:textColor="#9BB5A7"
+        android:fontFamily="@font/alata"
+        android:paddingStart="16dp"
+        android:paddingBottom="4dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/inputBar"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Input bar -->
     <LinearLayout
         android:id="@+id/inputBar"
         android:layout_width="0dp"
