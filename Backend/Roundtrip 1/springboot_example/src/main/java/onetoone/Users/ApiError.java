@@ -1,4 +1,4 @@
-package onetoone.Exceptions;
+package onetoone.Users;
 
 import java.time.LocalDateTime;
 

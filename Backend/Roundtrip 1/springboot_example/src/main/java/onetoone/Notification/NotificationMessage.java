@@ -14,5 +14,27 @@ public class NotificationMessage {
         this.type = type;
     }
 
-    // Getters & Setters
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setMessage(String message){
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getType() {
+        return type;
+    }
 }

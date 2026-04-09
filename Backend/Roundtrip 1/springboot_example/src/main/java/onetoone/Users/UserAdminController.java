@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin")
 public class UserAdminController {
@@ -14,6 +16,14 @@ public class UserAdminController {
 
     public UserAdminController(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        if (users.isEmpty())
+            return ResponseEntity.ok("{\"message\":\"No users found\"}");
+        return ResponseEntity.ok(users);
     }
 
     @DeleteMapping("/{id}")

@@ -2,9 +2,14 @@ package onetoone.Notification;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+@RequestMapping("/notification")
 @Service
 public class NotificationService {
 
@@ -17,19 +22,8 @@ public class NotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // Create general notification
-    public Notification createNotification(Long userId, String message) {
+    public Notification createNotification(@PathVariable Long userId, @PathVariable String message) {
         Notification notif = new Notification(userId, message, NotificationType.GENERAL);
-        repo.save(notif);
-
-        sendRealtimeNotification(userId, notif);
-
-        return notif;
-    }
-
-    // Create daily reminder
-    public Notification createDailyReminder(Long userId, String message) {
-        Notification notif = new Notification(userId, message, NotificationType.DAILY_REMINDER);
         repo.save(notif);
 
         sendRealtimeNotification(userId, notif);
@@ -54,12 +48,12 @@ public class NotificationService {
         return repo.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    public void markAsRead(Long id) {
-        Notification notif = repo.findById(id).orElseThrow();
+    public void markNotificationAsRead(Long notificationId) {
+        Notification notif = repo.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found with id " + notificationId));
         notif.setRead(true);
         repo.save(notif);
     }
-
     public void deleteNotification(Long id) {
         repo.deleteById(id);
     }

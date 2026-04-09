@@ -5,17 +5,20 @@ import onetoone.Users.LoginResponse;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-//import onetoone.Login.LoginPage;
 import onetoone.Counsellors.CounsellorProfile;
 import onetoone.Counsellors.CounsellorProfileController;
 import onetoone.Counsellors.CounsellorProfileRepository;
 import onetoone.Counsellors.CounsellorStatus;
-import org.hibernate.usertype.UserType;
+import onetoone.Notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -33,17 +36,15 @@ public class UserController {
     @Autowired
     CounsellorProfileRepository counsellorProfileRepository;
 
+    @Autowired
+    NotificationService notificationService;
+
     CounsellorProfileController counsellorProfileController;
     CounsellorProfile counsellorProfile;
     CounsellorStatus counsellorStatus;
 
     private String success = "{\"message\":\"success\"}";
     private String failure = "{\"message\":\"failure\"}";
-
-//    @GetMapping(path = "/LoginPage/user")
-//    List<User> getAllUsers(){
-//        return userRepository.findAll();
-//    }
 
     @GetMapping("/LoginPage/user/{email}")
     public ResponseEntity<User> getUserByEmail(@PathVariable("email") String email) {
@@ -58,6 +59,70 @@ public class UserController {
     public User getUserById(@PathVariable Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    /**
+     * Daily Check-in endpoint
+     * User submits their anxiety level (1-10) and an optional note
+     *
+     * POST /users/{id}/checkin
+     * Body: { "anxietyLevel": 7, "note": "Feeling stressed about exams" }
+     */
+    @PostMapping("/{id}/checkin")
+    public ResponseEntity<?> dailyCheckIn(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+
+        // Validate user exists
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Validate anxiety level is present
+        if (!body.containsKey("anxietyLevel")) {
+            return ResponseEntity.badRequest()
+                    .body("{\"message\":\"anxietyLevel is required (1-10)\"}");
+        }
+
+        int anxietyLevel;
+        try {
+            anxietyLevel = Integer.parseInt(body.get("anxietyLevel").toString());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest()
+                    .body("{\"message\":\"anxietyLevel must be a number\"}");
+        }
+
+        // Validate range
+        if (anxietyLevel < 1 || anxietyLevel > 10) {
+            return ResponseEntity.badRequest()
+                    .body("{\"message\":\"anxietyLevel must be between 1 and 10\"}");
+        }
+
+        String note = body.containsKey("note") ? body.get("note").toString() : "";
+        String anxietyCategory;
+        String message;
+
+        if (anxietyLevel <= 3) {
+            anxietyCategory = "LOW";
+            message = "Your anxiety level is low today. Keep it up!";
+        } else if (anxietyLevel <= 6) {
+            anxietyCategory = "MEDIUM";
+            message = "Your anxiety level is moderate. Remember to take breaks and breathe.";
+        } else {
+            anxietyCategory = "HIGH";
+            message = "Your anxiety level is high. Please reach out to your counsellor for support.";
+        }
+
+        // Build response
+        Map<String, Object> response = new HashMap<>();
+        response.put("userId", id);
+        response.put("userName", user.getName());
+        response.put("date", LocalDate.now().toString());
+        response.put("anxietyLevel", anxietyLevel);
+        response.put("anxietyCategory", anxietyCategory);
+        response.put("note", note);
+        response.put("message", message);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/signup")
@@ -80,15 +145,13 @@ public class UserController {
         user.setConfirmPassword(req.getConfirmPassword());
         user.setActive(true);
 
-        // if role can be null, default it
         user.setRole(req.getRole() != null ? req.getRole() : Role.USER);
 
         User saved = userRepository.save(user);
 
-        // ONLY create counsellor profile when role is counsellor
         if (saved.getRole() == Role.COUNSELLOR) {
             CounsellorProfile profile = new CounsellorProfile();
-            profile.setUser(saved);                       // important if you have a relation
+            profile.setUser(saved);
             profile.setDisplayName(saved.getName());
             profile.setSpecialization("");
             profile.setBio("");
@@ -97,48 +160,41 @@ public class UserController {
             profile.setRatingCount(0);
             profile.setRatingAverage(0.0);
 
-            saved.setCounsellorProfile(profile);  // set on user side
-            userRepository.save(saved);     // <-- save directly
+            saved.setCounsellorProfile(profile);
+            userRepository.save(saved);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new UserResponse(saved.getId(), saved.getEmail()));
     }
 
-
-    // Delete user
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-
         if (!userRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
-
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
 
         User user = userRepository.findByEmail(req.getEmail());
         if (user == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         if (!user.getPassword().equals(req.getPassword())) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         if (req.getRole() != user.getRole()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "You are not a " + req.getRole());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a " + req.getRole());
         }
 
         return ResponseEntity.ok(
-                new LoginResponse(user.getId(), user.getEmail(), user.getRole().name())  // ← add role
+                new LoginResponse(user.getId(), user.getEmail(), user.getRole().name())
         );
     }
-
 }
