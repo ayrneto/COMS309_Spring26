@@ -15,6 +15,17 @@
         android:theme="@style/Theme.AndroidExample"
         tools:targetApi="31">
 
+        <!-- Landing screen — LAUNCHER (replaces LoginActivity as entry point) -->
+        <activity
+            android:name=".LandingActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".LoginActivity" />
         <activity android:name=".AddWorryActivity"/>
         <activity android:name=".WorryNotes"/>
         <activity android:name=".EditProfile"/>
@@ -30,15 +41,6 @@
         <activity android:name=".AdminDashboardActivity" />
         <activity android:name=".AdminEditUserActivity" />
         <activity android:name=".AppointmentRequestsActivity" />
-
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <meta-data
             android:name="preloaded_fonts"
