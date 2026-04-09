@@ -35,6 +35,8 @@
         <activity android:name=".AssignTaskActivity" />
         <activity android:name=".TasksOverview" />
         <activity android:name=".TaskDetailsActivity"/>
+        <activity android:name=".CheckInActivity" />
+        <activity android:name=".CheckInSummaryActivity" />
 
         <activity
             android:name=".LoginActivity"

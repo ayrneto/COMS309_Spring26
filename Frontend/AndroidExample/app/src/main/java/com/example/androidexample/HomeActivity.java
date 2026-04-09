@@ -71,13 +71,15 @@ public class HomeActivity extends AppCompatActivity {
         String role = prefs.getString("USER_ROLE", "");
 
     // Show/hide menu items based on role
-            if (role.equals("COUNSELLOR")) {
-                findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
-                findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
-            } else {
-                findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
-                findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
-            }
+        if (role.equals("COUNSELLOR")) {
+            findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
+        }
 
     // My Tasks click listener
             findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
@@ -90,6 +92,12 @@ public class HomeActivity extends AppCompatActivity {
                 drawerLayout.close();
                 startActivity(new Intent(this, AssignTaskActivity.class));
             });
+
+        // Check-In click listener
+        findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, CheckInActivity.class));
+        });
 
         // ── Log Out ───────────────────────────────────────────────────────────
         findViewById(R.id.drawerItemLogout).setOnClickListener(v -> {
