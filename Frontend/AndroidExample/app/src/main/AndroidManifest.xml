@@ -51,6 +51,12 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
         <service android:name=".WebSocketService" />
+
+        <receiver android:name=".CheckInReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     </application>
 
 </manifest>

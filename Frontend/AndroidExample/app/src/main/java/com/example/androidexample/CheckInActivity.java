@@ -23,6 +23,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 
 public class CheckInActivity extends AppCompatActivity {
     private View[] circles;
@@ -189,6 +192,8 @@ public class CheckInActivity extends AppCompatActivity {
             reminderTime = "20:00";  // Default to 8 PM
         }
 
+        final String finalReminderTime = reminderTime;
+
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
 
@@ -221,6 +226,10 @@ public class CheckInActivity extends AppCompatActivity {
                 checkInData,
                 response -> {
                     Toast.makeText(this, "Check-in saved!", Toast.LENGTH_SHORT).show();
+
+                    // Schedule reminder for tomorrow
+                    scheduleCheckInReminder(finalReminderTime);
+
                     finish();
                 },
                 error -> {
@@ -230,6 +239,42 @@ public class CheckInActivity extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
+    }
+
+    private void scheduleCheckInReminder(String reminderTime) {
+        // Parse time (format: "HH:mm")
+        String[] parts = reminderTime.split(":");
+        int hour = Integer.parseInt(parts[0]);
+        int minute = Integer.parseInt(parts[1]);
+
+        // Set up calendar for the reminder time
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+
+        // If time has passed today, schedule for tomorrow
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        // Create intent for alarm
+        Intent intent = new Intent(this, CheckInReminderReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Schedule repeating alarm
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+        );
     }
 
 }
