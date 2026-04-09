@@ -7,11 +7,10 @@ import onetoone.Users.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-<<<<<<< Backend/Roundtrip 1/springboot_example/src/main/java/onetoone/Assignments/UserCounsellorAssignmentController.java
 import java.util.List;
 import java.util.Random;
 
-=======
+
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,7 +46,6 @@ public class UserCounsellorAssignmentController {
             @ApiResponse(responseCode = "400", description = "Assigned counsellor has no profile")
     })
     // User profile screen: fetch assigned counsellor "card"
->>>>>>> Backend/Roundtrip 1/springboot_example/src/main/java/onetoone/Assignments/UserCounsellorAssignmentController.java
     @GetMapping("/user/{userId}/counsellor-card")
     public ResponseEntity<?> getAssignedCounsellorCard(@PathVariable long userId) {
         var assignment = assignmentRepo.findByUserId((int) userId).orElse(null);
