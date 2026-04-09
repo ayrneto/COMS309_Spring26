@@ -153,7 +153,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-=======
+
 
     @Operation(summary = "Register user", description = "Creates a new user account")
     @ApiResponses(value = {
@@ -208,29 +208,6 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-
-
-    // Delete user
-
-    @Operation(summary = "Delete user", description = "Deletes user by ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "User deleted"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
-            @Parameter(description = "User ID", example = "1")
-            @PathVariable Long id) {
-
-
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
 
 
 
