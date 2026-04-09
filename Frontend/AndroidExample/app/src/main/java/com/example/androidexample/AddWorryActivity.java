@@ -115,9 +115,8 @@ public class AddWorryActivity extends AppCompatActivity{
         try {
             noteData.put("title", title);
             noteData.put("content", content);
-            //ToDo: add these after backend:
-            //noteData.put("dueDate", dueDate);
-            //noteData.put("label", label);
+            noteData.put("dueDate", dueDate);
+            noteData.put("label", label);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -148,9 +147,8 @@ public class AddWorryActivity extends AppCompatActivity{
         try {
             noteData.put("title", title);
             noteData.put("content", content);
-            //ToDo: uncomment these after backend:
-            //noteData.put("dueDate", dueDate);
-            //noteData.put("label", label);
+            noteData.put("dueDate", dueDate);
+            noteData.put("label", label);
         } catch (JSONException e) {
             e.printStackTrace();
         }

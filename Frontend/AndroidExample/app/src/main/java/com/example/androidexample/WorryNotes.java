@@ -76,11 +76,11 @@ public class WorryNotes extends AppCompatActivity {
                 long noteId = note.getLong("id");
                 String title = note.getString("title");
                 String content = note.getString("content");
-                //ToDo: uncomment when backend is ready
-                //String dueDate = note.getString("dueDate");
-                //String label = note.getString("label");
-                String dueDate = "No date";
-                String label = "Label";
+                String dueDate = note.getString("dueDate");
+                String label = note.getString("label");
+                // Placeholders waiting for backend
+                //String dueDate = "No date";
+                //String label = "Label";
 
                 addNoteCard(container, title, content, dueDate, label, noteId);
             }
