@@ -8,8 +8,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+
 @RestController
 @RequestMapping("/api/admin")
+@Tag(name = "User Admin Controller", description = "Admin operations for managing users and counsellors")
 public class UserAdminController {
 
     private final UserRepository userRepository;
@@ -37,6 +44,15 @@ public class UserAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Update user",
+            description = "Updates user details such as name, email, active status, and optionally password"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    
     @PutMapping("/update/{id}")
     public String updateUser(@RequestBody User incoming, @PathVariable long id) {
 
@@ -59,6 +75,16 @@ public class UserAdminController {
         }).orElse("failure");
     }
 
+
+
+    @Operation(
+            summary = "Create counsellor",
+            description = "Creates a new counsellor user with name, email, and password"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Counsellor created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
     @PostMapping("/counsellors")
     public ResponseEntity<?> createCounsellor(@RequestBody CreateCounsellorRequest req) {
         if (req.name == null || req.name.trim().isEmpty()) {

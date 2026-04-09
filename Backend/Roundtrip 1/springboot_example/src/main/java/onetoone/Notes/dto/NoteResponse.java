@@ -1,13 +1,22 @@
 package onetoone.Notes.dto;
 
 import onetoone.Notes.Note;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Response object for a note")
 public class NoteResponse {
+
+    @Schema(description = "Note ID", example = "1")
     private Long id;
+    @Schema(description = "Title of the note", example = "Meeting Summary")
     private String title;
+    @Schema(description = "Content of the note", example = "Discussed project timelines...")
     private String content;
+    @Schema(description = "Creation timestamp of the note", example = "2026-04-05T12:00:00")
     private String createdAt;
+    @Schema(description = "Last updated timestamp of the note", example = "2026-04-05T15:00:00")
     private String updatedAt;
+    @Schema(description = "ID of the user who owns the note", example = "2")
     private Long userId;      // just the userId, NOT the whole User object
 
     // converts Note entity → NoteResponse DTO

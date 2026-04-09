@@ -29,13 +29,13 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        EditText emailInput = findViewById(R.id.inputEmail);
+        EditText emailInput    = findViewById(R.id.inputEmail);
         EditText passwordInput = findViewById(R.id.inputPassword);
-        Button loginBtn = findViewById(R.id.btnLogin);
+        Button loginBtn        = findViewById(R.id.btnLogin);
         LinearLayout signUpBtn = findViewById(R.id.btnSignUp);
         roleSpinner            = findViewById(R.id.spinner_role);
 
-        String[] roles = {"USER", "COUNSELLOR"};
+        String[] roles = {"USER", "COUNSELLOR", "ADMIN"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_dropdown_item,
@@ -46,21 +46,20 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn.setOnClickListener(v -> {
             String email    = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString();
-            String role     = roleSpinner.getSelectedItem().toString(); // ← get role from spinner
+            String role     = roleSpinner.getSelectedItem().toString();
 
             if (email.isEmpty()) {
                 emailInput.setError("Enter your email");
                 emailInput.requestFocus();
                 return;
             }
-
             if (password.isEmpty()) {
                 passwordInput.setError("Enter your password");
                 passwordInput.requestFocus();
                 return;
             }
 
-            sendLoginRequest(email, password, role); // ← pass role
+            sendLoginRequest(email, password, role);
         });
 
         signUpBtn.setOnClickListener(v ->
@@ -69,83 +68,75 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void sendLoginRequest(String email, String password, String role) {
-
         String url = ApiConstants.LOGIN;
 
-        // Create JSON object with email and password
         JSONObject loginData = new JSONObject();
         try {
-            loginData.put("email", email);
+            loginData.put("email",    email);
             loginData.put("password", password);
-            loginData.put("role", role); // ← sent to backend
+            loginData.put("role",     role);
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Create request
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
                 url,
                 loginData,
                 response -> {
                     try {
-                        // Backend returns: { "id": ..., "email": ... }
-                        String userId = String.valueOf(response.getLong("id"));
+                        String userId        = String.valueOf(response.getLong("id"));
                         String emailReturned = response.getString("email");
-                        String returnedRole  = response.getString("role"); // routing uses backend response
+                        String returnedRole  = response.getString("role");
 
                         SharedPreferences.Editor editor =
                                 getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
-                        editor.putString("USER_ID", userId);
+
+                        // Clear ALL previous session data first
+                        editor.clear();
+
+                        editor.putString("USER_ID",    userId);
                         editor.putString("USER_EMAIL", emailReturned);
                         editor.putString("USER_ROLE",  returnedRole);
-
-                        // Clear cached counselor profile from any previous session
-                        editor.remove("COUNSELOR_DISPLAY_NAME");
-                        editor.remove("COUNSELOR_SPECIALIZATION");
-                        editor.remove("COUNSELOR_BIO");
-                        editor.remove("COUNSELOR_PROFILE_PIC");
-                        editor.remove("COUNSELOR_STATUS");
-
                         editor.apply();
 
-                        // Routing still uses backend response role
-                        if (returnedRole.equals("COUNSELLOR")) {
-                            startActivity(new Intent(LoginActivity.this, CounselorHomeActivity.class));
-                        } else {
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                        // Route based on role
+                        switch (returnedRole) {
+                            case "COUNSELLOR":
+                                startActivity(new Intent(this, CounselorHomeActivity.class));
+                                break;
+                            case "ADMIN":
+                                startActivity(new Intent(this, AdminDashboardActivity.class));
+                                break;
+                            default:
+                                startActivity(new Intent(this, HomeActivity.class));
+                                break;
                         }
                         finish();
 
                     } catch (Exception e) {
-                        Toast.makeText(LoginActivity.this, "Bad login response: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                "Bad login response: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-
                     if (error.networkResponse != null) {
-
                         int statusCode = error.networkResponse.statusCode;
-
                         if (statusCode == 401) {
                             Toast.makeText(this, "Invalid email or password", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        if (statusCode == 403) {
+                        } else if (statusCode == 403) {
                             Toast.makeText(this, "Account is inactive", Toast.LENGTH_LONG).show();
-                            return;
+                        } else {
+                            Toast.makeText(this, "Login failed: HTTP " + statusCode, Toast.LENGTH_LONG).show();
                         }
-
-                        Toast.makeText(this, "Login failed: HTTP " + statusCode, Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this, "Network error. Check connection.", Toast.LENGTH_LONG).show();
                     }
                 }
         );
 
-        // Add to request queue
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
     }
