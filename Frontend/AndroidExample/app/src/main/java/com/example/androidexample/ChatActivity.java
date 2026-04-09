@@ -37,6 +37,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -53,8 +54,6 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import java.io.IOException;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -88,7 +87,7 @@ public class ChatActivity extends AppCompatActivity {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     // ── Typing ────────────────────────────────────────────────────────────────
-    private final Runnable hideTypingRunnable     = () ->
+    private final Runnable hideTypingRunnable      = () ->
             tvTypingIndicator.setVisibility(View.INVISIBLE);
     private final Runnable sendTypingStartRunnable = this::sendTypingStart;
     private final Runnable sendTypingStopRunnable  = this::sendTypingStop;
@@ -97,12 +96,9 @@ public class ChatActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String[]> filePicker =
             registerForActivityResult(
                     new ActivityResultContracts.OpenDocument(),
-                    uri -> {
-                        if (uri != null) uploadFile(uri);
-                    }
+                    uri -> { if (uri != null) uploadFile(uri); }
             );
 
-    // ── OkHttp for file upload ────────────────────────────────────────────────
     private final OkHttpClient httpClient = new OkHttpClient();
 
     // ── Time formatter ────────────────────────────────────────────────────────
@@ -135,8 +131,6 @@ public class ChatActivity extends AppCompatActivity {
         tvChatPartnerName.setText(partnerName);
         btnBack.setOnClickListener(v -> finish());
         findViewById(R.id.btnSend).setOnClickListener(v -> sendMessage());
-
-        // Attach button — opens file picker for any file type
         findViewById(R.id.btnAttach).setOnClickListener(v ->
                 filePicker.launch(new String[]{"*/*"})
         );
@@ -193,9 +187,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // File upload
-    // POST /api/chat/upload (multipart)
-    // Returns: { "fileUrl": "...", "fileName": "...", "fileType": "..." }
+    // File upload — POST /api/chat/upload
     // ─────────────────────────────────────────────────────────────────────────
     private void uploadFile(Uri uri) {
         String fileName = getFileName(uri);
@@ -214,16 +206,16 @@ public class ChatActivity extends AppCompatActivity {
             byte[] fileBytes = inputStream.readAllBytes();
             inputStream.close();
 
-            String uploadUrl = ApiConstants.BASE_URL + "/api/chat/upload";
-            final String finalMimeType = mimeType;
+            String uploadUrl      = ApiConstants.BASE_URL + "/api/chat/upload";
+            final String finalMime = mimeType;
+            final String finalName = fileName;
 
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("senderId",   String.valueOf(myUserId))
                     .addFormDataPart("receiverId", String.valueOf(partnerUserId))
-                    .addFormDataPart("file", fileName,
-                            RequestBody.create(fileBytes,
-                                    MediaType.parse(finalMimeType)))
+                    .addFormDataPart("file", finalName,
+                            RequestBody.create(fileBytes, MediaType.parse(finalMime)))
                     .build();
 
             okhttp3.Request request = new okhttp3.Request.Builder()
@@ -237,8 +229,7 @@ public class ChatActivity extends AppCompatActivity {
                     mainHandler.post(() ->
                             Toast.makeText(ChatActivity.this,
                                     "Upload failed: " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show()
-                    );
+                                    Toast.LENGTH_LONG).show());
                 }
 
                 @Override
@@ -247,28 +238,24 @@ public class ChatActivity extends AppCompatActivity {
                         mainHandler.post(() ->
                                 Toast.makeText(ChatActivity.this,
                                         "Upload failed (HTTP " + response.code() + ")",
-                                        Toast.LENGTH_LONG).show()
-                        );
+                                        Toast.LENGTH_LONG).show());
                         return;
                     }
 
                     String body = response.body().string();
                     mainHandler.post(() -> {
                         try {
-                            JSONObject json    = new JSONObject(body);
-                            String fileUrl     = json.getString("fileUrl");
-                            String fName       = json.optString("fileName",  fileName);
-                            String fileType    = json.optString("fileType",  "FILE");
+                            JSONObject json = new JSONObject(body);
+                            String fileUrl  = json.getString("fileUrl");
+                            String fName    = json.optString("fileName", finalName);
+                            String fileType = json.optString("fileType", getFileTypeLabel(finalName));
 
-                            // Send file message over WebSocket
                             sendFileMessage(fileUrl, fName, fileType);
 
-                            // Show locally
-                            ChatMessage msg = new ChatMessage(
+                            appendMessage(new ChatMessage(
                                     myUserId, partnerUserId, "",
                                     timeFmt.format(new Date()), false,
-                                    fileUrl, fName, fileType);
-                            appendMessage(msg);
+                                    fileUrl, fName, fileType));
 
                             Toast.makeText(ChatActivity.this,
                                     "File sent!", Toast.LENGTH_SHORT).show();
@@ -289,8 +276,6 @@ public class ChatActivity extends AppCompatActivity {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Send file message over WebSocket
-    // { "senderId": X, "receiverId": Y, "content": "", "fileUrl": "...",
-    //   "fileName": "...", "fileType": "..." }
     // ─────────────────────────────────────────────────────────────────────────
     private void sendFileMessage(String fileUrl, String fileName, String fileType) {
         if (wsClient == null || !wsClient.isOpen()) return;
@@ -307,7 +292,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Download file using DownloadManager
+    // Download file
     // ─────────────────────────────────────────────────────────────────────────
     private void downloadFile(String fileUrl, String fileName) {
         try {
@@ -324,15 +309,10 @@ public class ChatActivity extends AppCompatActivity {
             dm.enqueue(request);
             Toast.makeText(this, "Downloading " + fileName, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            // Fallback — open in browser
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl));
-            startActivity(intent);
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl)));
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Get file name from URI
-    // ─────────────────────────────────────────────────────────────────────────
     private String getFileName(Uri uri) {
         String name = "file";
         Cursor cursor = getContentResolver().query(uri, null, null, null, null);
@@ -344,20 +324,17 @@ public class ChatActivity extends AppCompatActivity {
         return name;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Get file type label from file name
-    // ─────────────────────────────────────────────────────────────────────────
     private String getFileTypeLabel(String fileName) {
         if (fileName == null) return "FILE";
         String lower = fileName.toLowerCase();
-        if (lower.endsWith(".pdf"))                          return "PDF";
+        if (lower.endsWith(".pdf"))                                return "PDF";
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")
-                || lower.endsWith(".png"))                   return "IMAGE";
-        if (lower.endsWith(".doc") || lower.endsWith(".docx")) return "WORD";
-        if (lower.endsWith(".xls") || lower.endsWith(".xlsx")) return "EXCEL";
-        if (lower.endsWith(".mp4") || lower.endsWith(".mov"))  return "VIDEO";
-        if (lower.endsWith(".mp3") || lower.endsWith(".wav"))  return "AUDIO";
-        if (lower.endsWith(".zip") || lower.endsWith(".rar"))  return "ZIP";
+                || lower.endsWith(".png"))                         return "IMAGE";
+        if (lower.endsWith(".doc") || lower.endsWith(".docx"))     return "WORD";
+        if (lower.endsWith(".xls") || lower.endsWith(".xlsx"))     return "EXCEL";
+        if (lower.endsWith(".mp4") || lower.endsWith(".mov"))      return "VIDEO";
+        if (lower.endsWith(".mp3") || lower.endsWith(".wav"))      return "AUDIO";
+        if (lower.endsWith(".zip") || lower.endsWith(".rar"))      return "ZIP";
         return "FILE";
     }
 
@@ -543,7 +520,6 @@ public class ChatActivity extends AppCompatActivity {
         try {
             JSONObject obj = new JSONObject(text);
 
-            // No "type" field = real chat message (text or file)
             if (!obj.has("type")) {
                 ChatMessage msg = parseMessage(obj);
                 if (msg.senderId == myUserId) return;
@@ -606,16 +582,20 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Parse message — handles text and file messages
+    // Parse message — FIX: use isNull() to properly handle absent/null fields
+    // This fixes the "null" string bug on Android's JSONObject.optString()
     // ─────────────────────────────────────────────────────────────────────────
     private ChatMessage parseMessage(JSONObject obj) throws JSONException {
         long   senderId   = obj.getLong("senderId");
         long   receiverId = obj.getLong("receiverId");
-        String content    = obj.optString("content", "");
-        String rawTime    = obj.optString("sentAt", "");
-        String fileUrl    = obj.optString("fileUrl",  null);
-        String fileName   = obj.optString("fileName", null);
-        String fileType   = obj.optString("fileType", null);
+
+        // FIX: use isNull() check to avoid "null" string from optString()
+        String content  = obj.isNull("content")  ? "" : obj.optString("content", "");
+        String fileUrl  = obj.isNull("fileUrl")  ? null : obj.optString("fileUrl",  null);
+        String fileName = obj.isNull("fileName") ? null : obj.optString("fileName", null);
+        String fileType = obj.isNull("fileType") ? null : obj.optString("fileType", null);
+
+        String rawTime  = obj.optString("sentAt", "");
 
         // Auto-detect fileType from name if not provided
         if (fileUrl != null && fileType == null && fileName != null) {
@@ -656,19 +636,20 @@ public class ChatActivity extends AppCompatActivity {
         final long   senderId, receiverId;
         final String content, displayTime;
         boolean      isRead;
-        // file fields — null if this is a text message
         final String fileUrl, fileName, fileType;
 
         boolean isSystem() { return senderId == -1; }
-        boolean isFile()   { return fileUrl != null; }
 
-        // Text message constructor
+        // FIX: triple check to guard against "null" string from Android JSONObject
+        boolean isFile() {
+            return fileUrl != null && !fileUrl.isEmpty() && !fileUrl.equals("null");
+        }
+
         ChatMessage(long senderId, long receiverId,
                     String content, String displayTime, boolean isRead) {
             this(senderId, receiverId, content, displayTime, isRead, null, null, null);
         }
 
-        // Full constructor (text or file)
         ChatMessage(long senderId, long receiverId,
                     String content, String displayTime, boolean isRead,
                     String fileUrl, String fileName, String fileType) {
@@ -705,6 +686,7 @@ public class ChatActivity extends AppCompatActivity {
         public void onBindViewHolder(MsgViewHolder h, int position) {
             ChatMessage msg = messages.get(position);
 
+            // Reset all layouts first
             h.layoutSent.setVisibility(View.GONE);
             h.layoutReceived.setVisibility(View.GONE);
             h.layoutSystem.setVisibility(View.GONE);
@@ -717,18 +699,18 @@ public class ChatActivity extends AppCompatActivity {
                 h.layoutSent.setVisibility(View.VISIBLE);
                 h.tvSentTime.setText(msg.displayTime);
 
+                // FIX: always reset both to GONE first, then show the right one
+                h.tvSentMessage.setVisibility(View.GONE);
+                h.cardSentFile.setVisibility(View.GONE);
+
                 if (msg.isFile()) {
-                    // File bubble
-                    h.tvSentMessage.setVisibility(View.GONE);
                     h.cardSentFile.setVisibility(View.VISIBLE);
                     h.tvSentFileName.setText(msg.fileName);
                     h.tvSentFileType.setText(msg.fileType);
                     h.btnSentFileDownload.setOnClickListener(v ->
                             downloadFile(msg.fileUrl, msg.fileName));
                 } else {
-                    // Text bubble
                     h.tvSentMessage.setVisibility(View.VISIBLE);
-                    h.cardSentFile.setVisibility(View.GONE);
                     h.tvSentMessage.setText(msg.content);
                 }
 
@@ -745,18 +727,18 @@ public class ChatActivity extends AppCompatActivity {
                 h.tvReceivedTime.setText(msg.displayTime);
                 h.tvSenderName.setVisibility(View.GONE);
 
+                // FIX: always reset both to GONE first, then show the right one
+                h.tvReceivedMessage.setVisibility(View.GONE);
+                h.cardReceivedFile.setVisibility(View.GONE);
+
                 if (msg.isFile()) {
-                    // File bubble
-                    h.tvReceivedMessage.setVisibility(View.GONE);
                     h.cardReceivedFile.setVisibility(View.VISIBLE);
                     h.tvReceivedFileName.setText(msg.fileName);
                     h.tvReceivedFileType.setText(msg.fileType);
                     h.btnReceivedFileDownload.setOnClickListener(v ->
                             downloadFile(msg.fileUrl, msg.fileName));
                 } else {
-                    // Text bubble
                     h.tvReceivedMessage.setVisibility(View.VISIBLE);
-                    h.cardReceivedFile.setVisibility(View.GONE);
                     h.tvReceivedMessage.setText(msg.content);
                 }
             }
