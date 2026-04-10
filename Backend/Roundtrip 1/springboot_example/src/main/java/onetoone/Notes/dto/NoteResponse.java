@@ -30,6 +30,15 @@ public class NoteResponse {
     @Schema(description = "ID of the user who owns the note", example = "2")
     private Long userId;
 
+    @Schema(description = "Whether this note has been shared with a counsellor", example = "true")
+    private boolean shared;
+
+    @Schema(description = "User ID of the counsellor this note is shared with", example = "3")
+    private Long sharedWithCounsellorId;
+
+    @Schema(description = "Name of the counsellor this note is shared with", example = "Dr. Jane Doe")
+    private String sharedWithCounsellorName;
+
     public static NoteResponse from(Note note) {
         NoteResponse r = new NoteResponse();
         r.id = note.getId();
@@ -40,6 +49,11 @@ public class NoteResponse {
         r.createdAt = note.getCreatedAt().toString();
         r.updatedAt = note.getUpdatedAt().toString();
         r.userId = note.getUser().getId();
+        r.shared = note.isShared();
+        if (note.getSharedWithCounsellor() != null) {
+            r.sharedWithCounsellorId   = note.getSharedWithCounsellor().getId();
+            r.sharedWithCounsellorName = note.getSharedWithCounsellor().getName();
+        }
         return r;
     }
 
@@ -51,4 +65,7 @@ public class NoteResponse {
     public String getCreatedAt() { return createdAt; }
     public String getUpdatedAt() { return updatedAt; }
     public Long getUserId() { return userId; }
+    public boolean isShared() { return shared; }
+    public Long getSharedWithCounsellorId() { return sharedWithCounsellorId; }
+    public String getSharedWithCounsellorName() { return sharedWithCounsellorName; }
 }
