@@ -267,7 +267,11 @@ public class CheckInActivity extends AppCompatActivity {
                     finish();
                 },
                 error -> {
-                    Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show();
+                    if (error.networkResponse != null && error.networkResponse.statusCode == 409) {
+                        Toast.makeText(this, "You already checked in today! Go to Summary to edit it.", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show();
+                    }
                 }
         );
 
