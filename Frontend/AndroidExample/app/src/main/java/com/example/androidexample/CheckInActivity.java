@@ -27,6 +27,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 
+import com.android.volley.toolbox.JsonArrayRequest;
+
 public class CheckInActivity extends AppCompatActivity {
     private View[] circles;
     private int selectedRating = 0;
@@ -148,30 +150,38 @@ public class CheckInActivity extends AppCompatActivity {
         String userId = prefs.getString("USER_ID", "-1");
 
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/checkins/date/" + today;
+        String url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";  // Get ALL check-ins
 
-        JsonObjectRequest request = new JsonObjectRequest(
+        JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
                     try {
-                        // Today's check-in exists, pre-fill
-                        checkInId = response.getString("id");
-                        int rating = response.getInt("rating");
-                        String description = response.getString("description");
-                        String reminderTime = response.optString("reminderTime", "20:00");
+                        // Find today's check-in from the array
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject checkIn = response.getJSONObject(i);
+                            String date = checkIn.getString("date");
 
-                        updateRating(rating);
-                        descriptionInput.setText(description);
-                        reminderTimeInput.setText(reminderTime);
+                            if (date.equals(today)) {
+                                // Found today's check-in, pre-fill
+                                checkInId = checkIn.getString("id");
+                                int rating = checkIn.getInt("rating");
+                                String description = checkIn.getString("description");
+                                String reminderTime = checkIn.optString("reminderTime", "20:00");
 
+                                updateRating(rating);
+                                descriptionInput.setText(description);
+                                reminderTimeInput.setText(reminderTime);
+                                break;
+                            }
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 },
                 error -> {
-                    // No check-in for today, that's fine - new entry
+                    // No check-ins or error
                 }
         );
 

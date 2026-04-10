@@ -43,7 +43,7 @@ public class CheckInSummaryActivity extends AppCompatActivity {
     }
 
     private void fetchCheckIns(String userId) {
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/checkins";
+        String url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
