@@ -4,6 +4,7 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -98,7 +99,10 @@ public class CheckInActivity extends AppCompatActivity {
 
         // Update circle appearances
         for (int i = 0; i < circles.length; i++) {
-            if (i < rating) {
+            if (rating == 0) {
+                // No selection - all faded
+                circles[i].setBackgroundResource(getCircleDrawable(i + 1, true));
+            } else if (i < rating) {
                 // Solid color for selected
                 circles[i].setBackgroundResource(getCircleDrawable(i + 1, false));
             } else {
@@ -150,21 +154,31 @@ public class CheckInActivity extends AppCompatActivity {
         String userId = prefs.getString("USER_ID", "-1");
 
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        String url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";  // Get ALL check-ins
+        String url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";
+
+        Log.d("CheckIn", "Fetching check-ins from: " + url);
+        Log.d("CheckIn", "Looking for date: " + today);
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
+                    Log.d("CheckIn", "Response received, length: " + response.length());
+
                     try {
-                        // Find today's check-in from the array
+                        boolean foundToday = false;
+
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject checkIn = response.getJSONObject(i);
                             String date = checkIn.getString("date");
 
+                            Log.d("CheckIn", "Checking date: " + date + " vs " + today);
+
                             if (date.equals(today)) {
-                                // Found today's check-in, pre-fill
+                                foundToday = true;
+                                Log.d("CheckIn", "Found today's check-in!");
+
                                 checkInId = checkIn.getString("id");
                                 int rating = checkIn.getInt("rating");
                                 String description = checkIn.getString("description");
@@ -176,12 +190,21 @@ public class CheckInActivity extends AppCompatActivity {
                                 break;
                             }
                         }
+
+                        if (!foundToday) {
+                            Log.d("CheckIn", "No check-in for today, setting defaults");
+                            updateRating(0);
+                            descriptionInput.setText("");
+                            reminderTimeInput.setText("20:00");
+                        }
+
                     } catch (JSONException e) {
+                        Log.e("CheckIn", "JSON error: " + e.getMessage());
                         e.printStackTrace();
                     }
                 },
                 error -> {
-                    // No check-ins or error
+                    Log.e("CheckIn", "API error: " + error.toString());
                 }
         );
 
