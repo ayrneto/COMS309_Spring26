@@ -61,6 +61,12 @@ public class CounselorHomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, ChatListActivity.class));
         });
 
+        // ── Assign Task ───────────────────────────────────────────────────────
+        findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, AssignTaskActivity.class));
+        });
+
         // ── Edit Profile ──────────────────────────────────────────────────────
         findViewById(R.id.drawerItemEditProfile).setOnClickListener(v -> {
             drawerLayout.close();

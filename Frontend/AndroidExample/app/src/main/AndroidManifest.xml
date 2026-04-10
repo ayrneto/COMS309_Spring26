@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:usesCleartextTraffic="true"
@@ -41,10 +44,22 @@
         <activity android:name=".AdminDashboardActivity" />
         <activity android:name=".AdminEditUserActivity" />
         <activity android:name=".AppointmentRequestsActivity" />
+        <activity android:name=".AssignTaskActivity" />
+        <activity android:name=".TasksOverview" />
+        <activity android:name=".TaskDetailsActivity"/>
+        <activity android:name=".CheckInActivity" />
+        <activity android:name=".CheckInSummaryActivity" />
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+        <service android:name=".WebSocketService" />
+
+        <receiver android:name=".CheckInReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
+
 
 </manifest>

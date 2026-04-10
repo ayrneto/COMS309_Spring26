@@ -1,5 +1,6 @@
 package com.example.androidexample;
 
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
@@ -54,6 +55,7 @@ public class AddWorryActivity extends AppCompatActivity {
             isEditMode = true;
             noteId = extras.getLong("noteId");
 
+            // Pre-fill the fields
             titleInput.setText(extras.getString("title"));
             contentInput.setText(extras.getString("content"));
             dueDateInput.setText(extras.getString("dueDate"));
@@ -94,6 +96,7 @@ public class AddWorryActivity extends AppCompatActivity {
         });
     }
 
+    // Used only for when saving a NEW Worry Note
     private void saveWorry(String title, String content, String dueDate, String label) {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
@@ -103,38 +106,60 @@ public class AddWorryActivity extends AppCompatActivity {
         try {
             noteData.put("title",   title);
             noteData.put("content", content);
-        } catch (JSONException e) { e.printStackTrace(); }
+            noteData.put("dueDate", dueDate);
+            noteData.put("label", label);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.POST, url, noteData,
+                Request.Method.POST,
+                url,
+                noteData,
                 response -> {
                     Toast.makeText(this, "Worry saved!", Toast.LENGTH_SHORT).show();
-                    finish();
+                    finish();  // Go back to WorryNotes page
                 },
-                error -> Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show()
+                error -> {
+                    Toast.makeText(this, "Failed to save", Toast.LENGTH_SHORT).show();
+                }
         );
 
-        Volley.newRequestQueue(this).add(request);
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
     }
 
+
+    // Used only when updating an existing note
     private void updateWorry(String title, String content, String dueDate, String label) {
         String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
 
         JSONObject noteData = new JSONObject();
         try {
-            noteData.put("title",   title);
+            noteData.put("title", title);
             noteData.put("content", content);
-        } catch (JSONException e) { e.printStackTrace(); }
+            noteData.put("dueDate", dueDate);
+            noteData.put("label", label);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.PUT, url, noteData,
+                Request.Method.PUT,
+                url,
+                noteData,
                 response -> {
                     Toast.makeText(this, "Worry updated!", Toast.LENGTH_SHORT).show();
                     finish();
                 },
-                error -> Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show()
+                error -> {
+                    Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show();
+                }
         );
 
-        Volley.newRequestQueue(this).add(request);
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
     }
+
+
 }

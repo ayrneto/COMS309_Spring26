@@ -196,6 +196,29 @@
 
             </LinearLayout>
 
+            <!-- Assign Task (for counselors) -->
+            <LinearLayout
+                android:id="@+id/drawerItemAssignTask"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Assign Task"
+                    android:textSize="16sp"
+                    android:textColor="#1B1B1B"
+                    android:fontFamily="@font/alata" />
+
+            </LinearLayout>
+
             <!-- Edit Profile -->
             <LinearLayout
                 android:id="@+id/drawerItemEditProfile"

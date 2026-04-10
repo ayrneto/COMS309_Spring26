@@ -2,6 +2,8 @@ package com.example.androidexample;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -34,6 +36,14 @@ public class LoginActivity extends AppCompatActivity {
         Button loginBtn        = findViewById(R.id.btnLogin);
         LinearLayout signUpBtn = findViewById(R.id.btnSignUp);
         roleSpinner            = findViewById(R.id.spinner_role);
+
+        // Request notification permission on app start
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
+            }
+        }
 
         String[] roles = {"USER", "COUNSELLOR", "ADMIN"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -70,6 +80,7 @@ public class LoginActivity extends AppCompatActivity {
     private void sendLoginRequest(String email, String password, String role) {
         String url = ApiConstants.LOGIN;
 
+        // Create JSON object with email and password
         JSONObject loginData = new JSONObject();
         try {
             loginData.put("email",    email);
@@ -80,6 +91,7 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        // Create request
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
                 url,
@@ -100,6 +112,18 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("USER_EMAIL", emailReturned);
                         editor.putString("USER_ROLE",  returnedRole);
                         editor.apply();
+
+                        // Start WebSocket service
+                        Intent serviceIntent = new Intent(LoginActivity.this, WebSocketService.class);
+                        startService(serviceIntent);
+
+                        // After starting WebSocket service
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
+                            }
+                        }
 
                         // Route based on role
                         switch (returnedRole) {
@@ -137,6 +161,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
         );
 
+        // Add to request queue
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
     }

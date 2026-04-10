@@ -3,6 +3,7 @@ package com.example.androidexample;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -65,6 +66,37 @@ public class HomeActivity extends AppCompatActivity {
             intent.putExtra("name",     name);
             intent.putExtra("password", "");
             startActivity(intent);
+        });
+
+        String role = prefs.getString("USER_ROLE", "");
+
+    // Show/hide menu items based on role
+        if (role.equals("COUNSELLOR")) {
+            findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
+        } else {
+            findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
+        }
+
+    // My Tasks click listener
+            findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
+                drawerLayout.close();
+                startActivity(new Intent(this, TasksOverview.class));
+            });
+
+    // Assign Task click listener
+            findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
+                drawerLayout.close();
+                startActivity(new Intent(this, AssignTaskActivity.class));
+            });
+
+        // Check-In click listener
+        findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, CheckInActivity.class));
         });
 
         // ── Log Out ───────────────────────────────────────────────────────────

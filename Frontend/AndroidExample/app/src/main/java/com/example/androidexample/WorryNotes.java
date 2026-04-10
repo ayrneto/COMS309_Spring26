@@ -3,9 +3,11 @@ package com.example.androidexample;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -29,6 +32,7 @@ public class WorryNotes extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worry_notes);
 
+        //Getting global values:
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         Long userId = Long.parseLong(prefs.getString("USER_ID", "-1"));
 
@@ -59,16 +63,19 @@ public class WorryNotes extends AppCompatActivity {
 
     private void displayNotes(JSONArray notes) {
         GridLayout container = findViewById(R.id.worriesContainer);
-        container.removeAllViews();
+        container.removeAllViews(); // This resets all the worries in view
 
         try {
             for (int i = notes.length() - 1; i >= 0; i--) {
                 JSONObject note = notes.getJSONObject(i);
-                long   noteId  = note.getLong("id");
-                String title   = note.getString("title");
+
+                long noteId = note.getLong("id");
+                String title = note.getString("title");
                 String content = note.getString("content");
-                String dueDate = "No date";
-                String label   = "Label";
+                String dueDate = note.getString("dueDate");
+                String label = note.getString("label");
+
+
                 addNoteCard(container, title, content, dueDate, label, noteId);
             }
         } catch (JSONException e) {
@@ -91,44 +98,65 @@ public class WorryNotes extends AppCompatActivity {
         container.addView(cardView);
     }
 
-    private void showEditDeleteDialog(long noteId, String title, String content,
-                                      String dueDate, String label) {
-        new AlertDialog.Builder(this)
-                .setTitle("Choose Action")
-                .setPositiveButton("Edit", (dialog, which) -> {
-                    Intent intent = new Intent(WorryNotes.this, AddWorryActivity.class);
-                    intent.putExtra("noteId",  noteId);
-                    intent.putExtra("title",   title);
-                    intent.putExtra("content", content);
-                    intent.putExtra("dueDate", dueDate);
-                    intent.putExtra("label",   label);
-                    startActivity(intent);
-                })
-                .setNegativeButton("Delete", (dialog, which) -> deleteNote(noteId))
-                .setNeutralButton("Cancel", null)
-                .show();
+    // Methods for editing / deleting note popup:
+    private void showEditDeleteDialog(long noteId, String title, String content, String dueDate, String label) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose Action");
+
+        builder.setPositiveButton("Edit", (dialog, which) -> {
+            // Open AddWorryActivity with existing data
+            Intent intent = new Intent(WorryNotes.this, AddWorryActivity.class);
+            intent.putExtra("noteId", noteId);
+            intent.putExtra("title", title);
+            intent.putExtra("content", content);
+            intent.putExtra("dueDate", dueDate);
+            intent.putExtra("label", label);
+            startActivity(intent);
+        });
+
+        builder.setNegativeButton("Delete", (dialog, which) -> {
+            deleteNote(noteId);
+        });
+
+        builder.setNeutralButton("Cancel", null);
+
+        builder.show();
     }
 
     private void deleteNote(long noteId) {
         String url = ApiConstants.BASE_URL + "/api/notes/" + noteId;
 
         StringRequest request = new StringRequest(
-                Request.Method.DELETE, url,
+                Request.Method.DELETE,
+                url,
                 response -> {
                     Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
+                    // Refresh the list
                     SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-                    fetchUserNotes(Long.parseLong(prefs.getString("USER_ID", "-1")));
+                    String userIdString = prefs.getString("USER_ID", "-1");
+                    Long userId = Long.parseLong(userIdString);
+                    fetchUserNotes(userId);
                 },
-                error -> Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show()
+                error -> {
+                    Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+                }
         );
 
-        Volley.newRequestQueue(this).add(request);
+        RequestQueue queue = Volley.newRequestQueue(this);
+        queue.add(request);
     }
 
+    // Causes the WorryNotes page to refresh right away when updating or adding notes
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Refresh the notes list
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
-        fetchUserNotes(Long.parseLong(prefs.getString("USER_ID", "-1")));
+        String userIdString = prefs.getString("USER_ID", "-1");
+        Long userId = Long.parseLong(userIdString);
+        fetchUserNotes(userId);
     }
+
+
 }
