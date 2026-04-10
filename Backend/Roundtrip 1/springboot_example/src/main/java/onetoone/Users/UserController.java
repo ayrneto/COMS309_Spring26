@@ -192,7 +192,7 @@ public class UserController {
      * POST /users/{id}/checkin
      * Body: { "anxietyLevel": 7, "note": "Feeling stressed about exams" }
      */
-    @PostMapping("/users/{userId}/checkins")
+    @PostMapping("/{userId}/checkins")
     public ResponseEntity<?> createCheckIn(
             @PathVariable Long userId,
             @RequestBody Map<String, Object> body) {
