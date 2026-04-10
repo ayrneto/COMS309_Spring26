@@ -85,13 +85,14 @@ public class CheckInActivity extends AppCompatActivity {
             updateRating(rating);
             descriptionInput.setText(description);
             reminderTimeInput.setText(reminderTime);
-        } else {
-            // Load today's check-in if it exists
-            loadTodayCheckIn();
         }
 
-        // Load today's check-in if it exists
-        loadTodayCheckIn();
+        // Commented out for better UI look (PLEASE. DON'T. DELETE.)
+//        else {
+//            // Load today's check-in if it exists
+//            loadTodayCheckIn();
+//        }
+
     }
 
     private void updateRating(int rating) {
@@ -235,11 +236,11 @@ public class CheckInActivity extends AppCompatActivity {
 
         if (checkInId == null) {
             // Create new
-            url = ApiConstants.BASE_URL + "/users/users/" + userId + "/checkins";
+            url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";
             method = Request.Method.POST;
         } else {
             // Update existing
-            url = ApiConstants.BASE_URL + "/api/checkins/" + checkInId;
+            url = ApiConstants.BASE_URL + "/users/checkins/" + checkInId;
             method = Request.Method.PUT;
         }
 

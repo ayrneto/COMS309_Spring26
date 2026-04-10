@@ -136,7 +136,7 @@ public class CheckInSummaryActivity extends AppCompatActivity {
     }
 
     private void deleteCheckIn(String checkInId) {
-        String url = ApiConstants.BASE_URL + "/api/checkins/" + checkInId;
+        String url = ApiConstants.BASE_URL + "/users/checkins/" + checkInId;
 
         StringRequest request = new StringRequest(
                 Request.Method.DELETE,
