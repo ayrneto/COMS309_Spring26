@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/gradient_green_background"
-    tools:context=".TaskDetailsActivity"
+    tools:context=".RoutineTrackerActivity"
     android:orientation="vertical">
 
     <LinearLayout
@@ -25,9 +25,10 @@
                 android:layout_gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Task Assignment"
+                android:text="Create Your Routine"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
@@ -38,12 +39,11 @@
             android:layout_marginTop="32dp"
             app:cardCornerRadius="20dp">
 
-            <TextView
-                android:id="@+id/taskTitle"
-                android:textStyle="bold"
+            <EditText
+                android:id="@+id/routineTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Task Title Placeholder"
+                android:hint="Routine Title"
                 android:textSize="24sp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
@@ -71,11 +71,11 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="4dp"/>
 
-            <TextView
-                android:id="@+id/taskDescription"
+            <EditText
+                android:id="@+id/routineDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Task description goes here"
+                android:hint="Enter the routine's description"
                 android:textSize="20sp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
@@ -94,7 +94,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Due Date"
+                android:text="Routine Start Date"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginStart="16dp"
@@ -102,11 +102,11 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="4dp" />
 
-            <TextView
-                android:id="@+id/taskDueDate"
+            <EditText
+                android:id="@+id/routineStartDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Due: 2026-03-15"
+                android:hint="Start Date"
                 android:textSize="20sp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
@@ -125,7 +125,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Status"
+                android:text="Label"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginStart="16dp"
@@ -134,7 +134,7 @@
                 android:layout_marginTop="4dp" />
 
             <Spinner
-                android:id="@+id/spinnerStatus"
+                android:id="@+id/spinnerLabel"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:layout_marginStart="16dp"
@@ -144,13 +144,13 @@
         </androidx.cardview.widget.CardView>
 
         <Button
-            android:id="@+id/btnBack"
+            android:id="@+id/btnSave"
             android:focusable="false"
             android:clickable="true"
-            android:layout_marginTop="120dp"
+            android:layout_marginTop="60dp"
             android:layout_width="360dp"
             android:layout_height="wrap_content"
-            android:text="Back"
+            android:text="Save"
             android:textSize="32sp"
             android:layout_gravity="center" />
 
