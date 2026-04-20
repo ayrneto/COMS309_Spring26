@@ -35,26 +35,21 @@
 
     <!-- Filter Spinner -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
+        android:layout_gravity="center"
         android:layout_marginBottom="20dp">
+            <Spinner
+                android:id="@+id/filterSpinner"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:background="@drawable/chat_input_bg"
+                android:padding="10dp"
+                android:layout_marginEnd="8dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sort by: "
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginEnd="10dp"/>
-
-        <Spinner
-            android:id="@+id/filterSpinner"
-            android:layout_width="200dp"
-            android:layout_height="40dp"
-            android:background="@android:drawable/btn_dropdown"
-            android:padding="8dp"/>
 
     </LinearLayout>
 
@@ -64,7 +59,7 @@
 
         <GridLayout
             android:id="@+id/routinesContainer"
-            android:columnCount="2"
+            android:columnCount="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:alignmentMode="alignMargins">

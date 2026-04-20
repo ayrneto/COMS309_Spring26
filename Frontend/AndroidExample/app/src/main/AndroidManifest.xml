@@ -50,6 +50,7 @@
         <activity android:name=".CheckInActivity" />
         <activity android:name=".CheckInSummaryActivity" />
         <activity android:name=".RoutineTrackerActivity" />
+        <activity android:name=".RoutineSummaryActivity"/>
 
         <meta-data
             android:name="preloaded_fonts"
