@@ -49,6 +49,7 @@
         <activity android:name=".TaskDetailsActivity"/>
         <activity android:name=".CheckInActivity" />
         <activity android:name=".CheckInSummaryActivity" />
+        <activity android:name=".RoutineTrackerActivity" />
 
         <meta-data
             android:name="preloaded_fonts"
