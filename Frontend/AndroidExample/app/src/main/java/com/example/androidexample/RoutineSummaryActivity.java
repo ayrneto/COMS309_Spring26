@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -43,9 +44,15 @@ public class RoutineSummaryActivity extends AppCompatActivity {
 
         routinesContainer = findViewById(R.id.routinesContainer);
         filterSpinner = findViewById(R.id.filterSpinner);
+        FrameLayout btnAddRoutine = findViewById(R.id.btnAddRoutine);
 
         setupFilter();
         fetchRoutines();
+
+        btnAddRoutine.setOnClickListener(v -> {
+            Intent intent = new Intent(RoutineSummaryActivity.this, RoutineTrackerActivity.class);
+            startActivity(intent);
+        });
     }
 
     @Override

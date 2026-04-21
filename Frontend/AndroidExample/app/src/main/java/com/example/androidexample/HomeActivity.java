@@ -75,10 +75,12 @@ public class HomeActivity extends AppCompatActivity {
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
+            findViewById(R.id.drawerRoutineTracker).setVisibility(View.GONE);
         } else {
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
+            findViewById(R.id.drawerRoutineTracker).setVisibility(View.VISIBLE);
         }
 
     // My Tasks click listener
@@ -97,6 +99,12 @@ public class HomeActivity extends AppCompatActivity {
         findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -> {
             drawerLayout.close();
             startActivity(new Intent(this, CheckInActivity.class));
+        });
+
+        // Routine Summary listener
+        findViewById(R.id.drawerRoutineTracker).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, RoutineSummaryActivity.class));
         });
 
         // ── Log Out ───────────────────────────────────────────────────────────
