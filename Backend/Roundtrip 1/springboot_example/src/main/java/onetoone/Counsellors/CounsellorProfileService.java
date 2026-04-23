@@ -5,6 +5,7 @@ import onetoone.Counsellors.dto.CounsellorProfileResponse;
 import onetoone.Users.Role;
 import onetoone.Users.User;
 import onetoone.Users.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,22 +15,24 @@ import java.util.Optional;
 public class CounsellorProfileService {
 
     private final CounsellorProfileRepository profileRepo;
-    private final UserRepository userRepo;
+    @Autowired
+    private final UserRepository userRepository;
 
     public CounsellorProfileService(CounsellorProfileRepository profileRepo, UserRepository userRepo) {
         this.profileRepo = profileRepo;
-        this.userRepo = userRepo;
+        this.userRepository = userRepo;
     }
 
     public CounsellorProfileResponse upsertProfile(long counsellorUserId, CounsellorProfileRequest req) {
-        User counsellor = userRepo.findById(counsellorUserId).orElse(null);
-        if (counsellor == null) throw new IllegalArgumentException("Counsellor user not found");
+        User user = userRepository.findById(counsellorUserId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        if (req == null) throw new IllegalArgumentException("Counsellor user not found");
 
 
         CounsellorProfile profile = profileRepo.findByUser_Id(counsellorUserId)
                 .orElseGet(CounsellorProfile::new);
 
-        profile.setUser(counsellor);
+        profile.setUser(req.getUser);
         profile.setDisplayName(nonEmptyOrThrow(req.displayName, "displayName"));
         profile.setSpecialization(nonEmptyOrThrow(req.specialization, "specialization"));
         profile.setBio(req.bio);

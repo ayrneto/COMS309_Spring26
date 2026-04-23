@@ -64,11 +64,11 @@ public class UserCounsellorAssignmentController {
             @PathVariable long userId,
             @PathVariable long counsellorId) {
 
-        User user = userRepository.findById(userId).orElse(null);
+        User user = userRepository.findById(userId);
         if (user == null)
             return ResponseEntity.status(404).body("{\"message\":\"User not found\"}");
 
-        User counsellorUser = userRepository.findById(counsellorId).orElse(null);
+        User counsellorUser = userRepository.findById(counsellorId);
         if (counsellorUser == null)
             return ResponseEntity.status(404).body("{\"message\":\"Counsellor not found\"}");
 
@@ -94,7 +94,7 @@ public class UserCounsellorAssignmentController {
     @PostMapping("/user/{userId}/random")
     public ResponseEntity<?> randomlyAssignCounsellor(@PathVariable long userId) {
 
-        User user = userRepository.findById(userId).orElse(null);
+        User user = userRepository.findById(userId);
         if (user == null)
             return ResponseEntity.status(404).body("{\"message\":\"User not found\"}");
 
