@@ -68,9 +68,13 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // ── AI Chat ───────────────────────────────────────────────────────────
+        findViewById(R.id.cardAiChat).setOnClickListener(v ->
+                startActivity(new Intent(this, AIChatActivity.class)));
+
         String role = prefs.getString("USER_ROLE", "");
 
-    // Show/hide menu items based on role
+        // Show/hide menu items based on role
         if (role.equals("COUNSELLOR")) {
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
@@ -81,17 +85,17 @@ public class HomeActivity extends AppCompatActivity {
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
         }
 
-    // My Tasks click listener
-            findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
-                drawerLayout.close();
-                startActivity(new Intent(this, TasksOverview.class));
-            });
+        // My Tasks click listener
+        findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, TasksOverview.class));
+        });
 
-    // Assign Task click listener
-            findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
-                drawerLayout.close();
-                startActivity(new Intent(this, AssignTaskActivity.class));
-            });
+        // Assign Task click listener
+        findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, AssignTaskActivity.class));
+        });
 
         // Check-In click listener
         findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -> {
