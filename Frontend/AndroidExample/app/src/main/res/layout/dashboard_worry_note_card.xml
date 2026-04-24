@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
+    android:elevation="4dp"
+    app:cardCornerRadius="20dp"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/worryTitle"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Worry Title"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/worryContent"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="This is a placeholder"
+            android:textSize="20sp"
+            android:layout_marginTop="0dp" />
+
+        <TextView
+            android:id="@+id/worryDueDate"
+            android:background="@drawable/light_green_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="wrap_content"
+            android:text="Due: 2026-03-15"
+            android:textColor="#000000"
+            android:layout_marginTop="0dp" />
+
+        <TextView
+            android:id="@+id/worryLabel"
+            android:background="@drawable/dark_green_background"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textColor="#FFFFFF"
+            android:layout_width="168dp"
+            android:layout_height="25dp"
+            android:text="Work"
+            android:layout_marginTop="10dp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

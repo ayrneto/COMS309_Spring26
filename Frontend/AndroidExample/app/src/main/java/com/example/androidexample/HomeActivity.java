@@ -5,10 +5,19 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -116,5 +125,144 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
             finishAffinity();
         });
+
+        // Load the summaries
+        loadDashboard();
+    }
+
+    private void loadDashboard() {
+        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String role = prefs.getString("USER_ROLE", "");
+
+        if (role.equals("USER")) {
+            addRoutineSummaryCard(dashboardContainer);
+            addWorryNoteCard(dashboardContainer);
+        } else {
+            // Counselor dashboard cards
+        }
+    }
+
+    private void addRoutineSummaryCard(LinearLayout container) {
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String userId = prefs.getString("USER_ID", "-1");
+        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/routines";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    if (response.length() == 0) {
+                        // No routines, show placeholder or hide card
+                        return;
+                    }
+
+                    try {
+                        // Find routine with highest progress (not completed)
+                        JSONObject topRoutine = null;
+                        int maxProgress = -1;
+
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject routine = response.getJSONObject(i);
+                            boolean completed = routine.getBoolean("completed");
+                            int streakCount = routine.getInt("streakCount");
+
+                            if (!completed && streakCount > maxProgress) {
+                                maxProgress = streakCount;
+                                topRoutine = routine;
+                            }
+                        }
+
+                        if (topRoutine == null) {
+                            // All routines completed
+                            return;
+                        }
+
+                        // Inflate and populate card
+                        View card = getLayoutInflater().inflate(R.layout.routine_card, container, false);
+
+                        TextView title = card.findViewById(R.id.routineTitle);
+                        TextView progress = card.findViewById(R.id.routineProgress);
+                        TextView label = card.findViewById(R.id.routineLabel);
+                        ProgressBar progressBar = card.findViewById(R.id.progressBar);
+
+                        title.setText(topRoutine.getString("title"));
+                        progress.setText("Day " + maxProgress + "/60");
+                        label.setText(topRoutine.getString("label"));
+                        progressBar.setMax(60);
+                        progressBar.setProgress(maxProgress);
+
+                        // Click to open routines page
+                        card.setOnClickListener(v -> {
+                            startActivity(new Intent(this, RoutineSummaryActivity.class));
+                        });
+
+                        container.addView(card);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    // Failed to load routines, don't show card
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void addWorryNoteCard(LinearLayout container) {
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String userId = prefs.getString("USER_ID", "-1");
+        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/notes";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    if (response.length() == 0) {
+                        // No worry notes, don't show card
+                        return;
+                    }
+
+                    try {
+                        // Get most recent note (last in array)
+                        JSONObject latestNote = response.getJSONObject(response.length() - 1);
+
+                        // Inflate and populate card
+                        View card = getLayoutInflater().inflate(R.layout.note_card, container, false);
+
+                        TextView title = card.findViewById(R.id.worryTitle);
+                        TextView content = card.findViewById(R.id.worryContent);
+                        TextView dueDate = card.findViewById(R.id.worryDueDate);
+                        TextView label = card.findViewById(R.id.worryLabel);
+
+                        title.setText(latestNote.getString("title"));
+                        content.setText(latestNote.getString("content"));
+
+                        String dueDateStr = latestNote.optString("dueDate", "No due date");
+                        dueDate.setText("Due: " + dueDateStr);
+
+                        label.setText(latestNote.optString("label", ""));
+
+                        // Click to open worry notes page
+                        card.setOnClickListener(v -> {
+                            startActivity(new Intent(this, WorryNotes.class));
+                        });
+
+                        container.addView(card);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    // Failed to load notes, don't show card
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 }
