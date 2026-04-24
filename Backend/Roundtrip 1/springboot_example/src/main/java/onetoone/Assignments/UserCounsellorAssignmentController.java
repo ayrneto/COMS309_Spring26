@@ -64,13 +64,10 @@ public class UserCounsellorAssignmentController {
             @PathVariable long userId,
             @PathVariable long counsellorId) {
 
-        User user = userRepository.findById(userId);
-        if (user == null)
-            return ResponseEntity.status(404).body("{\"message\":\"User not found\"}");
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        User counsellorUser = userRepository.findById(counsellorId);
-        if (counsellorUser == null)
-            return ResponseEntity.status(404).body("{\"message\":\"Counsellor not found\"}");
+
+       User counsellorUser =  userRepository.findById(counsellorId).orElseThrow(() -> new RuntimeException("Counsellor not found"));
 
         // Check counsellor has a profile
         var counsellorProfile = profileRepo.findByUser_Id(counsellorId).orElse(null);
@@ -94,9 +91,7 @@ public class UserCounsellorAssignmentController {
     @PostMapping("/user/{userId}/random")
     public ResponseEntity<?> randomlyAssignCounsellor(@PathVariable long userId) {
 
-        User user = userRepository.findById(userId);
-        if (user == null)
-            return ResponseEntity.status(404).body("{\"message\":\"User not found\"}");
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // Get all counsellor profiles
         List<CounsellorProfile> allCounsellors = profileRepo.findAll();
