@@ -19,6 +19,10 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class HomeActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
@@ -138,6 +142,8 @@ public class HomeActivity extends AppCompatActivity {
         if (role.equals("USER")) {
             addRoutineSummaryCard(dashboardContainer);
             addWorryNoteCard(dashboardContainer);
+            addTaskCard(dashboardContainer);
+            addCheckInCard(dashboardContainer);
         } else {
             // Counselor dashboard cards
         }
@@ -264,5 +270,176 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         Volley.newRequestQueue(this).add(request);
+    }
+
+    private void addTaskCard(LinearLayout container) {
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String userId = prefs.getString("USER_ID", "-1");
+        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/tasks";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    if (response.length() == 0) {
+                        // No tasks, don't show card
+                        return;
+                    }
+
+                    try {
+                        // Find most urgent task (soonest due date, not completed)
+                        JSONObject urgentTask = null;
+                        String earliestDueDate = null;
+
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject task = response.getJSONObject(i);
+                            String status = task.getString("status");
+
+                            if (status.equals("Completed")) {
+                                continue; // Skip completed tasks
+                            }
+
+                            String dueDate = task.optString("dueDate", null);
+                            if (dueDate != null) {
+                                if (earliestDueDate == null || dueDate.compareTo(earliestDueDate) < 0) {
+                                    earliestDueDate = dueDate;
+                                    urgentTask = task;
+                                }
+                            }
+                        }
+
+                        if (urgentTask == null) {
+                            // No active tasks
+                            return;
+                        }
+
+                        // Inflate and populate card
+                        View card = getLayoutInflater().inflate(R.layout.dashboard_task_card, container, false);
+
+                        TextView title = card.findViewById(R.id.taskTitle);
+                        TextView description = card.findViewById(R.id.taskDescription);
+                        TextView dueDate = card.findViewById(R.id.taskDueDate);
+                        TextView status = card.findViewById(R.id.taskStatus);
+
+                        title.setText(urgentTask.getString("title"));
+                        description.setText(urgentTask.getString("description"));
+                        dueDate.setText("Due: " + urgentTask.optString("dueDate", "No due date"));
+
+                        String taskStatus = urgentTask.getString("status");
+                        status.setText(taskStatus);
+
+                        // Set status background color
+                        if (taskStatus.equals("Not Started")) {
+                            status.setBackgroundResource(R.drawable.red_background);
+                        } else if (taskStatus.equals("Ongoing")) {
+                            status.setBackgroundResource(R.drawable.yellow_background);
+                        } else {
+                            status.setBackgroundResource(R.drawable.green_background);
+                        }
+
+                        // Click to open tasks page
+                        card.setOnClickListener(v -> {
+                            startActivity(new Intent(this, TasksOverview.class));
+                        });
+
+                        container.addView(card);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> {
+                    // Failed to load tasks, don't show card
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void addCheckInCard(LinearLayout container) {
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String userId = prefs.getString("USER_ID", "-1");
+        String url = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    // Inflate card
+                    View card = getLayoutInflater().inflate(R.layout.dashboard_checkin_card, container, false);
+
+                    View circle = card.findViewById(R.id.checkinCircle);
+                    TextView status = card.findViewById(R.id.checkinStatus);
+
+                    boolean checkedInToday = false;
+                    int rating = 0;
+
+                    // Check if checked in today
+                    try {
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject checkIn = response.getJSONObject(i);
+                            String date = checkIn.getString("date");
+
+                            if (date.equals(today)) {
+                                checkedInToday = true;
+                                rating = checkIn.getInt("rating");
+                                break;
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (checkedInToday) {
+                        // Show rating circle
+                        circle.setBackgroundResource(getCircleDrawable(rating));
+                        status.setText("You rated today: " + rating + "/5");
+                    } else {
+                        // Show faded circle
+                        circle.setBackgroundResource(R.drawable.circle_rating_3_faded);
+                        status.setText("Not checked in yet");
+                    }
+
+                    // Click to open check-in
+                    card.setOnClickListener(v -> {
+                        startActivity(new Intent(this, CheckInActivity.class));
+                    });
+
+                    container.addView(card);
+                },
+                error -> {
+                    // Failed to load, show "not checked in"
+                    View card = getLayoutInflater().inflate(R.layout.dashboard_checkin_card, container, false);
+
+                    View circle = card.findViewById(R.id.checkinCircle);
+                    TextView status = card.findViewById(R.id.checkinStatus);
+
+                    circle.setBackgroundResource(R.drawable.circle_rating_3_faded);
+                    status.setText("Not checked in yet");
+
+                    card.setOnClickListener(v -> {
+                        startActivity(new Intent(this, CheckInActivity.class));
+                    });
+
+                    container.addView(card);
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private int getCircleDrawable(int rating) {
+        switch (rating) {
+            case 1: return R.drawable.circle_rating_1;
+            case 2: return R.drawable.circle_rating_2;
+            case 3: return R.drawable.circle_rating_3;
+            case 4: return R.drawable.circle_rating_4;
+            case 5: return R.drawable.circle_rating_5;
+            default: return R.drawable.circle_rating_3;
+        }
     }
 }

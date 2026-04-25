@@ -19,44 +19,44 @@
         android:padding="4dp">
 
         <TextView
-            android:id="@+id/worryTitle"
-            android:layout_gravity="center"
+            android:id="@+id/taskTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Worry Title"
+            android:layout_gravity="center"
+            android:text="Title"
             android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/worryContent"
-            android:layout_gravity="center"
+            android:id="@+id/taskDescription"
             android:layout_width="match_parent"
             android:layout_height="75dp"
-            android:text="This is a placeholder"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_marginTop="0dp"
             android:textSize="20sp"
-            android:gravity="center"
-            android:layout_marginTop="0dp" />
+            android:text="This is a placeholder" />
 
         <TextView
-            android:id="@+id/worryDueDate"
-            android:background="@drawable/light_green_background"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:layout_width="168dp"
-            android:layout_height="wrap_content"
-            android:text="Due: 2026-03-15"
-            android:textColor="#000000"
-            android:layout_marginTop="0dp" />
-
-        <TextView
-            android:id="@+id/worryLabel"
+            android:id="@+id/taskDueDate"
             android:background="@drawable/dark_green_background"
-            android:gravity="center"
             android:layout_gravity="center"
-            android:textColor="#FFFFFF"
+            android:gravity="center"
             android:layout_width="168dp"
-            android:layout_height="25dp"
-            android:text="Work"
+            android:layout_height="24dp"
+            android:text="Due: 2026-03-15"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="0dp" />
+
+        <TextView
+            android:id="@+id/taskStatus"
+            android:background="@drawable/red_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="24dp"
+            android:text="Not Started"
+            android:textColor="#FFFFFF"
             android:layout_marginTop="10dp" />
 
     </LinearLayout>
