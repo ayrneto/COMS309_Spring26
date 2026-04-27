@@ -1,5 +1,6 @@
 package com.example.androidexample;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -7,10 +8,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -27,6 +26,7 @@ public class AIChatActivity extends AppCompatActivity {
     private EditText etMessage;
     private ImageButton btnSend;
     private RequestQueue requestQueue;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +37,9 @@ public class AIChatActivity extends AppCompatActivity {
         scrollView    = findViewById(R.id.scrollView);
         etMessage     = findViewById(R.id.etMessage);
         btnSend       = findViewById(R.id.btnSend);
+
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        userId = prefs.getString("USER_ID", "1");
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -56,7 +59,7 @@ public class AIChatActivity extends AppCompatActivity {
     private void sendToAI(String userMessage) {
         TextView typingIndicator = addBotMessage("...");
 
-        String url = ApiConstants.BASE_URL + "/api/ai/chat";
+        String url = ApiConstants.BASE_URL + "/api/ai-chat/" + userId;
 
         JSONObject body = new JSONObject();
         try {
@@ -73,7 +76,7 @@ public class AIChatActivity extends AppCompatActivity {
                     chatContainer.removeView(typingIndicator.getParent() != null
                             ? (View) typingIndicator.getParent() : typingIndicator);
                     try {
-                        String reply = response.getString("reply");
+                        String reply = response.getString("aiReply");
                         addBotMessage(reply);
                     } catch (JSONException e) {
                         addBotMessage("Sorry, I couldn't understand the response.");
