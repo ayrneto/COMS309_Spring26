@@ -2,6 +2,7 @@ package onetoone.Counsellors.dto;
 
 import onetoone.Counsellors.CounsellorStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import onetoone.Users.User;
 
 @Schema(description = "Request body for creating or updating a counsellor profile")
 public class CounsellorProfileRequest {
@@ -16,4 +17,7 @@ public class CounsellorProfileRequest {
     public String profilePictureUrl;
     @Schema(description = "Availability status of the counsellor", example = "AVAILABLE")
     public CounsellorStatus status;
+
+    @Schema(description = "User profile")
+    public User getUser;
 }

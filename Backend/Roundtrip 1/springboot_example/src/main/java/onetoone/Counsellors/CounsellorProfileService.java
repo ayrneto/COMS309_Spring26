@@ -25,7 +25,7 @@ public class CounsellorProfileService {
 
     public CounsellorProfileResponse upsertProfile(long counsellorUserId, CounsellorProfileRequest req) {
         User user = userRepository.findById(counsellorUserId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("User not found with id: " +counsellorUserId));
         if (req == null) throw new IllegalArgumentException("Counsellor user not found");
 
 
