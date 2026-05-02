@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounselorProfileActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CounselorProfileActivity.java</span></div><h1>CounselorProfileActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+
+<span class="nc" id="L17">public class CounselorProfileActivity extends AppCompatActivity {</span>
+
+    private TextView tvEmail, tvDisplayName, tvSpecialization, tvBio, tvStatus, tvRating;
+    private Button btnEditProfile, btnBack, btnDelete;
+
+<span class="nc" id="L22">    private String userId = &quot;&quot;;</span>
+<span class="nc" id="L23">    private String email = &quot;&quot;;</span>
+<span class="nc" id="L24">    private String savedName = &quot;&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L28">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L29">        setContentView(R.layout.activity_counselor_profile);</span>
+
+<span class="nc" id="L31">        tvEmail          = findViewById(R.id.tvEmail);</span>
+<span class="nc" id="L32">        tvDisplayName    = findViewById(R.id.tvDisplayName);</span>
+<span class="nc" id="L33">        tvSpecialization = findViewById(R.id.tvSpecialization);</span>
+<span class="nc" id="L34">        tvBio            = findViewById(R.id.tvBio);</span>
+<span class="nc" id="L35">        tvStatus         = findViewById(R.id.tvStatus);</span>
+<span class="nc" id="L36">        tvRating         = findViewById(R.id.tvRating);</span>
+<span class="nc" id="L37">        btnEditProfile   = findViewById(R.id.btnEditProfile);</span>
+<span class="nc" id="L38">        btnBack          = findViewById(R.id.btn_back_home);</span>
+<span class="nc" id="L39">        btnDelete        = findViewById(R.id.btn_delete_profile);</span>
+
+<span class="nc" id="L41">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L42">        email     = prefs.getString(&quot;USER_EMAIL&quot;, &quot;&quot;);</span>
+<span class="nc" id="L43">        userId    = prefs.getString(&quot;USER_ID&quot;, &quot;&quot;);</span>
+<span class="nc" id="L44">        savedName = prefs.getString(&quot;USER_NAME&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L46" title="All 4 branches missed.">        tvEmail.setText(email == null || email.isEmpty() ? &quot;Email: (not found)&quot; : &quot;Email: &quot; + email);</span>
+
+<span class="nc" id="L48">        fetchProfile();</span>
+
+<span class="nc" id="L50">        btnBack.setOnClickListener(v -&gt; finish());</span>
+
+<span class="nc" id="L52">        btnDelete.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">            if (userId == null || userId.trim().isEmpty()) {</span>
+<span class="nc" id="L54">                Toast.makeText(this, &quot;User ID missing.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L55">                return;</span>
+            }
+
+<span class="nc" id="L58">            new AlertDialog.Builder(CounselorProfileActivity.this)</span>
+<span class="nc" id="L59">                    .setTitle(&quot;Delete Profile?&quot;)</span>
+<span class="nc" id="L60">                    .setMessage(&quot;Are you sure you want to delete your account? This cannot be undone.&quot;)</span>
+<span class="nc" id="L61">                    .setPositiveButton(&quot;Yes, Delete&quot;, (dialog, which) -&gt; deleteUser(userId))</span>
+<span class="nc" id="L62">                    .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; dialog.dismiss())</span>
+<span class="nc" id="L63">                    .show();</span>
+<span class="nc" id="L64">        });</span>
+
+<span class="nc" id="L66">        btnEditProfile.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L67">            Intent intent = new Intent(CounselorProfileActivity.this, CounselorEditProfileActivity.class);</span>
+<span class="nc" id="L68">            intent.putExtra(&quot;userId&quot;,          Long.parseLong(userId));</span>
+<span class="nc" id="L69">            intent.putExtra(&quot;displayName&quot;,       tvDisplayName.getText().toString().replace(&quot;Name: &quot;, &quot;&quot;));</span>
+<span class="nc" id="L70">            intent.putExtra(&quot;specialization&quot;,    tvSpecialization.getText().toString().replace(&quot;Specialization: &quot;, &quot;&quot;));</span>
+<span class="nc" id="L71">            intent.putExtra(&quot;bio&quot;,               tvBio.getText().toString().replace(&quot;Bio: &quot;, &quot;&quot;));</span>
+<span class="nc" id="L72">            intent.putExtra(&quot;profilePictureUrl&quot;, &quot;&quot;);</span>
+<span class="nc" id="L73">            intent.putExtra(&quot;status&quot;,            tvStatus.getText().toString().replace(&quot;Status: &quot;, &quot;&quot;));</span>
+<span class="nc" id="L74">            startActivity(intent);</span>
+<span class="nc" id="L75">        });</span>
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L80">        super.onResume();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (!userId.isEmpty()) fetchProfile();</span>
+<span class="nc" id="L82">    }</span>
+
+    private void fetchProfile() {
+        // Pre-fill from SharedPreferences immediately
+<span class="nc" id="L86">        SharedPreferences prefs     = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L87">        String cachedName           = prefs.getString(&quot;COUNSELOR_DISPLAY_NAME&quot;, savedName);</span>
+<span class="nc" id="L88">        String cachedSpecialization = prefs.getString(&quot;COUNSELOR_SPECIALIZATION&quot;, &quot;&quot;);</span>
+<span class="nc" id="L89">        String cachedBio            = prefs.getString(&quot;COUNSELOR_BIO&quot;, &quot;&quot;);</span>
+<span class="nc" id="L90">        String cachedStatus         = prefs.getString(&quot;COUNSELOR_STATUS&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        tvDisplayName.setText(&quot;Name: &quot;            + (cachedName.isEmpty() ? &quot;—&quot; : cachedName));</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        tvSpecialization.setText(&quot;Specialization: &quot; + (cachedSpecialization.isEmpty() ? &quot;—&quot; : cachedSpecialization));</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        tvBio.setText(&quot;Bio: &quot;                     + (cachedBio.isEmpty() ? &quot;—&quot; : cachedBio));</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        tvStatus.setText(&quot;Status: &quot;               + (cachedStatus.isEmpty() ? &quot;—&quot; : cachedStatus));</span>
+
+<span class="nc" id="L97">        String url = ApiConstants.counselorProfile(Long.parseLong(userId));</span>
+
+<span class="nc" id="L99">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    // API overrides only if values are non-empty
+<span class="nc" id="L105">                    String displayName = response.optString(&quot;displayName&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">                    tvDisplayName.setText(&quot;Name: &quot; + (displayName.isEmpty() ? cachedName : displayName));</span>
+
+<span class="nc" id="L108">                    String spec = response.optString(&quot;specialization&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                    tvSpecialization.setText(&quot;Specialization: &quot; + (spec.isEmpty() ? cachedSpecialization : spec));</span>
+
+<span class="nc" id="L111">                    String bio = response.optString(&quot;bio&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                    tvBio.setText(&quot;Bio: &quot; + (bio.isEmpty() ? cachedBio : bio));</span>
+
+<span class="nc" id="L114">                    String status = response.optString(&quot;status&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                    tvStatus.setText(&quot;Status: &quot; + (status.isEmpty() ? cachedStatus : status));</span>
+
+<span class="nc" id="L117">                    double avg   = response.optDouble(&quot;ratingAverage&quot;, 0.0);</span>
+<span class="nc" id="L118">                    int    count = response.optInt(&quot;ratingCount&quot;, 0);</span>
+<span class="nc" id="L119">                    tvRating.setText(String.format(&quot;Rating: %.1f (%d reviews)&quot;, avg, count));</span>
+<span class="nc" id="L120">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L122" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.statusCode == 404) {</span>
+<span class="nc" id="L123">                        Toast.makeText(this, &quot;No profile yet. Create one!&quot;, Toast.LENGTH_SHORT).show();</span>
+                    } else {
+<span class="nc" id="L125">                        Toast.makeText(this, &quot;Failed to load profile.&quot;, Toast.LENGTH_LONG).show();</span>
+                    }
+<span class="nc" id="L127">                }</span>
+        );
+
+<span class="nc" id="L130">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L131">    }</span>
+
+    private void deleteUser(String userId) {
+<span class="nc" id="L134">        String url = ApiConstants.DELETE + userId;</span>
+
+<span class="nc" id="L136">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L140">                    SharedPreferences.Editor editor = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit();</span>
+<span class="nc" id="L141">                    editor.clear();</span>
+<span class="nc" id="L142">                    editor.apply();</span>
+
+<span class="nc" id="L144">                    Toast.makeText(CounselorProfileActivity.this, &quot;Profile deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L146">                    Intent i = new Intent(CounselorProfileActivity.this, SignUpActivity.class);</span>
+<span class="nc" id="L147">                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L148">                    startActivity(i);</span>
+<span class="nc" id="L149">                    finishAffinity();</span>
+<span class="nc" id="L150">                },</span>
+<span class="nc" id="L151">                error -&gt; Toast.makeText(CounselorProfileActivity.this,</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                        &quot;Delete failed: &quot; + (error.getMessage() != null ? error.getMessage() : &quot;unknown error&quot;),</span>
+<span class="nc" id="L153">                        Toast.LENGTH_LONG).show()</span>
+        );
+
+<span class="nc" id="L156">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L157">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

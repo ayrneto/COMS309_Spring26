@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">ChatActivity.java</span></div><h1>ChatActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.DownloadManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.OpenableColumns;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+<span class="nc" id="L58">public class ChatActivity extends AppCompatActivity {</span>
+
+    private static final String TAG = &quot;CHAT_DEBUG&quot;;
+
+<span class="nc" id="L62">    private static final List&lt;String&gt; COMMANDS = Arrays.asList(</span>
+            &quot;/help&quot;, &quot;/ping&quot;, &quot;/status&quot;, &quot;/clear&quot;
+    );
+
+    // ── Views ─────────────────────────────────────────────────────────────────
+    private RecyclerView recyclerMessages;
+    private EditText     etMessage;
+    private TextView     tvChatPartnerName;
+    private TextView     tvOnlineStatus;
+    private TextView     tvAvailabilityStatus;
+    private TextView     tvTypingIndicator;
+    private ListView     lvCommandSuggestions;
+
+    // ── Data ──────────────────────────────────────────────────────────────────
+<span class="nc" id="L76">    private final List&lt;ChatMessage&gt; messageList = new ArrayList&lt;&gt;();</span>
+    private ChatAdapter chatAdapter;
+
+    // ── Session ───────────────────────────────────────────────────────────────
+    private long   myUserId;
+    private long   partnerUserId;
+<span class="nc" id="L82">    private String partnerName = &quot;Chat&quot;;</span>
+<span class="nc" id="L83">    private String myRole      = &quot;USER&quot;;</span>
+
+    // ── WebSocket ─────────────────────────────────────────────────────────────
+    private WebSocketClient wsClient;
+<span class="nc" id="L87">    private final Handler mainHandler = new Handler(Looper.getMainLooper());</span>
+
+    // ── Typing ────────────────────────────────────────────────────────────────
+<span class="nc" id="L90">    private final Runnable hideTypingRunnable      = () -&gt;</span>
+<span class="nc" id="L91">            tvTypingIndicator.setVisibility(View.INVISIBLE);</span>
+<span class="nc" id="L92">    private final Runnable sendTypingStartRunnable = this::sendTypingStart;</span>
+<span class="nc" id="L93">    private final Runnable sendTypingStopRunnable  = this::sendTypingStop;</span>
+
+    // ── File picker ───────────────────────────────────────────────────────────
+<span class="nc" id="L96">    private final ActivityResultLauncher&lt;String[]&gt; filePicker =</span>
+<span class="nc" id="L97">            registerForActivityResult(</span>
+                    new ActivityResultContracts.OpenDocument(),
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                    uri -&gt; { if (uri != null) uploadFile(uri); }</span>
+            );
+
+<span class="nc" id="L102">    private final OkHttpClient httpClient = new OkHttpClient();</span>
+
+    // ── Time formatter ────────────────────────────────────────────────────────
+<span class="nc" id="L105">    private final SimpleDateFormat timeFmt =</span>
+<span class="nc" id="L106">            new SimpleDateFormat(&quot;h:mm a&quot;, Locale.getDefault());</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L111">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L112">        setContentView(R.layout.activity_chat);</span>
+
+<span class="nc" id="L114">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L115">        myUserId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+<span class="nc" id="L116">        myRole   = prefs.getString(&quot;USER_ROLE&quot;, &quot;USER&quot;);</span>
+
+<span class="nc" id="L118">        partnerUserId = getIntent().getLongExtra(&quot;partnerUserId&quot;, -1L);</span>
+<span class="nc" id="L119">        partnerName   = getIntent().getStringExtra(&quot;partnerName&quot;);</span>
+<span class="nc bnc" id="L120" title="All 4 branches missed.">        if (partnerName == null || partnerName.isEmpty()) partnerName = &quot;Chat&quot;;</span>
+
+<span class="nc" id="L122">        recyclerMessages     = findViewById(R.id.recyclerMessages);</span>
+<span class="nc" id="L123">        etMessage            = findViewById(R.id.etMessage);</span>
+<span class="nc" id="L124">        tvChatPartnerName    = findViewById(R.id.tvChatPartnerName);</span>
+<span class="nc" id="L125">        tvOnlineStatus       = findViewById(R.id.tvOnlineStatus);</span>
+<span class="nc" id="L126">        tvAvailabilityStatus = findViewById(R.id.tvAvailabilityStatus);</span>
+<span class="nc" id="L127">        tvTypingIndicator    = findViewById(R.id.tvTypingIndicator);</span>
+<span class="nc" id="L128">        lvCommandSuggestions = findViewById(R.id.lvCommandSuggestions);</span>
+<span class="nc" id="L129">        ImageButton btnBack  = findViewById(R.id.btnBack);</span>
+
+<span class="nc" id="L131">        tvChatPartnerName.setText(partnerName);</span>
+<span class="nc" id="L132">        btnBack.setOnClickListener(v -&gt; finish());</span>
+<span class="nc" id="L133">        findViewById(R.id.btnSend).setOnClickListener(v -&gt; sendMessage());</span>
+<span class="nc" id="L134">        findViewById(R.id.btnAttach).setOnClickListener(v -&gt;</span>
+<span class="nc" id="L135">                filePicker.launch(new String[]{&quot;*/*&quot;})</span>
+        );
+
+<span class="nc" id="L138">        chatAdapter = new ChatAdapter(messageList, myUserId);</span>
+<span class="nc" id="L139">        LinearLayoutManager llm = new LinearLayoutManager(this);</span>
+<span class="nc" id="L140">        llm.setStackFromEnd(true);</span>
+<span class="nc" id="L141">        recyclerMessages.setLayoutManager(llm);</span>
+<span class="nc" id="L142">        recyclerMessages.setAdapter(chatAdapter);</span>
+
+<span class="nc" id="L144">        etMessage.addTextChangedListener(new TextWatcher() {</span>
+<span class="nc" id="L145">            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}</span>
+<span class="nc" id="L146">            @Override public void afterTextChanged(Editable s) {}</span>
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
+<span class="nc" id="L148">                String input = s.toString();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                if (input.startsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L150">                    List&lt;String&gt; matches = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                    for (String cmd : COMMANDS) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                        if (cmd.startsWith(input)) matches.add(cmd);</span>
+<span class="nc" id="L153">                    }</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                    if (!matches.isEmpty()) showCommandSuggestions(matches);</span>
+<span class="nc" id="L155">                    else hideCommandSuggestions();</span>
+<span class="nc" id="L156">                } else {</span>
+<span class="nc" id="L157">                    hideCommandSuggestions();</span>
+                }
+<span class="nc" id="L159">                mainHandler.removeCallbacks(sendTypingStartRunnable);</span>
+<span class="nc" id="L160">                mainHandler.removeCallbacks(sendTypingStopRunnable);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                if (input.length() &gt; 0) {</span>
+<span class="nc" id="L162">                    mainHandler.postDelayed(sendTypingStartRunnable, 300);</span>
+<span class="nc" id="L163">                    mainHandler.postDelayed(sendTypingStopRunnable, 2000);</span>
+                } else {
+<span class="nc" id="L165">                    sendTypingStop();</span>
+                }
+<span class="nc" id="L167">            }</span>
+        });
+
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (partnerUserId == -1) {</span>
+<span class="nc" id="L171">            Toast.makeText(this, &quot;Error: partner ID missing&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L172">            return;</span>
+        }
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (&quot;USER&quot;.equals(myRole)) fetchAvailability();</span>
+<span class="nc" id="L176">        fetchHistory();</span>
+<span class="nc" id="L177">    }</span>
+
+    @Override
+    protected void onDestroy() {
+<span class="nc" id="L181">        super.onDestroy();</span>
+<span class="nc" id="L182">        mainHandler.removeCallbacks(hideTypingRunnable);</span>
+<span class="nc" id="L183">        mainHandler.removeCallbacks(sendTypingStartRunnable);</span>
+<span class="nc" id="L184">        mainHandler.removeCallbacks(sendTypingStopRunnable);</span>
+<span class="nc" id="L185">        sendTypingStop();</span>
+<span class="nc" id="L186">        disconnectWebSocket();</span>
+<span class="nc" id="L187">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // File upload — POST /api/chat/upload
+    // ─────────────────────────────────────────────────────────────────────────
+    private void uploadFile(Uri uri) {
+<span class="nc" id="L193">        String fileName = getFileName(uri);</span>
+<span class="nc" id="L194">        String mimeType = getContentResolver().getType(uri);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (mimeType == null) mimeType = &quot;application/octet-stream&quot;;</span>
+
+<span class="nc" id="L197">        Toast.makeText(this, &quot;Uploading &quot; + fileName + &quot;…&quot;, Toast.LENGTH_SHORT).show();</span>
+
+        try {
+<span class="nc" id="L200">            InputStream inputStream = getContentResolver().openInputStream(uri);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (inputStream == null) {</span>
+<span class="nc" id="L202">                Toast.makeText(this, &quot;Could not read file&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L203">                return;</span>
+            }
+
+<span class="nc" id="L206">            byte[] fileBytes = inputStream.readAllBytes();</span>
+<span class="nc" id="L207">            inputStream.close();</span>
+
+<span class="nc" id="L209">            String uploadUrl      = ApiConstants.BASE_URL + &quot;/api/chat/upload&quot;;</span>
+<span class="nc" id="L210">            final String finalMime = mimeType;</span>
+<span class="nc" id="L211">            final String finalName = fileName;</span>
+
+<span class="nc" id="L213">            RequestBody requestBody = new MultipartBody.Builder()</span>
+<span class="nc" id="L214">                    .setType(MultipartBody.FORM)</span>
+<span class="nc" id="L215">                    .addFormDataPart(&quot;senderId&quot;,   String.valueOf(myUserId))</span>
+<span class="nc" id="L216">                    .addFormDataPart(&quot;receiverId&quot;, String.valueOf(partnerUserId))</span>
+<span class="nc" id="L217">                    .addFormDataPart(&quot;file&quot;, finalName,</span>
+<span class="nc" id="L218">                            RequestBody.create(fileBytes, MediaType.parse(finalMime)))</span>
+<span class="nc" id="L219">                    .build();</span>
+
+<span class="nc" id="L221">            okhttp3.Request request = new okhttp3.Request.Builder()</span>
+<span class="nc" id="L222">                    .url(uploadUrl)</span>
+<span class="nc" id="L223">                    .post(requestBody)</span>
+<span class="nc" id="L224">                    .build();</span>
+
+<span class="nc" id="L226">            httpClient.newCall(request).enqueue(new Callback() {</span>
+                @Override
+                public void onFailure(Call call, IOException e) {
+<span class="nc" id="L229">                    mainHandler.post(() -&gt;</span>
+<span class="nc" id="L230">                            Toast.makeText(ChatActivity.this,</span>
+<span class="nc" id="L231">                                    &quot;Upload failed: &quot; + e.getMessage(),</span>
+<span class="nc" id="L232">                                    Toast.LENGTH_LONG).show());</span>
+<span class="nc" id="L233">                }</span>
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                    if (!response.isSuccessful()) {</span>
+<span class="nc" id="L238">                        mainHandler.post(() -&gt;</span>
+<span class="nc" id="L239">                                Toast.makeText(ChatActivity.this,</span>
+<span class="nc" id="L240">                                        &quot;Upload failed (HTTP &quot; + response.code() + &quot;)&quot;,</span>
+<span class="nc" id="L241">                                        Toast.LENGTH_LONG).show());</span>
+<span class="nc" id="L242">                        return;</span>
+                    }
+
+<span class="nc" id="L245">                    String body = response.body().string();</span>
+<span class="nc" id="L246">                    mainHandler.post(() -&gt; {</span>
+                        try {
+<span class="nc" id="L248">                            JSONObject json = new JSONObject(body);</span>
+<span class="nc" id="L249">                            String fileUrl  = json.getString(&quot;fileUrl&quot;);</span>
+<span class="nc" id="L250">                            String fName    = json.optString(&quot;fileName&quot;, finalName);</span>
+<span class="nc" id="L251">                            String fileType = json.optString(&quot;fileType&quot;, getFileTypeLabel(finalName));</span>
+
+<span class="nc" id="L253">                            sendFileMessage(fileUrl, fName, fileType);</span>
+
+<span class="nc" id="L255">                            appendMessage(new ChatMessage(</span>
+<span class="nc" id="L256">                                    myUserId, partnerUserId, &quot;&quot;,</span>
+<span class="nc" id="L257">                                    timeFmt.format(new Date()), false,</span>
+                                    fileUrl, fName, fileType));
+
+<span class="nc" id="L260">                            Toast.makeText(ChatActivity.this,</span>
+<span class="nc" id="L261">                                    &quot;File sent!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc" id="L263">                        } catch (JSONException e) {</span>
+<span class="nc" id="L264">                            Toast.makeText(ChatActivity.this,</span>
+<span class="nc" id="L265">                                    &quot;Upload response error&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L266">                        }</span>
+<span class="nc" id="L267">                    });</span>
+<span class="nc" id="L268">                }</span>
+            });
+
+<span class="nc" id="L271">        } catch (Exception e) {</span>
+<span class="nc" id="L272">            Toast.makeText(this, &quot;Error reading file: &quot; + e.getMessage(),</span>
+<span class="nc" id="L273">                    Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L274">        }</span>
+<span class="nc" id="L275">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Send file message over WebSocket
+    // ─────────────────────────────────────────────────────────────────────────
+    private void sendFileMessage(String fileUrl, String fileName, String fileType) {
+<span class="nc bnc" id="L281" title="All 4 branches missed.">        if (wsClient == null || !wsClient.isOpen()) return;</span>
+<span class="nc" id="L282">        JSONObject payload = new JSONObject();</span>
+        try {
+<span class="nc" id="L284">            payload.put(&quot;senderId&quot;,   myUserId);</span>
+<span class="nc" id="L285">            payload.put(&quot;receiverId&quot;, partnerUserId);</span>
+<span class="nc" id="L286">            payload.put(&quot;content&quot;,    &quot;&quot;);</span>
+<span class="nc" id="L287">            payload.put(&quot;fileUrl&quot;,    fileUrl);</span>
+<span class="nc" id="L288">            payload.put(&quot;fileName&quot;,   fileName);</span>
+<span class="nc" id="L289">            payload.put(&quot;fileType&quot;,   fileType);</span>
+<span class="nc" id="L290">        } catch (JSONException e) { e.printStackTrace(); }</span>
+<span class="nc" id="L291">        wsClient.send(payload.toString());</span>
+<span class="nc" id="L292">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Download file
+    // ─────────────────────────────────────────────────────────────────────────
+    private void downloadFile(String fileUrl, String fileName) {
+        try {
+<span class="nc" id="L299">            DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);</span>
+<span class="nc" id="L300">            Uri uri = Uri.parse(fileUrl);</span>
+<span class="nc" id="L301">            DownloadManager.Request request = new DownloadManager.Request(uri)</span>
+<span class="nc" id="L302">                    .setTitle(fileName)</span>
+<span class="nc" id="L303">                    .setDescription(&quot;Downloading from Calmify&quot;)</span>
+<span class="nc" id="L304">                    .setNotificationVisibility(</span>
+                            DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+<span class="nc" id="L306">                    .setDestinationInExternalPublicDir(</span>
+                            Environment.DIRECTORY_DOWNLOADS, fileName)
+<span class="nc" id="L308">                    .setAllowedOverMetered(true);</span>
+<span class="nc" id="L309">            dm.enqueue(request);</span>
+<span class="nc" id="L310">            Toast.makeText(this, &quot;Downloading &quot; + fileName, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L311">        } catch (Exception e) {</span>
+<span class="nc" id="L312">            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl)));</span>
+<span class="nc" id="L313">        }</span>
+<span class="nc" id="L314">    }</span>
+
+    private String getFileName(Uri uri) {
+<span class="nc" id="L317">        String name = &quot;file&quot;;</span>
+<span class="nc" id="L318">        Cursor cursor = getContentResolver().query(uri, null, null, null, null);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        if (cursor != null) {</span>
+<span class="nc" id="L320">            int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);</span>
+<span class="nc bnc" id="L321" title="All 4 branches missed.">            if (idx &gt;= 0 &amp;&amp; cursor.moveToFirst()) name = cursor.getString(idx);</span>
+<span class="nc" id="L322">            cursor.close();</span>
+        }
+<span class="nc" id="L324">        return name;</span>
+    }
+
+    private String getFileTypeLabel(String fileName) {
+<span class="nc bnc" id="L328" title="All 2 branches missed.">        if (fileName == null) return &quot;FILE&quot;;</span>
+<span class="nc" id="L329">        String lower = fileName.toLowerCase();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">        if (lower.endsWith(&quot;.pdf&quot;))                                return &quot;PDF&quot;;</span>
+<span class="nc bnc" id="L331" title="All 4 branches missed.">        if (lower.endsWith(&quot;.jpg&quot;) || lower.endsWith(&quot;.jpeg&quot;)</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">                || lower.endsWith(&quot;.png&quot;))                         return &quot;IMAGE&quot;;</span>
+<span class="nc bnc" id="L333" title="All 4 branches missed.">        if (lower.endsWith(&quot;.doc&quot;) || lower.endsWith(&quot;.docx&quot;))     return &quot;WORD&quot;;</span>
+<span class="nc bnc" id="L334" title="All 4 branches missed.">        if (lower.endsWith(&quot;.xls&quot;) || lower.endsWith(&quot;.xlsx&quot;))     return &quot;EXCEL&quot;;</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">        if (lower.endsWith(&quot;.mp4&quot;) || lower.endsWith(&quot;.mov&quot;))      return &quot;VIDEO&quot;;</span>
+<span class="nc bnc" id="L336" title="All 4 branches missed.">        if (lower.endsWith(&quot;.mp3&quot;) || lower.endsWith(&quot;.wav&quot;))      return &quot;AUDIO&quot;;</span>
+<span class="nc bnc" id="L337" title="All 4 branches missed.">        if (lower.endsWith(&quot;.zip&quot;) || lower.endsWith(&quot;.rar&quot;))      return &quot;ZIP&quot;;</span>
+<span class="nc" id="L338">        return &quot;FILE&quot;;</span>
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Slash command suggestions
+    // ─────────────────────────────────────────────────────────────────────────
+    private void showCommandSuggestions(List&lt;String&gt; matches) {
+<span class="nc" id="L345">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_list_item_1, matches);
+<span class="nc" id="L347">        lvCommandSuggestions.setAdapter(adapter);</span>
+<span class="nc" id="L348">        lvCommandSuggestions.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L349">        lvCommandSuggestions.setOnItemClickListener((parent, view, pos, id) -&gt; {</span>
+<span class="nc" id="L350">            etMessage.setText(matches.get(pos));</span>
+<span class="nc" id="L351">            etMessage.setSelection(etMessage.getText().length());</span>
+<span class="nc" id="L352">            hideCommandSuggestions();</span>
+<span class="nc" id="L353">        });</span>
+<span class="nc" id="L354">    }</span>
+
+    private void hideCommandSuggestions() {
+<span class="nc" id="L357">        lvCommandSuggestions.setVisibility(View.GONE);</span>
+<span class="nc" id="L358">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Fetch counsellor availability
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchAvailability() {
+<span class="nc" id="L364">        JsonObjectRequest req = new JsonObjectRequest(</span>
+<span class="nc" id="L365">                Request.Method.GET, ApiConstants.counselorProfile(partnerUserId), null,</span>
+                response -&gt; {
+<span class="nc" id="L367">                    String status = response.optString(&quot;status&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L368" title="All 4 branches missed.">                    switch (status.toUpperCase()) {</span>
+                        case &quot;AVAILABLE&quot;:
+<span class="nc" id="L370">                            tvAvailabilityStatus.setText(&quot;● Available&quot;);</span>
+<span class="nc" id="L371">                            tvAvailabilityStatus.setTextColor(0xFF81C784);</span>
+<span class="nc" id="L372">                            break;</span>
+                        case &quot;BUSY&quot;:
+<span class="nc" id="L374">                            tvAvailabilityStatus.setText(&quot;● Busy&quot;);</span>
+<span class="nc" id="L375">                            tvAvailabilityStatus.setTextColor(0xFFFFB74D);</span>
+<span class="nc" id="L376">                            break;</span>
+                        case &quot;OFFLINE&quot;:
+<span class="nc" id="L378">                            tvAvailabilityStatus.setText(&quot;● Offline&quot;);</span>
+<span class="nc" id="L379">                            tvAvailabilityStatus.setTextColor(0xFFB0BEC5);</span>
+<span class="nc" id="L380">                            break;</span>
+                        default:
+<span class="nc" id="L382">                            tvAvailabilityStatus.setText(&quot;&quot;);</span>
+                    }
+<span class="nc" id="L384">                },</span>
+<span class="nc" id="L385">                error -&gt; tvAvailabilityStatus.setText(&quot;&quot;)</span>
+        );
+<span class="nc" id="L387">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L388">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Load chat history
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchHistory() {
+<span class="nc" id="L394">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET,
+<span class="nc" id="L396">                ApiConstants.chatHistory(myUserId, partnerUserId),</span>
+                null,
+                response -&gt; {
+<span class="nc" id="L399">                    messageList.clear();</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L402">                            messageList.add(parseMessage(response.getJSONObject(i)));</span>
+<span class="nc" id="L403">                        } catch (JSONException e) {</span>
+<span class="nc" id="L404">                            Log.e(TAG, &quot;History parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L405">                        }</span>
+                    }
+<span class="nc" id="L407">                    chatAdapter.notifyDataSetChanged();</span>
+<span class="nc" id="L408">                    scrollToBottom();</span>
+<span class="nc" id="L409">                    connectWebSocket();</span>
+<span class="nc" id="L410">                },</span>
+                error -&gt; {
+<span class="nc" id="L412">                    Log.e(TAG, &quot;History load failed&quot;);</span>
+<span class="nc" id="L413">                    Toast.makeText(this, &quot;Could not load history&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L414">                    connectWebSocket();</span>
+<span class="nc" id="L415">                }</span>
+        );
+<span class="nc" id="L417">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L418">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // WebSocket
+    // ─────────────────────────────────────────────────────────────────────────
+    private void connectWebSocket() {
+        try {
+<span class="nc" id="L425">            wsClient = new WebSocketClient(URI.create(ApiConstants.wsChat(myUserId, partnerUserId))) {</span>
+                @Override public void onOpen(ServerHandshake h) {
+<span class="nc" id="L427">                    mainHandler.post(() -&gt; tvOnlineStatus.setText(&quot;● Connected&quot;));</span>
+<span class="nc" id="L428">                }</span>
+                @Override public void onMessage(String text) {
+<span class="nc" id="L430">                    mainHandler.post(() -&gt; handleIncomingMessage(text));</span>
+<span class="nc" id="L431">                }</span>
+                @Override public void onClose(int code, String reason, boolean remote) {
+<span class="nc" id="L433">                    mainHandler.post(() -&gt; {</span>
+<span class="nc" id="L434">                        tvOnlineStatus.setText(&quot;○ Disconnected&quot;);</span>
+<span class="nc" id="L435">                        mainHandler.postDelayed(() -&gt; {</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">                            if (!isDestroyed()) connectWebSocket();</span>
+<span class="nc" id="L437">                        }, 3000);</span>
+<span class="nc" id="L438">                    });</span>
+<span class="nc" id="L439">                }</span>
+                @Override public void onError(Exception ex) {
+<span class="nc" id="L441">                    mainHandler.post(() -&gt; tvOnlineStatus.setText(&quot;○ Error&quot;));</span>
+<span class="nc" id="L442">                }</span>
+            };
+<span class="nc" id="L444">            wsClient.connect();</span>
+<span class="nc" id="L445">        } catch (Exception e) {</span>
+<span class="nc" id="L446">            Toast.makeText(this, &quot;WebSocket error: &quot; + e.getMessage(), Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L447">        }</span>
+<span class="nc" id="L448">    }</span>
+
+    private void disconnectWebSocket() {
+<span class="nc bnc" id="L451" title="All 4 branches missed.">        if (wsClient != null &amp;&amp; wsClient.isOpen()) wsClient.close();</span>
+<span class="nc" id="L452">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Send text message
+    // ─────────────────────────────────────────────────────────────────────────
+    private void sendMessage() {
+<span class="nc" id="L458">        String text = etMessage.getText().toString().trim();</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        if (text.isEmpty()) return;</span>
+
+<span class="nc bnc" id="L461" title="All 4 branches missed.">        if (wsClient == null || !wsClient.isOpen()) {</span>
+<span class="nc" id="L462">            Toast.makeText(this, &quot;Not connected — reconnecting…&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L463">            connectWebSocket();</span>
+<span class="nc" id="L464">            return;</span>
+        }
+
+<span class="nc" id="L467">        JSONObject payload = new JSONObject();</span>
+        try {
+<span class="nc" id="L469">            payload.put(&quot;type&quot;,       &quot;message&quot;);</span>
+<span class="nc" id="L470">            payload.put(&quot;senderId&quot;,   myUserId);</span>
+<span class="nc" id="L471">            payload.put(&quot;receiverId&quot;, partnerUserId);</span>
+<span class="nc" id="L472">            payload.put(&quot;content&quot;,    text);</span>
+<span class="nc" id="L473">        } catch (JSONException e) { e.printStackTrace(); return; }</span>
+
+<span class="nc" id="L475">        wsClient.send(payload.toString());</span>
+
+<span class="nc" id="L477">        hideCommandSuggestions();</span>
+<span class="nc" id="L478">        sendTypingStop();</span>
+<span class="nc" id="L479">        mainHandler.removeCallbacks(sendTypingStartRunnable);</span>
+<span class="nc" id="L480">        mainHandler.removeCallbacks(sendTypingStopRunnable);</span>
+
+<span class="nc bnc" id="L482" title="All 2 branches missed.">        if (!text.startsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L483">            appendMessage(new ChatMessage(myUserId, partnerUserId, text,</span>
+<span class="nc" id="L484">                    timeFmt.format(new Date()), false));</span>
+        }
+<span class="nc" id="L486">        etMessage.setText(&quot;&quot;);</span>
+<span class="nc" id="L487">    }</span>
+
+<span class="nc" id="L489">    private void sendTypingStart() { sendTypingEvent(true); }</span>
+<span class="nc" id="L490">    private void sendTypingStop()  { sendTypingEvent(false); }</span>
+
+    private void sendTypingEvent(boolean isTyping) {
+<span class="nc bnc" id="L493" title="All 4 branches missed.">        if (wsClient == null || !wsClient.isOpen()) return;</span>
+<span class="nc" id="L494">        JSONObject payload = new JSONObject();</span>
+        try {
+<span class="nc" id="L496">            payload.put(&quot;type&quot;,       &quot;typing&quot;);</span>
+<span class="nc" id="L497">            payload.put(&quot;senderId&quot;,   myUserId);</span>
+<span class="nc" id="L498">            payload.put(&quot;receiverId&quot;, partnerUserId);</span>
+<span class="nc" id="L499">            payload.put(&quot;isTyping&quot;,   isTyping);</span>
+<span class="nc" id="L500">        } catch (JSONException e) { e.printStackTrace(); }</span>
+<span class="nc" id="L501">        wsClient.send(payload.toString());</span>
+<span class="nc" id="L502">    }</span>
+
+    private void sendReadReceipt() {
+<span class="nc bnc" id="L505" title="All 4 branches missed.">        if (wsClient == null || !wsClient.isOpen()) return;</span>
+<span class="nc" id="L506">        JSONObject payload = new JSONObject();</span>
+        try {
+<span class="nc" id="L508">            payload.put(&quot;type&quot;,       &quot;read&quot;);</span>
+<span class="nc" id="L509">            payload.put(&quot;senderId&quot;,   myUserId);</span>
+<span class="nc" id="L510">            payload.put(&quot;receiverId&quot;, partnerUserId);</span>
+<span class="nc" id="L511">        } catch (JSONException e) { e.printStackTrace(); }</span>
+<span class="nc" id="L512">        wsClient.send(payload.toString());</span>
+<span class="nc" id="L513">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Handle incoming WebSocket frame
+    // ─────────────────────────────────────────────────────────────────────────
+    private void handleIncomingMessage(String text) {
+<span class="nc" id="L519">        Log.d(TAG, &quot;Received: &quot; + text);</span>
+        try {
+<span class="nc" id="L521">            JSONObject obj = new JSONObject(text);</span>
+
+<span class="nc bnc" id="L523" title="All 2 branches missed.">            if (!obj.has(&quot;type&quot;)) {</span>
+<span class="nc" id="L524">                ChatMessage msg = parseMessage(obj);</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">                if (msg.senderId == myUserId) return;</span>
+<span class="nc" id="L526">                tvTypingIndicator.setVisibility(View.INVISIBLE);</span>
+<span class="nc" id="L527">                mainHandler.removeCallbacks(hideTypingRunnable);</span>
+<span class="nc" id="L528">                appendMessage(msg);</span>
+<span class="nc" id="L529">                sendReadReceipt();</span>
+<span class="nc" id="L530">                return;</span>
+            }
+
+<span class="nc" id="L533">            String type = obj.getString(&quot;type&quot;);</span>
+<span class="nc bnc" id="L534" title="All 6 branches missed.">            switch (type) {</span>
+                case &quot;typing&quot;:
+<span class="nc" id="L536">                    boolean isTyping = obj.optBoolean(&quot;isTyping&quot;, true);</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">                    if (isTyping) {</span>
+<span class="nc" id="L538">                        tvTypingIndicator.setText(partnerName + &quot; is typing…&quot;);</span>
+<span class="nc" id="L539">                        tvTypingIndicator.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L540">                        mainHandler.removeCallbacks(hideTypingRunnable);</span>
+<span class="nc" id="L541">                        mainHandler.postDelayed(hideTypingRunnable, 3000);</span>
+                    } else {
+<span class="nc" id="L543">                        tvTypingIndicator.setVisibility(View.INVISIBLE);</span>
+<span class="nc" id="L544">                        mainHandler.removeCallbacks(hideTypingRunnable);</span>
+                    }
+<span class="nc" id="L546">                    break;</span>
+                case &quot;read&quot;:
+<span class="nc bnc" id="L548" title="All 2 branches missed.">                    for (int i = messageList.size() - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">                        if (messageList.get(i).senderId == myUserId) {</span>
+<span class="nc" id="L550">                            messageList.get(i).isRead = true;</span>
+<span class="nc" id="L551">                            chatAdapter.notifyItemChanged(i);</span>
+<span class="nc" id="L552">                            break;</span>
+                        }
+                    }
+<span class="nc" id="L555">                    break;</span>
+                case &quot;system&quot;:
+<span class="nc" id="L557">                    appendSystemMessage(obj.optString(&quot;text&quot;, &quot;&quot;));</span>
+<span class="nc" id="L558">                    break;</span>
+                case &quot;command&quot;:
+<span class="nc bnc" id="L560" title="All 2 branches missed.">                    if (&quot;clear&quot;.equals(obj.optString(&quot;action&quot;))) {</span>
+<span class="nc" id="L561">                        messageList.clear();</span>
+<span class="nc" id="L562">                        chatAdapter.notifyDataSetChanged();</span>
+                    }
+                    break;
+                case &quot;error&quot;:
+<span class="nc" id="L566">                    Toast.makeText(this, obj.optString(&quot;text&quot;, &quot;Error&quot;),</span>
+<span class="nc" id="L567">                            Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L568">                    break;</span>
+                default:
+<span class="nc" id="L570">                    Log.d(TAG, &quot;Unknown type: &quot; + type);</span>
+            }
+
+<span class="nc" id="L573">        } catch (JSONException e) {</span>
+<span class="nc" id="L574">            Log.e(TAG, &quot;Parse error: &quot; + e.getMessage());</span>
+<span class="nc" id="L575">        }</span>
+<span class="nc" id="L576">    }</span>
+
+    private void appendSystemMessage(String text) {
+<span class="nc" id="L579">        messageList.add(new ChatMessage(-1, -1, text, &quot;&quot;, false));</span>
+<span class="nc" id="L580">        chatAdapter.notifyItemInserted(messageList.size() - 1);</span>
+<span class="nc" id="L581">        scrollToBottom();</span>
+<span class="nc" id="L582">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Parse message — FIX: use isNull() to properly handle absent/null fields
+    // This fixes the &quot;null&quot; string bug on Android's JSONObject.optString()
+    // ─────────────────────────────────────────────────────────────────────────
+    private ChatMessage parseMessage(JSONObject obj) throws JSONException {
+<span class="nc" id="L589">        long   senderId   = obj.getLong(&quot;senderId&quot;);</span>
+<span class="nc" id="L590">        long   receiverId = obj.getLong(&quot;receiverId&quot;);</span>
+
+        // FIX: use isNull() check to avoid &quot;null&quot; string from optString()
+<span class="nc bnc" id="L593" title="All 2 branches missed.">        String content  = obj.isNull(&quot;content&quot;)  ? &quot;&quot; : obj.optString(&quot;content&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">        String fileUrl  = obj.isNull(&quot;fileUrl&quot;)  ? null : obj.optString(&quot;fileUrl&quot;,  null);</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">        String fileName = obj.isNull(&quot;fileName&quot;) ? null : obj.optString(&quot;fileName&quot;, null);</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">        String fileType = obj.isNull(&quot;fileType&quot;) ? null : obj.optString(&quot;fileType&quot;, null);</span>
+
+<span class="nc" id="L598">        String rawTime  = obj.optString(&quot;sentAt&quot;, &quot;&quot;);</span>
+
+        // Auto-detect fileType from name if not provided
+<span class="nc bnc" id="L601" title="All 6 branches missed.">        if (fileUrl != null &amp;&amp; fileType == null &amp;&amp; fileName != null) {</span>
+<span class="nc" id="L602">            fileType = getFileTypeLabel(fileName);</span>
+        }
+
+        String displayTime;
+        try {
+<span class="nc bnc" id="L607" title="All 2 branches missed.">            if (rawTime.startsWith(&quot;[&quot;)) {</span>
+<span class="nc" id="L608">                displayTime = &quot;&quot;;</span>
+            } else {
+<span class="nc" id="L610">                SimpleDateFormat iso =</span>
+<span class="nc" id="L611">                        new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss&quot;, Locale.getDefault());</span>
+<span class="nc" id="L612">                Date d = iso.parse(rawTime);</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">                displayTime = (d != null) ? timeFmt.format(d) : rawTime;</span>
+            }
+<span class="nc" id="L615">        } catch (Exception e) {</span>
+<span class="nc" id="L616">            displayTime = rawTime;</span>
+<span class="nc" id="L617">        }</span>
+
+<span class="nc" id="L619">        return new ChatMessage(senderId, receiverId, content, displayTime, false,</span>
+                fileUrl, fileName, fileType);
+    }
+
+    private void appendMessage(ChatMessage msg) {
+<span class="nc" id="L624">        messageList.add(msg);</span>
+<span class="nc" id="L625">        chatAdapter.notifyItemInserted(messageList.size() - 1);</span>
+<span class="nc" id="L626">        scrollToBottom();</span>
+<span class="nc" id="L627">    }</span>
+
+    private void scrollToBottom() {
+<span class="nc bnc" id="L630" title="All 2 branches missed.">        if (!messageList.isEmpty())</span>
+<span class="nc" id="L631">            recyclerMessages.smoothScrollToPosition(messageList.size() - 1);</span>
+<span class="nc" id="L632">    }</span>
+
+    // ── ChatMessage model ─────────────────────────────────────────────────────
+    static class ChatMessage {
+        final long   senderId, receiverId;
+        final String content, displayTime;
+        boolean      isRead;
+        final String fileUrl, fileName, fileType;
+
+<span class="nc bnc" id="L641" title="All 2 branches missed.">        boolean isSystem() { return senderId == -1; }</span>
+
+        // FIX: triple check to guard against &quot;null&quot; string from Android JSONObject
+        boolean isFile() {
+<span class="nc bnc" id="L645" title="All 6 branches missed.">            return fileUrl != null &amp;&amp; !fileUrl.isEmpty() &amp;&amp; !fileUrl.equals(&quot;null&quot;);</span>
+        }
+
+        ChatMessage(long senderId, long receiverId,
+                    String content, String displayTime, boolean isRead) {
+<span class="nc" id="L650">            this(senderId, receiverId, content, displayTime, isRead, null, null, null);</span>
+<span class="nc" id="L651">        }</span>
+
+        ChatMessage(long senderId, long receiverId,
+                    String content, String displayTime, boolean isRead,
+<span class="nc" id="L655">                    String fileUrl, String fileName, String fileType) {</span>
+<span class="nc" id="L656">            this.senderId    = senderId;</span>
+<span class="nc" id="L657">            this.receiverId  = receiverId;</span>
+<span class="nc" id="L658">            this.content     = content;</span>
+<span class="nc" id="L659">            this.displayTime = displayTime;</span>
+<span class="nc" id="L660">            this.isRead      = isRead;</span>
+<span class="nc" id="L661">            this.fileUrl     = fileUrl;</span>
+<span class="nc" id="L662">            this.fileName    = fileName;</span>
+<span class="nc" id="L663">            this.fileType    = fileType;</span>
+<span class="nc" id="L664">        }</span>
+    }
+
+    // ── Adapter ───────────────────────────────────────────────────────────────
+    class ChatAdapter extends RecyclerView.Adapter&lt;ChatAdapter.MsgViewHolder&gt; {
+
+        private final List&lt;ChatMessage&gt; messages;
+        private final long myUserId;
+
+<span class="nc" id="L673">        ChatAdapter(List&lt;ChatMessage&gt; messages, long myUserId) {</span>
+<span class="nc" id="L674">            this.messages = messages;</span>
+<span class="nc" id="L675">            this.myUserId = myUserId;</span>
+<span class="nc" id="L676">        }</span>
+
+        @Override
+        public MsgViewHolder onCreateViewHolder(android.view.ViewGroup parent, int viewType) {
+<span class="nc" id="L680">            android.view.View v = android.view.LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L681">                    .inflate(R.layout.item_chat_message, parent, false);</span>
+<span class="nc" id="L682">            return new MsgViewHolder(v);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(MsgViewHolder h, int position) {
+<span class="nc" id="L687">            ChatMessage msg = messages.get(position);</span>
+
+            // Reset all layouts first
+<span class="nc" id="L690">            h.layoutSent.setVisibility(View.GONE);</span>
+<span class="nc" id="L691">            h.layoutReceived.setVisibility(View.GONE);</span>
+<span class="nc" id="L692">            h.layoutSystem.setVisibility(View.GONE);</span>
+
+<span class="nc bnc" id="L694" title="All 2 branches missed.">            if (msg.isSystem()) {</span>
+<span class="nc" id="L695">                h.layoutSystem.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L696">                h.tvSystemMessage.setText(msg.content);</span>
+
+<span class="nc bnc" id="L698" title="All 2 branches missed.">            } else if (msg.senderId == myUserId) {</span>
+<span class="nc" id="L699">                h.layoutSent.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L700">                h.tvSentTime.setText(msg.displayTime);</span>
+
+                // FIX: always reset both to GONE first, then show the right one
+<span class="nc" id="L703">                h.tvSentMessage.setVisibility(View.GONE);</span>
+<span class="nc" id="L704">                h.cardSentFile.setVisibility(View.GONE);</span>
+
+<span class="nc bnc" id="L706" title="All 2 branches missed.">                if (msg.isFile()) {</span>
+<span class="nc" id="L707">                    h.cardSentFile.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L708">                    h.tvSentFileName.setText(msg.fileName);</span>
+<span class="nc" id="L709">                    h.tvSentFileType.setText(msg.fileType);</span>
+<span class="nc" id="L710">                    h.btnSentFileDownload.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L711">                            downloadFile(msg.fileUrl, msg.fileName));</span>
+                } else {
+<span class="nc" id="L713">                    h.tvSentMessage.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L714">                    h.tvSentMessage.setText(msg.content);</span>
+                }
+
+<span class="nc bnc" id="L717" title="All 2 branches missed.">                if (msg.isRead) {</span>
+<span class="nc" id="L718">                    h.tvReadReceipt.setText(&quot;✓✓ Read&quot;);</span>
+<span class="nc" id="L719">                    h.tvReadReceipt.setTextColor(0xFF4A6E60);</span>
+                } else {
+<span class="nc" id="L721">                    h.tvReadReceipt.setText(&quot;✓&quot;);</span>
+<span class="nc" id="L722">                    h.tvReadReceipt.setTextColor(0xFF9BB5A7);</span>
+                }
+
+            } else {
+<span class="nc" id="L726">                h.layoutReceived.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L727">                h.tvReceivedTime.setText(msg.displayTime);</span>
+<span class="nc" id="L728">                h.tvSenderName.setVisibility(View.GONE);</span>
+
+                // FIX: always reset both to GONE first, then show the right one
+<span class="nc" id="L731">                h.tvReceivedMessage.setVisibility(View.GONE);</span>
+<span class="nc" id="L732">                h.cardReceivedFile.setVisibility(View.GONE);</span>
+
+<span class="nc bnc" id="L734" title="All 2 branches missed.">                if (msg.isFile()) {</span>
+<span class="nc" id="L735">                    h.cardReceivedFile.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L736">                    h.tvReceivedFileName.setText(msg.fileName);</span>
+<span class="nc" id="L737">                    h.tvReceivedFileType.setText(msg.fileType);</span>
+<span class="nc" id="L738">                    h.btnReceivedFileDownload.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L739">                            downloadFile(msg.fileUrl, msg.fileName));</span>
+                } else {
+<span class="nc" id="L741">                    h.tvReceivedMessage.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L742">                    h.tvReceivedMessage.setText(msg.content);</span>
+                }
+            }
+<span class="nc" id="L745">        }</span>
+
+<span class="nc" id="L747">        @Override public int getItemCount() { return messages.size(); }</span>
+
+        class MsgViewHolder extends RecyclerView.ViewHolder {
+            android.view.View       layoutSent, layoutReceived, layoutSystem;
+            android.widget.TextView tvSentMessage, tvSentTime, tvReadReceipt;
+            android.widget.TextView tvSentFileName, tvSentFileType, btnSentFileDownload;
+            android.view.View       cardSentFile;
+            android.widget.TextView tvReceivedMessage, tvReceivedTime, tvSenderName;
+            android.widget.TextView tvReceivedFileName, tvReceivedFileType, btnReceivedFileDownload;
+            android.view.View       cardReceivedFile;
+            android.widget.TextView tvSystemMessage;
+
+<span class="nc" id="L759">            MsgViewHolder(android.view.View v) {</span>
+<span class="nc" id="L760">                super(v);</span>
+<span class="nc" id="L761">                layoutSent              = v.findViewById(R.id.layoutSent);</span>
+<span class="nc" id="L762">                layoutReceived          = v.findViewById(R.id.layoutReceived);</span>
+<span class="nc" id="L763">                layoutSystem            = v.findViewById(R.id.layoutSystem);</span>
+<span class="nc" id="L764">                tvSentMessage           = v.findViewById(R.id.tvSentMessage);</span>
+<span class="nc" id="L765">                tvSentTime              = v.findViewById(R.id.tvSentTime);</span>
+<span class="nc" id="L766">                tvReadReceipt           = v.findViewById(R.id.tvReadReceipt);</span>
+<span class="nc" id="L767">                cardSentFile            = v.findViewById(R.id.cardSentFile);</span>
+<span class="nc" id="L768">                tvSentFileName          = v.findViewById(R.id.tvSentFileName);</span>
+<span class="nc" id="L769">                tvSentFileType          = v.findViewById(R.id.tvSentFileType);</span>
+<span class="nc" id="L770">                btnSentFileDownload     = v.findViewById(R.id.btnSentFileDownload);</span>
+<span class="nc" id="L771">                tvReceivedMessage       = v.findViewById(R.id.tvReceivedMessage);</span>
+<span class="nc" id="L772">                tvReceivedTime          = v.findViewById(R.id.tvReceivedTime);</span>
+<span class="nc" id="L773">                tvSenderName            = v.findViewById(R.id.tvSenderName);</span>
+<span class="nc" id="L774">                cardReceivedFile        = v.findViewById(R.id.cardReceivedFile);</span>
+<span class="nc" id="L775">                tvReceivedFileName      = v.findViewById(R.id.tvReceivedFileName);</span>
+<span class="nc" id="L776">                tvReceivedFileType      = v.findViewById(R.id.tvReceivedFileType);</span>
+<span class="nc" id="L777">                btnReceivedFileDownload = v.findViewById(R.id.btnReceivedFileDownload);</span>
+<span class="nc" id="L778">                tvSystemMessage         = v.findViewById(R.id.tvSystemMessage);</span>
+<span class="nc" id="L779">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoutineSummaryActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">RoutineSummaryActivity.java</span></div><h1>RoutineSummaryActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+<span class="nc" id="L34">public class RoutineSummaryActivity extends AppCompatActivity {</span>
+
+    private GridLayout routinesContainer;
+    private Spinner filterSpinner;
+<span class="nc" id="L38">    private List&lt;JSONObject&gt; allRoutines = new ArrayList&lt;&gt;();</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L42">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L43">        setContentView(R.layout.activity_routine_summary);</span>
+
+<span class="nc" id="L45">        routinesContainer = findViewById(R.id.routinesContainer);</span>
+<span class="nc" id="L46">        filterSpinner = findViewById(R.id.filterSpinner);</span>
+<span class="nc" id="L47">        FrameLayout btnAddRoutine = findViewById(R.id.btnAddRoutine);</span>
+
+<span class="nc" id="L49">        setupFilter();</span>
+<span class="nc" id="L50">        fetchRoutines();</span>
+
+<span class="nc" id="L52">        btnAddRoutine.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L53">            Intent intent = new Intent(RoutineSummaryActivity.this, RoutineTrackerActivity.class);</span>
+<span class="nc" id="L54">            startActivity(intent);</span>
+<span class="nc" id="L55">        });</span>
+<span class="nc" id="L56">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L60">        super.onResume();</span>
+<span class="nc" id="L61">        fetchRoutines();</span>
+<span class="nc" id="L62">    }</span>
+
+    private void setupFilter() {
+<span class="nc" id="L65">        String[] filterOptions = {&quot;Active First&quot;, &quot;Completed First&quot;, &quot;Progress %&quot;};</span>
+<span class="nc" id="L66">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, filterOptions);
+<span class="nc" id="L68">        filterSpinner.setAdapter(adapter);</span>
+
+<span class="nc" id="L70">        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override
+            public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
+<span class="nc" id="L73">                sortAndDisplay(position);</span>
+<span class="nc" id="L74">            }</span>
+
+            @Override
+<span class="nc" id="L77">            public void onNothingSelected(AdapterView&lt;?&gt; parent) {}</span>
+        });
+<span class="nc" id="L79">    }</span>
+
+    private void fetchRoutines() {
+<span class="nc" id="L82">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L83">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="nc" id="L84">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/routines&quot;;</span>
+
+<span class="nc" id="L86">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L91">                    allRoutines.clear();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L94">                            allRoutines.add(response.getJSONObject(i));</span>
+<span class="nc" id="L95">                        } catch (JSONException e) {</span>
+<span class="nc" id="L96">                            e.printStackTrace();</span>
+<span class="nc" id="L97">                        }</span>
+                    }
+<span class="nc" id="L99">                    sortAndDisplay(filterSpinner.getSelectedItemPosition());</span>
+<span class="nc" id="L100">                },</span>
+                error -&gt; {
+<span class="nc" id="L102">                    Toast.makeText(this, &quot;Failed to load routines&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L103">                }</span>
+        );
+
+<span class="nc" id="L106">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L107">    }</span>
+
+    private void sortAndDisplay(int filterType) {
+<span class="nc" id="L110">        List&lt;JSONObject&gt; sorted = new ArrayList&lt;&gt;(allRoutines);</span>
+
+<span class="nc bnc" id="L112" title="All 4 branches missed.">        switch (filterType) {</span>
+            case 0: // Active First
+<span class="nc" id="L114">                Collections.sort(sorted, (a, b) -&gt; {</span>
+                    try {
+<span class="nc" id="L116">                        boolean aCompleted = a.getBoolean(&quot;completed&quot;);</span>
+<span class="nc" id="L117">                        boolean bCompleted = b.getBoolean(&quot;completed&quot;);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                        if (aCompleted == bCompleted) {</span>
+<span class="nc" id="L119">                            return b.getInt(&quot;streakCount&quot;) - a.getInt(&quot;streakCount&quot;);</span>
+                        }
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                        return aCompleted ? 1 : -1;</span>
+<span class="nc" id="L122">                    } catch (JSONException e) {</span>
+<span class="nc" id="L123">                        return 0;</span>
+                    }
+                });
+<span class="nc" id="L126">                break;</span>
+
+            case 1: // Completed First
+<span class="nc" id="L129">                Collections.sort(sorted, (a, b) -&gt; {</span>
+                    try {
+<span class="nc" id="L131">                        boolean aCompleted = a.getBoolean(&quot;completed&quot;);</span>
+<span class="nc" id="L132">                        boolean bCompleted = b.getBoolean(&quot;completed&quot;);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                        if (aCompleted == bCompleted) {</span>
+<span class="nc" id="L134">                            return b.getInt(&quot;streakCount&quot;) - a.getInt(&quot;streakCount&quot;);</span>
+                        }
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                        return aCompleted ? -1 : 1;</span>
+<span class="nc" id="L137">                    } catch (JSONException e) {</span>
+<span class="nc" id="L138">                        return 0;</span>
+                    }
+                });
+<span class="nc" id="L141">                break;</span>
+
+            case 2: // Progress %
+<span class="nc" id="L144">                Collections.sort(sorted, (a, b) -&gt; {</span>
+                    try {
+<span class="nc" id="L146">                        return b.getInt(&quot;streakCount&quot;) - a.getInt(&quot;streakCount&quot;);</span>
+<span class="nc" id="L147">                    } catch (JSONException e) {</span>
+<span class="nc" id="L148">                        return 0;</span>
+                    }
+                });
+                break;
+        }
+
+<span class="nc" id="L154">        displayRoutines(sorted);</span>
+<span class="nc" id="L155">    }</span>
+
+    private void displayRoutines(List&lt;JSONObject&gt; routines) {
+<span class="nc" id="L158">        routinesContainer.removeAllViews();</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        for (JSONObject routine : routines) {</span>
+            try {
+<span class="nc" id="L162">                String id = routine.getString(&quot;id&quot;);</span>
+<span class="nc" id="L163">                String title = routine.getString(&quot;title&quot;);</span>
+<span class="nc" id="L164">                String description = routine.getString(&quot;description&quot;);</span>
+<span class="nc" id="L165">                String label = routine.getString(&quot;label&quot;);</span>
+<span class="nc" id="L166">                int streakCount = routine.getInt(&quot;streakCount&quot;);</span>
+<span class="nc" id="L167">                boolean completed = routine.getBoolean(&quot;completed&quot;);</span>
+
+<span class="nc" id="L169">                addRoutineCard(id, title, description, label, streakCount, completed);</span>
+<span class="nc" id="L170">            } catch (JSONException e) {</span>
+<span class="nc" id="L171">                e.printStackTrace();</span>
+<span class="nc" id="L172">            }</span>
+<span class="nc" id="L173">        }</span>
+<span class="nc" id="L174">    }</span>
+
+    private void addRoutineCard(String id, String title, String description, String label, int streakCount, boolean completed) {
+<span class="nc" id="L177">        View cardView = getLayoutInflater().inflate(R.layout.routine_card, routinesContainer, false);</span>
+
+<span class="nc" id="L179">        TextView titleView = cardView.findViewById(R.id.routineTitle);</span>
+<span class="nc" id="L180">        TextView progressView = cardView.findViewById(R.id.routineProgress);</span>
+<span class="nc" id="L181">        TextView labelView = cardView.findViewById(R.id.routineLabel);</span>
+<span class="nc" id="L182">        ProgressBar progressBar = cardView.findViewById(R.id.progressBar);</span>
+<span class="nc" id="L183">        View cardBackground = cardView.findViewById(R.id.cardBackground);</span>
+
+<span class="nc" id="L185">        titleView.setText(title);</span>
+<span class="nc" id="L186">        progressView.setText(&quot;Day &quot; + streakCount + &quot;/60&quot;);</span>
+<span class="nc" id="L187">        labelView.setText(label);</span>
+<span class="nc" id="L188">        progressBar.setMax(60);</span>
+<span class="nc" id="L189">        progressBar.setProgress(streakCount);</span>
+
+        // Set background color based on progress
+<span class="nc" id="L192">        int backgroundColor = getProgressColor(streakCount, completed);</span>
+<span class="nc" id="L193">        cardBackground.setBackgroundColor(backgroundColor);</span>
+
+        // Click to view details or check-in
+<span class="nc" id="L196">        cardView.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            if (completed) {</span>
+<span class="nc" id="L198">                showCompletedDialog(title);</span>
+            } else {
+<span class="nc" id="L200">                showRoutineOptions(id, title, description, streakCount);</span>
+            }
+<span class="nc" id="L202">        });</span>
+
+<span class="nc" id="L204">        routinesContainer.addView(cardView);</span>
+<span class="nc" id="L205">    }</span>
+
+    private int getProgressColor(int streakCount, boolean completed) {
+<span class="nc bnc" id="L208" title="All 4 branches missed.">        if (completed || streakCount &gt;= 60) {</span>
+<span class="nc" id="L209">            return Color.parseColor(&quot;#4CAF50&quot;); // Green</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        } else if (streakCount &gt;= 41) {</span>
+<span class="nc" id="L211">            return Color.parseColor(&quot;#FFEB3B&quot;); // Yellow</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        } else if (streakCount &gt;= 21) {</span>
+<span class="nc" id="L213">            return Color.parseColor(&quot;#FF9800&quot;); // Orange</span>
+        } else {
+<span class="nc" id="L215">            return Color.parseColor(&quot;#F44336&quot;); // Red</span>
+        }
+    }
+
+    private void showCompletedDialog(String title) {
+<span class="nc" id="L220">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L221">                .setTitle(&quot;Completed!&quot;)</span>
+<span class="nc" id="L222">                .setMessage(title + &quot; is completed. Congratulations!&quot;)</span>
+<span class="nc" id="L223">                .setPositiveButton(&quot;OK&quot;, null)</span>
+<span class="nc" id="L224">                .show();</span>
+<span class="nc" id="L225">    }</span>
+
+    private void showRoutineOptions(String routineId, String title, String description, int currentDay) {
+<span class="nc" id="L228">        AlertDialog.Builder builder = new AlertDialog.Builder(this);</span>
+<span class="nc" id="L229">        builder.setTitle(title);</span>
+<span class="nc" id="L230">        builder.setMessage(description + &quot;\n\nCurrent: Day &quot; + currentDay + &quot;/60&quot;);</span>
+
+<span class="nc" id="L232">        builder.setPositiveButton(&quot;Check In Today&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L233">            checkInRoutine(routineId);</span>
+<span class="nc" id="L234">        });</span>
+
+<span class="nc" id="L236">        builder.setNegativeButton(&quot;Delete&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L237">            deleteRoutine(routineId);</span>
+<span class="nc" id="L238">        });</span>
+
+<span class="nc" id="L240">        builder.setNeutralButton(&quot;Cancel&quot;, null);</span>
+
+<span class="nc" id="L242">        builder.show();</span>
+<span class="nc" id="L243">    }</span>
+
+    private void checkInRoutine(String routineId) {
+<span class="nc" id="L246">        String url = ApiConstants.BASE_URL + &quot;/api/routines/&quot; + routineId + &quot;/checkin&quot;;</span>
+
+<span class="nc" id="L248">        StringRequest request = new StringRequest(</span>
+                Request.Method.POST,
+                url,
+                response -&gt; {
+<span class="nc" id="L252">                    Toast.makeText(this, &quot;Checked in!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L253">                    fetchRoutines();</span>
+<span class="nc" id="L254">                },</span>
+                error -&gt; {
+<span class="nc" id="L256">                    Toast.makeText(this, &quot;Failed to check in&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L257">                }</span>
+        );
+
+<span class="nc" id="L260">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L261">    }</span>
+
+    private void deleteRoutine(String routineId) {
+<span class="nc" id="L264">        String url = ApiConstants.BASE_URL + &quot;/api/routines/&quot; + routineId;</span>
+
+<span class="nc" id="L266">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L270">                    Toast.makeText(this, &quot;Routine deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L271">                    fetchRoutines();</span>
+<span class="nc" id="L272">                },</span>
+                error -&gt; {
+<span class="nc" id="L274">                    Toast.makeText(this, &quot;Failed to delete&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L275">                }</span>
+        );
+
+<span class="nc" id="L278">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L279">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
