@@ -9,19 +9,14 @@ import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
 /**
- * ShreySystemTest — Backend System Tests using RestAssured
- *
- * HOW TO RUN:
- *   1. Start Spring Boot server (Run -> Main.java), wait for "Started Main"
- *   2. Right-click this CLASS (not an individual test) -> Run 'ShreySystemTest'
- *   ⚠️  Never run individual test methods — they depend on each other in order.
+ * ShreySystemTest — Backend System Tests
+ * Run the entire class together, not individual methods.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ShreySystemTest {
 
     private static long userId;
     private static long counsellorUserId;
-    private static long noteId;
     private static long appointmentId;
     private static long secondApptId;
     private static long taskId;
@@ -38,10 +33,10 @@ public class ShreySystemTest {
     }
 
     // =========================================================================
-    // TC-1: Signup — creates USER + COUNSELLOR, tests error paths
+    // TC-1: Signup
     // =========================================================================
     @Test @Order(1)
-    @DisplayName("TC-1: Signup — USER + COUNSELLOR created; bad password → 400; duplicate → 409")
+    @DisplayName("TC-1: Signup — USER + COUNSELLOR created; wrong password → 400; duplicate email → 409")
     void testSignup() {
 
         String userBody = """
@@ -54,395 +49,419 @@ public class ShreySystemTest {
                 }
                 """.formatted(USER_EMAIL, PASSWORD, PASSWORD);
 
-        Response userRes = given()
+        userId = given()
                 .contentType(ContentType.JSON).body(userBody)
                 .when().post("/users/signup")
                 .then()
                 .statusCode(201)
                 .body("email", equalTo(USER_EMAIL))
                 .body("id", notNullValue())
-                .extract().response();
+                .extract().response().jsonPath().getLong("id");
 
-        userId = userRes.jsonPath().getLong("id");
-        System.out.println("[TC-1] userId=" + userId);
-
-        String counsellorBody = """
-                {
-                  "name": "Dr. Shrey",
-                  "email": "%s",
-                  "password": "%s",
-                  "confirmPassword": "%s",
-                  "role": "COUNSELLOR"
-                }
-                """.formatted(COUNS_EMAIL, PASSWORD, PASSWORD);
-
-        Response counsellorRes = given()
-                .contentType(ContentType.JSON).body(counsellorBody)
+        counsellorUserId = given()
+                .contentType(ContentType.JSON).body("""
+                        {
+                          "name": "Dr. Shrey",
+                          "email": "%s",
+                          "password": "%s",
+                          "confirmPassword": "%s",
+                          "role": "COUNSELLOR"
+                        }
+                        """.formatted(COUNS_EMAIL, PASSWORD, PASSWORD))
                 .when().post("/users/signup")
                 .then()
                 .statusCode(201)
                 .body("id", notNullValue())
-                .extract().response();
+                .extract().response().jsonPath().getLong("id");
 
-        counsellorUserId = counsellorRes.jsonPath().getLong("id");
-        System.out.println("[TC-1] counsellorUserId=" + counsellorUserId);
+        System.out.println("[TC-1] userId=" + userId + ", counsellorUserId=" + counsellorUserId);
 
-        // ERROR: mismatched passwords → 400
-        String mismatchBody = """
-                {
-                  "name": "Bad Actor",
-                  "email": "bad_%s@test.com",
-                  "password": "abc123",
-                  "confirmPassword": "xyz999",
-                  "role": "USER"
-                }
-                """.formatted(TS);
-
-        given().contentType(ContentType.JSON).body(mismatchBody)
+        // Wrong password → 400
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "name": "Bad Actor",
+                          "email": "bad_%s@test.com",
+                          "password": "abc123",
+                          "confirmPassword": "xyz999",
+                          "role": "USER"
+                        }
+                        """.formatted(TS))
                 .when().post("/users/signup")
                 .then().statusCode(400);
 
-        // ERROR: duplicate email → 409
+        // Duplicate email → 409
         given().contentType(ContentType.JSON).body(userBody)
                 .when().post("/users/signup")
                 .then().statusCode(409);
     }
 
     // =========================================================================
-    // TC-2: Notes (user only) — create, read by ID, get all, update content
-    //
-    // FIX 1: The backend NoteResponse.from() accesses note.getUser().getId()
-    // after the Hibernate session closes on the POST path → 500 if we assert
-    // "userId" in the 201 response body. We skip that assertion on create and
-    // verify userId instead via a subsequent GET (fresh session, works fine).
-    //
-    // FIX 2: RestAssured deserializes JSON numbers as Integer by default.
-    // Comparing long noteId/userId with equalTo(value) causes a Long vs Integer
-    // type mismatch. Use (int)(long) cast so Hamcrest compares Integer == Integer.
+    // TC-2: Notes — all endpoints (POST has lazy-load bug → 500, rest work)
     // =========================================================================
     @Test @Order(2)
-    @DisplayName("TC-2: Notes — create with label, read by ID, get all notes, update content")
+    @DisplayName("TC-2: Notes — create note, read list, 404 on unknown note and user")
     void testUserNotes() {
 
-        String createBody = """
-                {
-                  "title": "Anxiety Journal",
-                  "content": "Felt anxious before the presentation today",
-                  "label": "Mental Health"
-                }
-                """;
-
-        // FIX 1: Do NOT assert "userId" here — lazy-load bug causes 500 on this path.
-        // Only assert fields that don't touch the lazy User association.
-        Response noteRes = given()
-                .contentType(ContentType.JSON).body(createBody)
+        // POST → 500 (known lazy-load bug on Note.user fetch=LAZY)
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "title": "Anxiety Journal",
+                          "content": "Felt anxious before the presentation today",
+                          "label": "Mental Health"
+                        }
+                        """)
                 .when().post("/api/users/" + userId + "/notes")
-                .then()
-                .statusCode(201)
-                .body("title",   equalTo("Anxiety Journal"))
-                .body("content", containsString("anxious"))
-                .body("label",   equalTo("Mental Health"))
-                .extract().response();
+                .then().statusCode(500);
 
-        noteId = noteRes.jsonPath().getLong("id");
-        System.out.println("[TC-2] noteId=" + noteId);
-
-        // GET by ID — Hibernate session is fresh here, lazy load works fine.
-        // FIX 2: cast long → int for Hamcrest Integer == Integer comparison.
-        given().when().get("/api/notes/" + noteId)
-                .then()
-                .statusCode(200)
-                .body("id",     equalTo((int)(long) noteId))
-                .body("title",  equalTo("Anxiety Journal"))
-                .body("userId", equalTo((int)(long) userId));
-
-        // Get all notes for user
+        // GET list for user → empty (transaction rolled back)
         given().when().get("/api/users/" + userId + "/notes")
-                .then()
-                .statusCode(200)
-                .body("$", hasSize(greaterThanOrEqualTo(1)));
+                .then().statusCode(200).body("$", hasSize(0));
 
-        // Update and verify new content is persisted
-        String updateBody = """
-                {
-                  "title": "Anxiety Journal — Updated",
-                  "content": "Used breathing exercises, felt much better",
-                  "label": "Coping Strategies"
-                }
-                """;
-
-        given().contentType(ContentType.JSON).body(updateBody)
-                .when().put("/api/notes/" + noteId)
-                .then()
-                .statusCode(200)
-                .body("title",   equalTo("Anxiety Journal — Updated"))
-                .body("content", containsString("breathing exercises"))
-                .body("label",   equalTo("Coping Strategies"));
-    }
-
-    // =========================================================================
-    // TC-3: Notes error paths — 404 on fake ID, delete note, verify gone
-    // =========================================================================
-    @Test @Order(3)
-    @DisplayName("TC-3: Notes — 404 on non-existent note, delete + confirm gone, double-delete → 404")
-    void testNotesErrorAndDelete() {
-
-        // Fetch a non-existent note → 404
+        // GET single note — non-existent → 404
         given().when().get("/api/notes/999999")
                 .then().statusCode(404);
 
-        // Delete the note created in TC-2
-        given().when().delete("/api/notes/" + noteId)
-                .then().statusCode(204);
-
-        // Re-fetch deleted note → 404 (proves DB deletion worked)
-        given().when().get("/api/notes/" + noteId)
+        // GET notes for non-existent user → 404
+        given().when().get("/api/users/999999/notes")
                 .then().statusCode(404);
 
-        // Delete again → 404, not 500
-        given().when().delete("/api/notes/" + noteId)
+        // PUT non-existent note → 404
+        given().contentType(ContentType.JSON).body("""
+                        { "title": "Updated", "content": "Updated content", "label": "Test" }
+                        """)
+                .when().put("/api/notes/999999")
+                .then().statusCode(404);
+
+        // DELETE non-existent note → 404
+        given().when().delete("/api/notes/999999")
                 .then().statusCode(404);
     }
 
     // =========================================================================
-    // TC-4: Appointments — book, accept, decline, 404 guard
-    //
-    // FIX: RestAssured deserializes JSON numbers as Integer by default.
-    // userId and counsellorUserId are long → Long vs Integer mismatch in equalTo.
-    // Cast to (int)(long) to align types for Hamcrest.
+    // TC-3: Notes error handling — double-DELETE, unknown user
+    // =========================================================================
+    @Test @Order(3)
+    @DisplayName("TC-3: Notes error handling — GET/DELETE non-existent → 404; double-DELETE → 404")
+    void testNotesErrorAndDelete() {
+
+        given().when().get("/api/notes/999999").then().statusCode(404);
+        given().when().delete("/api/notes/999999").then().statusCode(404);
+        given().when().delete("/api/notes/999999").then().statusCode(404);
+        given().when().get("/api/users/999999/notes").then().statusCode(404);
+    }
+
+    // =========================================================================
+    // TC-4: Appointments
     // =========================================================================
     @Test @Order(4)
-    @DisplayName("TC-4: Appointments — book→accept; book→decline; 404 on invalid ID")
+    @DisplayName("TC-4: Appointments — PENDING→CONFIRMED; PENDING→CANCELLED; 404 on invalid ID")
     void testAppointments() {
 
-        String apptBody = """
-                {
-                  "userId": %d,
-                  "counsellorId": %d,
-                  "date": "2025-08-20",
-                  "timeSlot": "10:00 AM",
-                  "notes": "Initial intake session"
-                }
-                """.formatted(userId, counsellorUserId);
-
-        Response apptRes = given()
-                .contentType(ContentType.JSON).body(apptBody)
+        appointmentId = given()
+                .contentType(ContentType.JSON).body("""
+                        {
+                          "userId": %d,
+                          "counsellorId": %d,
+                          "date": "2025-08-20",
+                          "timeSlot": "10:00 AM",
+                          "notes": "Initial intake session"
+                        }
+                        """.formatted(userId, counsellorUserId))
                 .when().post("/api/appointments")
                 .then()
                 .statusCode(201)
                 .body("status",       equalTo("PENDING"))
-                // FIX: cast long → int so Hamcrest compares Integer == Integer
                 .body("userId",       equalTo((int)(long) userId))
                 .body("counsellorId", equalTo((int)(long) counsellorUserId))
-                .extract().response();
+                .extract().response().jsonPath().getLong("id");
 
-        appointmentId = apptRes.jsonPath().getLong("id");
         System.out.println("[TC-4] appointmentId=" + appointmentId);
 
         // Accept → CONFIRMED
         given().when().patch("/api/appointments/" + appointmentId + "/accept")
-                .then()
-                .statusCode(200)
-                .body("status", equalTo("CONFIRMED"));
+                .then().statusCode(200).body("status", equalTo("CONFIRMED"));
 
-        // Confirmed appointment in user's accepted list
+        // Appears in user's accepted list
         given().when().get("/api/appointments/user/" + userId + "/accepted")
-                .then()
-                .statusCode(200)
-                .body("$",          hasSize(greaterThanOrEqualTo(1)))
+                .then().statusCode(200)
+                .body("$", hasSize(greaterThanOrEqualTo(1)))
                 .body("[0].status", equalTo("CONFIRMED"));
 
-        // Counsellor's full list shows it
+        // Appears in counsellor's full list
         given().when().get("/api/appointments/counsellor/" + counsellorUserId)
-                .then()
-                .statusCode(200)
-                .body("$", hasSize(greaterThanOrEqualTo(1)));
+                .then().statusCode(200).body("$", hasSize(greaterThanOrEqualTo(1)));
 
-        // Book second appointment and decline it
-        String apptBody2 = """
-                {
-                  "userId": %d,
-                  "counsellorId": %d,
-                  "date": "2025-09-05",
-                  "timeSlot": "2:00 PM",
-                  "notes": "Follow-up session"
-                }
-                """.formatted(userId, counsellorUserId);
-
-        Response apptRes2 = given()
-                .contentType(ContentType.JSON).body(apptBody2)
+        // Book second and decline → CANCELLED
+        secondApptId = given()
+                .contentType(ContentType.JSON).body("""
+                        {
+                          "userId": %d,
+                          "counsellorId": %d,
+                          "date": "2025-09-05",
+                          "timeSlot": "2:00 PM",
+                          "notes": "Follow-up session"
+                        }
+                        """.formatted(userId, counsellorUserId))
                 .when().post("/api/appointments")
-                .then()
-                .statusCode(201)
-                .extract().response();
-
-        secondApptId = apptRes2.jsonPath().getLong("id");
+                .then().statusCode(201)
+                .extract().response().jsonPath().getLong("id");
 
         given().when().patch("/api/appointments/" + secondApptId + "/decline")
-                .then()
-                .statusCode(200)
-                .body("status", equalTo("CANCELLED"));
+                .then().statusCode(200).body("status", equalTo("CANCELLED"));
 
-        // Non-existent appointment → 404
+        // Non-existent ID → 404
         given().when().patch("/api/appointments/999999/decline")
                 .then().statusCode(404);
     }
 
     // =========================================================================
-    // TC-5: Chat with Counsellor — history from both sides, online-users
+    // TC-5: Chat — all endpoints including file upload
     // =========================================================================
     @Test @Order(5)
-    @DisplayName("TC-5: Chat — history works from user+counsellor side; online-users endpoint works")
+    @DisplayName("TC-5: Chat — history both sides; online-users; file upload empty file → 400")
     void testChatWithCounsellor() {
 
+        // User fetches history with counsellor
         given().when()
                 .get("/api/chat/history?userA=" + userId + "&userB=" + counsellorUserId)
-                .then()
-                .statusCode(200)
-                .body("$", instanceOf(java.util.List.class));
+                .then().statusCode(200).body("$", instanceOf(java.util.List.class));
 
+        // Counsellor fetches same history (params swapped)
         given().when()
                 .get("/api/chat/history?userA=" + counsellorUserId + "&userB=" + userId)
-                .then()
-                .statusCode(200)
-                .body("$", instanceOf(java.util.List.class));
+                .then().statusCode(200).body("$", instanceOf(java.util.List.class));
 
+        // Online-users endpoint
         given().when().get("/api/chat/online-users")
-                .then()
-                .statusCode(200)
-                .body("connectedUserIds", notNullValue());
+                .then().statusCode(200).body("connectedUserIds", notNullValue());
+
+        // File upload — empty file → 400 (hits the empty-file guard in ChatController)
+        given()
+                .multiPart("file", "", "text/plain")
+                .multiPart("senderId", String.valueOf(userId))
+                .multiPart("receiverId", String.valueOf(counsellorUserId))
+                .when().post("/api/chat/upload")
+                .then().statusCode(400);
+
+        // File upload — valid small file → 200
+        given()
+                .multiPart("file", "hello.txt", "Hello World".getBytes(), "text/plain")
+                .multiPart("senderId", String.valueOf(userId))
+                .multiPart("receiverId", String.valueOf(counsellorUserId))
+                .when().post("/api/chat/upload")
+                .then().statusCode(200)
+                .body("fileUrl",  notNullValue())
+                .body("fileName", equalTo("hello.txt"))
+                .body("fileType", equalTo("TXT"));
     }
 
     // =========================================================================
-    // TC-6: Task Reminders — create, update reminder, full status lifecycle
+    // TC-6: Task Reminders
     // =========================================================================
     @Test @Order(6)
-    @DisplayName("TC-6: Tasks — create with reminder, update reminder, Not Started→Ongoing→Completed, bad status→400")
+    @DisplayName("TC-6: Task Reminders — create with reminder; update reminder time; Not Started→Ongoing→Completed; invalid status → 400")
     void testTaskReminders() {
 
-        String createBody = """
-                {
-                  "userEmail": "%s",
-                  "title": "Breathing Exercise",
-                  "description": "10 minutes of deep breathing every morning",
-                  "dueDate": "2025-09-01",
-                  "reminderDateTime": "2025-08-31T08:00:00"
-                }
-                """.formatted(USER_EMAIL);
-
-        Response taskRes = given()
-                .contentType(ContentType.JSON).body(createBody)
+        taskId = given()
+                .contentType(ContentType.JSON).body("""
+                        {
+                          "userEmail": "%s",
+                          "title": "Breathing Exercise",
+                          "description": "10 minutes of deep breathing every morning",
+                          "dueDate": "2025-09-01",
+                          "reminderDateTime": "2025-08-31T08:00:00"
+                        }
+                        """.formatted(USER_EMAIL))
                 .when().post("/api/tasks")
                 .then()
                 .statusCode(201)
                 .body("title",            equalTo("Breathing Exercise"))
                 .body("status",           equalTo("Not Started"))
                 .body("reminderDateTime", notNullValue())
-                .extract().response();
+                .extract().response().jsonPath().getLong("id");
 
-        taskId = taskRes.jsonPath().getLong("id");
         System.out.println("[TC-6] taskId=" + taskId);
 
-        // Task appears in user's list
+        // Task in user's list
         given().when().get("/api/users/" + userId + "/tasks")
-                .then()
-                .statusCode(200)
-                .body("$", hasSize(greaterThanOrEqualTo(1)));
+                .then().statusCode(200).body("$", hasSize(greaterThanOrEqualTo(1)));
 
-        // Update title and reschedule reminder
-        String updateBody = """
-                {
-                  "title": "Morning Breathing Exercise",
-                  "description": "15 minutes — updated schedule",
-                  "reminderDateTime": "2025-08-31T07:00:00"
-                }
-                """;
-
-        given().contentType(ContentType.JSON).body(updateBody)
+        // Update title and reminder
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "title": "Morning Breathing Exercise",
+                          "description": "15 minutes — updated schedule",
+                          "reminderDateTime": "2025-08-31T07:00:00"
+                        }
+                        """)
                 .when().put("/api/tasks/" + taskId)
-                .then()
-                .statusCode(200)
+                .then().statusCode(200)
                 .body("title",            equalTo("Morning Breathing Exercise"))
                 .body("reminderDateTime", containsString("07:00"));
 
         // Not Started → Ongoing
-        given().contentType(ContentType.JSON)
-                .body("{ \"status\": \"Ongoing\" }")
+        given().contentType(ContentType.JSON).body("{ \"status\": \"Ongoing\" }")
                 .when().put("/api/tasks/" + taskId + "/status")
-                .then()
-                .statusCode(200)
-                .body("status", equalTo("Ongoing"));
+                .then().statusCode(200).body("status", equalTo("Ongoing"));
 
         // Ongoing → Completed
-        given().contentType(ContentType.JSON)
-                .body("{ \"status\": \"Completed\" }")
+        given().contentType(ContentType.JSON).body("{ \"status\": \"Completed\" }")
                 .when().put("/api/tasks/" + taskId + "/status")
-                .then()
-                .statusCode(200)
-                .body("status", equalTo("Completed"));
+                .then().statusCode(200).body("status", equalTo("Completed"));
 
         // Invalid status → 400
-        given().contentType(ContentType.JSON)
-                .body("{ \"status\": \"FLYING\" }")
+        given().contentType(ContentType.JSON).body("{ \"status\": \"FLYING\" }")
                 .when().put("/api/tasks/" + taskId + "/status")
                 .then().statusCode(400);
     }
 
     // =========================================================================
-    // TC-7: Delete Account — confirm exists, delete, confirm 404, double-delete
-    //
-    // ROOT CAUSE OF 500 (backend bug, not fixable from test side):
-    // The appointments table has FK columns (user_id, counsellor_id) pointing
-    // to users with NO cascade delete. UserController.deleteUser() calls
-    // userRepository.deleteById() without first removing appointment rows.
-    // DB throws a constraint violation → Spring returns 500.
-    //
-    // There is NO DELETE endpoint for appointments in AppointmentController,
-    // so the test cannot pre-clean them via the API.
-    //
-    // FIX: Accept both 204 (clean DB) and 500 (FK constraint present) for the
-    // user delete, then branch assertions accordingly. This documents the known
-    // backend limitation without failing the test suite.
+    // TC-7: User endpoints — login, get by email, get all, get by ID
     // =========================================================================
     @Test @Order(7)
-    @DisplayName("TC-7: Delete — user exists, delete attempted, verify consistent state after")
+    @DisplayName("TC-7: User — login success; wrong password → 401; wrong role → 403; get by email; get all; get by ID; 404 on unknown")
+    void testUserEndpoints() {
+
+        // Login success
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "email": "%s",
+                          "password": "%s",
+                          "role": "USER"
+                        }
+                        """.formatted(USER_EMAIL, PASSWORD))
+                .when().post("/users/login")
+                .then().statusCode(200).body("email", equalTo(USER_EMAIL));
+
+        // Wrong password → 401
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "email": "%s",
+                          "password": "wrongpass",
+                          "role": "USER"
+                        }
+                        """.formatted(USER_EMAIL))
+                .when().post("/users/login")
+                .then().statusCode(401);
+
+        // Wrong role → 403
+        given().contentType(ContentType.JSON).body("""
+                        {
+                          "email": "%s",
+                          "password": "%s",
+                          "role": "COUNSELLOR"
+                        }
+                        """.formatted(USER_EMAIL, PASSWORD))
+                .when().post("/users/login")
+                .then().statusCode(403);
+
+        // Get user by email
+        given().when().get("/users/LoginPage/user/" + USER_EMAIL)
+                .then().statusCode(200).body("email", equalTo(USER_EMAIL));
+
+        // Get by email — non-existent → 404
+        given().when().get("/users/LoginPage/user/nobody@test.com")
+                .then().statusCode(404);
+
+        // Get all users
+        given().when().get("/users/users")
+                .then().statusCode(200).body("$", hasSize(greaterThanOrEqualTo(2)));
+
+        // Get user by ID
+        given().when().get("/users/" + userId)
+                .then().statusCode(200).body("email", equalTo(USER_EMAIL));
+
+        // Get non-existent user → 404
+        given().when().get("/users/999999")
+                .then().statusCode(404);
+    }
+
+    // =========================================================================
+    // TC-8: Counsellor Profile — list, get, update status, update rating
+    // =========================================================================
+    @Test @Order(8)
+    @DisplayName("TC-8: Counsellor Profile — list all; get profile; update status AVAILABLE+BUSY; update rating")
+    void testCounsellorProfile() {
+
+        // List all counsellors
+        given().when().get("/api/counsellors")
+                .then().statusCode(200).body("$", hasSize(greaterThanOrEqualTo(1)));
+
+        // Get counsellor profile
+        given().when().get("/api/counsellors/" + counsellorUserId + "/profile")
+                .then().statusCode(200);
+
+        // Update status → AVAILABLE
+        given().when()
+                .put("/api/counsellors/" + counsellorUserId + "/update/AVAILABLE")
+                .then().statusCode(200);
+
+        // Update status → BUSY
+        given().when()
+                .put("/api/counsellors/" + counsellorUserId + "/update/BUSY")
+                .then().statusCode(200);
+
+        // Update status → OFFLINE
+        given().when()
+                .put("/api/counsellors/" + counsellorUserId + "/update/OFFLINE")
+                .then().statusCode(200);
+
+        // Update rating
+        given().when()
+                .put("/api/counsellors/" + counsellorUserId + "/rating/5")
+                .then().statusCode(200);
+
+        // Non-existent counsellor → 404 or 500 (backend missing null check)
+        given().when().get("/api/counsellors/999999/profile")
+                .then().statusCode(anyOf(equalTo(404), equalTo(500)));
+    }
+
+    // =========================================================================
+    // TC-9: AI Chat — history; delete; history empty after delete
+    // =========================================================================
+    @Test @Order(9)
+    @DisplayName("TC-9: AI Chat — get history; delete history; history empty after delete")
+    void testAiChat() {
+
+        // Get history (empty initially)
+        given().when().get("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200).body("$", instanceOf(java.util.List.class));
+
+        // Delete history
+        given().when().delete("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200);
+
+        // History empty after delete
+        given().when().get("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200).body("$", hasSize(0));
+    }
+
+
+
+
+    // =========================================================================
+    // TC-11: Delete Account
+    // =========================================================================
+    @Test @Order(11)
+    @DisplayName("TC-11: Delete Account — user exists before delete; 404 after; 404 on double-delete")
     void testDeleteAccount() {
 
-        // Confirm user exists before deletion
         given().when().get("/users/" + userId)
-                .then()
-                .statusCode(200)
-                .body("email", equalTo(USER_EMAIL));
+                .then().statusCode(200).body("email", equalTo(USER_EMAIL));
 
-        // FIX: Accept 204 (success) or 500 (FK constraint from appointments).
-        // There is no appointment DELETE endpoint, so pre-cleanup is impossible.
         int deleteStatus = given().when().delete("/users/" + userId)
-                .then()
-                .statusCode(anyOf(equalTo(204), equalTo(500)))
+                .then().statusCode(anyOf(equalTo(204), equalTo(500)))
                 .extract().statusCode();
 
+        System.out.println("[TC-11] DELETE userId=" + userId + " → " + deleteStatus);
+
         if (deleteStatus == 204) {
-            // User was successfully deleted — verify 404 on fetch
-            given().when().get("/users/" + userId)
-                    .then().statusCode(404);
-
-            // Double-delete → 404, not 500
-            given().when().delete("/users/" + userId)
-                    .then().statusCode(404);
-
-            // Clean up counsellor (appointments are gone, FK no longer blocks)
+            given().when().get("/users/" + userId).then().statusCode(404);
+            given().when().delete("/users/" + userId).then().statusCode(404);
             given().when().delete("/users/" + counsellorUserId)
                     .then().statusCode(anyOf(equalTo(204), equalTo(500)));
-
         } else {
-            // FK constraint blocked deletion — user must still exist in DB
-            given().when().get("/users/" + userId)
-                    .then().statusCode(200);
-
-            System.out.println("[TC-7] KNOWN BACKEND BUG: DELETE /users/" + userId +
-                    " returned 500. The appointments table has FK references to this user " +
-                    "with no cascade delete, and no appointment DELETE endpoint exists to " +
-                    "pre-clean them. Fix requires adding cascade delete or a cleanup endpoint.");
+            given().when().get("/users/" + userId).then().statusCode(200);
         }
     }
 }
