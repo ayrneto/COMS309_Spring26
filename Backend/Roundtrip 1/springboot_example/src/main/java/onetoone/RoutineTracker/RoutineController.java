@@ -52,6 +52,11 @@ public class RoutineController {
         return routineRepo.findAll();
     }
 
+    @GetMapping("/users/{userId}/routines")
+    public List<Routine> getUserRoutines(@PathVariable Long userId) {
+        return routineRepo.findByUserId(userId);
+    }
+
     @DeleteMapping("/{id}")
     public String deleteRoutine(@PathVariable Long id) {
         if (!routineRepo.existsById(id)) {
