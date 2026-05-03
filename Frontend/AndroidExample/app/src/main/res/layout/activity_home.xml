@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- ── Main content ───────────────────────────────────────────────────── -->
+    <!-- Main content -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -76,7 +76,7 @@
             android:id="@+id/tvHint"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Tap ☰ to navigate the app."
+            android:text="Tap to navigate the app."
             android:textSize="14sp"
             android:textColor="#6B6B6B"
             android:gravity="center"
@@ -89,7 +89,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- ── Navigation Drawer ──────────────────────────────────────────────── -->
+    <!-- Navigation Drawer -->
     <LinearLayout
         android:id="@+id/navDrawer"
         android:layout_width="300dp"
@@ -137,7 +137,6 @@
             android:orientation="vertical"
             android:paddingTop="8dp">
 
-            <!-- Find a Counselor -->
             <LinearLayout
                 android:id="@+id/drawerItemFindCounsellor"
                 android:layout_width="match_parent"
@@ -160,7 +159,6 @@
 
             </LinearLayout>
 
-            <!-- Worry Notes -->
             <LinearLayout
                 android:id="@+id/drawerItemWorryNotes"
                 android:layout_width="match_parent"
@@ -183,7 +181,6 @@
 
             </LinearLayout>
 
-            <!-- Chat with Counselor -->
             <LinearLayout
                 android:id="@+id/drawerItemChat"
                 android:layout_width="match_parent"
@@ -206,7 +203,30 @@
 
             </LinearLayout>
 
-            <!-- My Tasks (for users) -->
+            <!-- AI Assistant (USER only) -->
+            <LinearLayout
+                android:id="@+id/drawerItemAiChat"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI Assistant"
+                    android:textSize="16sp"
+                    android:textColor="#1B1B1B"
+                    android:fontFamily="@font/alata" />
+
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/drawerItemMyTasks"
                 android:layout_width="match_parent"
@@ -230,7 +250,6 @@
 
             </LinearLayout>
 
-            <!-- Assign Task (for counselors) -->
             <LinearLayout
                 android:id="@+id/drawerItemAssignTask"
                 android:layout_width="match_parent"
@@ -254,7 +273,6 @@
 
             </LinearLayout>
 
-            <!-- Check-In (for users) -->
             <LinearLayout
                 android:id="@+id/drawerItemCheckIn"
                 android:layout_width="match_parent"
@@ -278,7 +296,30 @@
 
             </LinearLayout>
 
-            <!-- Edit Profile -->
+            <!-- Prescriptions (USER only) -->
+            <LinearLayout
+                android:id="@+id/drawerItemPrescriptions"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Prescriptions"
+                    android:textSize="16sp"
+                    android:textColor="#1B1B1B"
+                    android:fontFamily="@font/alata" />
+
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/drawerItemEditProfile"
                 android:layout_width="match_parent"
@@ -300,7 +341,6 @@
                     android:fontFamily="@font/alata" />
 
             </LinearLayout>
-
 
         </LinearLayout>
 
