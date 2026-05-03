@@ -238,7 +238,7 @@ public class HomeActivity extends AppCompatActivity {
                         JSONObject latestNote = response.getJSONObject(response.length() - 1);
 
                         // Inflate and populate card
-                        View card = getLayoutInflater().inflate(R.layout.note_card, container, false);
+                        View card = getLayoutInflater().inflate(R.layout.dashboard_worry_note_card, container, false);
 
                         TextView title = card.findViewById(R.id.worryTitle);
                         TextView content = card.findViewById(R.id.worryContent);

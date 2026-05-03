@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -81,13 +82,16 @@ public class RoutineSummaryActivity extends AppCompatActivity {
     private void fetchRoutines() {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/routines";
+        String url = ApiConstants.BASE_URL + "/routines/users/" + userId + "/routines";
+
+        Log.d("RoutineFetch", "URL: " + url);  // ADD THIS
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
+                    Log.d("RoutineFetch", "Success! Got " + response.length() + " routines");  // ADD THIS
                     allRoutines.clear();
                     for (int i = 0; i < response.length(); i++) {
                         try {
@@ -99,6 +103,7 @@ public class RoutineSummaryActivity extends AppCompatActivity {
                     sortAndDisplay(filterSpinner.getSelectedItemPosition());
                 },
                 error -> {
+                    Log.e("RoutineFetch", "Error code: " + (error.networkResponse != null ? error.networkResponse.statusCode : "null"));  // ADD THIS
                     Toast.makeText(this, "Failed to load routines", Toast.LENGTH_SHORT).show();
                 }
         );
@@ -243,7 +248,7 @@ public class RoutineSummaryActivity extends AppCompatActivity {
     }
 
     private void checkInRoutine(String routineId) {
-        String url = ApiConstants.BASE_URL + "/api/routines/" + routineId + "/checkin";
+        String url = ApiConstants.BASE_URL + "/routines/" + routineId + "/checkin";
 
         StringRequest request = new StringRequest(
                 Request.Method.POST,
@@ -261,7 +266,7 @@ public class RoutineSummaryActivity extends AppCompatActivity {
     }
 
     private void deleteRoutine(String routineId) {
-        String url = ApiConstants.BASE_URL + "/api/routines/" + routineId;
+        String url = ApiConstants.BASE_URL + "/routines/" + routineId;
 
         StringRequest request = new StringRequest(
                 Request.Method.DELETE,

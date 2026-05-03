@@ -52,6 +52,7 @@
         <activity android:name=".RoutineTrackerActivity" />
         <activity android:name=".RoutineSummaryActivity"/>
         <activity android:name=".SharedNotesActivity" />
+        <activity android:name=".SelectCounselorActivity" />
 
         <meta-data
             android:name="preloaded_fonts"

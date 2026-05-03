@@ -89,7 +89,7 @@ public class RoutineTrackerActivity extends AppCompatActivity {
     private void saveRoutine(String title, String description, String startDate, String reminderTime, String label) {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/routines";
+        String url = ApiConstants.BASE_URL + "/routines/users/" + userId + "/routines";
 
         JSONObject routineData = new JSONObject();
         try {
