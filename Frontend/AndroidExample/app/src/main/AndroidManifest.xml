@@ -51,6 +51,7 @@
         <activity android:name=".CheckInSummaryActivity" />
         <activity android:name=".RoutineTrackerActivity" />
         <activity android:name=".RoutineSummaryActivity"/>
+        <activity android:name=".SharedNotesActivity" />
 
         <meta-data
             android:name="preloaded_fonts"
