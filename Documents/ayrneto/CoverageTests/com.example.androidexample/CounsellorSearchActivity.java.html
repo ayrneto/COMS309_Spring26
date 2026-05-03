@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounsellorSearchActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CounsellorSearchActivity.java</span></div><h1>CounsellorSearchActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.DatePickerDialog;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
+<span class="nc" id="L35">public class CounsellorSearchActivity extends AppCompatActivity {</span>
+
+<span class="nc" id="L37">    private static final String[] TIME_SLOTS = {</span>
+            &quot;9:00 AM&quot;, &quot;10:00 AM&quot;, &quot;11:00 AM&quot;,
+            &quot;1:00 PM&quot;, &quot;2:00 PM&quot;,  &quot;3:00 PM&quot;,
+            &quot;4:00 PM&quot;, &quot;5:00 PM&quot;
+    };
+
+    private RecyclerView recyclerCounsellors;
+    private TextView tvResultCount;
+    private EditText etSearch;
+    private Spinner spinnerStatus, spinnerRating;
+
+<span class="nc" id="L48">    private final List&lt;CounsellorItem&gt; allCounsellors = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L49">    private final List&lt;CounsellorItem&gt; filteredList   = new ArrayList&lt;&gt;();</span>
+    private CounsellorAdapter adapter;
+
+<span class="nc" id="L52">    private String filterStatus   = &quot;ALL&quot;;</span>
+<span class="nc" id="L53">    private double filterMinRating = 0.0;</span>
+<span class="nc" id="L54">    private String searchQuery    = &quot;&quot;;</span>
+
+    private long myUserId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L60">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L61">        setContentView(R.layout.activity_counsellor_search);</span>
+
+<span class="nc" id="L63">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L64">        myUserId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+
+<span class="nc" id="L66">        recyclerCounsellors = findViewById(R.id.recyclerCounsellors);</span>
+<span class="nc" id="L67">        tvResultCount       = findViewById(R.id.tvResultCount);</span>
+<span class="nc" id="L68">        etSearch            = findViewById(R.id.etSearch);</span>
+<span class="nc" id="L69">        spinnerStatus       = findViewById(R.id.spinnerStatus);</span>
+<span class="nc" id="L70">        spinnerRating       = findViewById(R.id.spinnerRating);</span>
+
+<span class="nc" id="L72">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+<span class="nc" id="L74">        adapter = new CounsellorAdapter(filteredList, this::openBookingDialog);</span>
+<span class="nc" id="L75">        recyclerCounsellors.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L76">        recyclerCounsellors.setAdapter(adapter);</span>
+
+        // Status spinner
+<span class="nc" id="L79">        String[] statusOptions = {&quot;All Statuses&quot;, &quot;Available&quot;, &quot;Busy&quot;};</span>
+<span class="nc" id="L80">        spinnerStatus.setAdapter(new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, statusOptions));
+<span class="nc" id="L82">        spinnerStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override public void onItemSelected(AdapterView&lt;?&gt; p, View v, int pos, long id) {
+<span class="nc bnc" id="L84" title="All 4 branches missed.">                filterStatus = pos == 0 ? &quot;ALL&quot; : pos == 1 ? &quot;AVAILABLE&quot; : &quot;BUSY&quot;;</span>
+<span class="nc" id="L85">                applyFilters();</span>
+<span class="nc" id="L86">            }</span>
+<span class="nc" id="L87">            @Override public void onNothingSelected(AdapterView&lt;?&gt; p) {}</span>
+        });
+
+        // Rating spinner
+<span class="nc" id="L91">        String[] ratingOptions = {&quot;Any Rating&quot;, &quot;1★ &amp; above&quot;, &quot;2★ &amp; above&quot;, &quot;3★ &amp; above&quot;, &quot;4★ &amp; above&quot;};</span>
+<span class="nc" id="L92">        spinnerRating.setAdapter(new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, ratingOptions));
+<span class="nc" id="L94">        spinnerRating.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override public void onItemSelected(AdapterView&lt;?&gt; p, View v, int pos, long id) {
+<span class="nc" id="L96">                filterMinRating = pos;</span>
+<span class="nc" id="L97">                applyFilters();</span>
+<span class="nc" id="L98">            }</span>
+<span class="nc" id="L99">            @Override public void onNothingSelected(AdapterView&lt;?&gt; p) {}</span>
+        });
+
+        // Search watcher
+<span class="nc" id="L103">        etSearch.addTextChangedListener(new TextWatcher() {</span>
+<span class="nc" id="L104">            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}</span>
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
+<span class="nc" id="L106">                searchQuery = s.toString().toLowerCase().trim();</span>
+<span class="nc" id="L107">                applyFilters();</span>
+<span class="nc" id="L108">            }</span>
+<span class="nc" id="L109">            @Override public void afterTextChanged(Editable s) {}</span>
+        });
+
+<span class="nc" id="L112">        fetchCounsellors();</span>
+<span class="nc" id="L113">    }</span>
+
+    private void fetchCounsellors() {
+<span class="nc" id="L116">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                ApiConstants.COUNSELLORS,
+                null,
+                response -&gt; {
+<span class="nc" id="L121">                    allCounsellors.clear();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L124">                            allCounsellors.add(parseCounsellor(response.getJSONObject(i)));</span>
+<span class="nc" id="L125">                        } catch (JSONException e) {</span>
+<span class="nc" id="L126">                            e.printStackTrace();</span>
+<span class="nc" id="L127">                        }</span>
+                    }
+<span class="nc" id="L129">                    applyFilters();</span>
+<span class="nc" id="L130">                },</span>
+<span class="nc" id="L131">                error -&gt; Toast.makeText(this, &quot;Failed to load counsellors&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="nc" id="L133">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L134">    }</span>
+
+    private void applyFilters() {
+<span class="nc" id="L137">        filteredList.clear();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        for (CounsellorItem c : allCounsellors) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (!searchQuery.isEmpty()) {</span>
+<span class="nc" id="L140">                boolean nameMatch = c.displayName.toLowerCase().contains(searchQuery);</span>
+<span class="nc" id="L141">                boolean specMatch = c.specialization.toLowerCase().contains(searchQuery);</span>
+<span class="nc bnc" id="L142" title="All 4 branches missed.">                if (!nameMatch &amp;&amp; !specMatch) continue;</span>
+            }
+<span class="nc bnc" id="L144" title="All 4 branches missed.">            if (!filterStatus.equals(&quot;ALL&quot;) &amp;&amp; !c.status.equalsIgnoreCase(filterStatus)) continue;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (c.ratingAverage &lt; filterMinRating) continue;</span>
+<span class="nc" id="L146">            filteredList.add(c);</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">        adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L149">        tvResultCount.setText(filteredList.size() + &quot; counsellor&quot; +</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                (filteredList.size() == 1 ? &quot;&quot; : &quot;s&quot;) + &quot; found&quot;);</span>
+<span class="nc" id="L151">    }</span>
+
+    private void openBookingDialog(CounsellorItem counsellor) {
+<span class="nc" id="L154">        View dialogView = LayoutInflater.from(this)</span>
+<span class="nc" id="L155">                .inflate(R.layout.dialog_book_appointment, null);</span>
+
+<span class="nc" id="L157">        TextView tvName     = dialogView.findViewById(R.id.tvDialogCounsellorName);</span>
+<span class="nc" id="L158">        EditText etDate     = dialogView.findViewById(R.id.etDate);</span>
+<span class="nc" id="L159">        Spinner  spTimeSlot = dialogView.findViewById(R.id.spinnerTimeSlot);</span>
+<span class="nc" id="L160">        EditText etNotes    = dialogView.findViewById(R.id.etNotes);</span>
+
+<span class="nc" id="L162">        tvName.setText(&quot;with &quot; + counsellor.displayName);</span>
+
+<span class="nc" id="L164">        spTimeSlot.setAdapter(new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, TIME_SLOTS));
+
+<span class="nc" id="L167">        etDate.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L168">            Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L169">            new DatePickerDialog(this,</span>
+<span class="nc" id="L170">                    (view, year, month, day) -&gt; etDate.setText(</span>
+<span class="nc" id="L171">                            String.format(Locale.getDefault(), &quot;%04d-%02d-%02d&quot;,</span>
+<span class="nc" id="L172">                                    year, month + 1, day)),</span>
+<span class="nc" id="L173">                    cal.get(Calendar.YEAR),</span>
+<span class="nc" id="L174">                    cal.get(Calendar.MONTH),</span>
+<span class="nc" id="L175">                    cal.get(Calendar.DAY_OF_MONTH)</span>
+<span class="nc" id="L176">            ).show();</span>
+<span class="nc" id="L177">        });</span>
+
+<span class="nc" id="L179">        AlertDialog dialog = new AlertDialog.Builder(this)</span>
+<span class="nc" id="L180">                .setView(dialogView)</span>
+<span class="nc" id="L181">                .create();</span>
+
+<span class="nc" id="L183">        dialogView.findViewById(R.id.btnCancelBooking)</span>
+<span class="nc" id="L184">                .setOnClickListener(v -&gt; dialog.dismiss());</span>
+
+<span class="nc" id="L186">        dialogView.findViewById(R.id.btnConfirmBooking)</span>
+<span class="nc" id="L187">                .setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L188">                    String date  = etDate.getText().toString().trim();</span>
+<span class="nc" id="L189">                    String slot  = spTimeSlot.getSelectedItem().toString();</span>
+<span class="nc" id="L190">                    String notes = etNotes.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                    if (date.isEmpty()) {</span>
+<span class="nc" id="L193">                        Toast.makeText(this, &quot;Please pick a date&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L194">                        return;</span>
+                    }
+
+<span class="nc" id="L197">                    dialog.dismiss();</span>
+<span class="nc" id="L198">                    bookAppointment(counsellor, date, slot, notes);</span>
+<span class="nc" id="L199">                });</span>
+
+<span class="nc" id="L201">        dialog.show();</span>
+<span class="nc" id="L202">    }</span>
+
+    private void bookAppointment(CounsellorItem counsellor,
+                                 String date, String timeSlot, String notes) {
+<span class="nc" id="L206">        String url = ApiConstants.APPOINTMENTS;</span>
+
+<span class="nc" id="L208">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L210">            body.put(&quot;userId&quot;,       myUserId);</span>
+<span class="nc" id="L211">            body.put(&quot;counsellorId&quot;, counsellor.userId);</span>
+<span class="nc" id="L212">            body.put(&quot;date&quot;,         date);</span>
+<span class="nc" id="L213">            body.put(&quot;timeSlot&quot;,     timeSlot);</span>
+<span class="nc" id="L214">            body.put(&quot;notes&quot;,        notes);</span>
+<span class="nc" id="L215">        } catch (JSONException e) {</span>
+<span class="nc" id="L216">            e.printStackTrace();</span>
+<span class="nc" id="L217">            return;</span>
+<span class="nc" id="L218">        }</span>
+
+<span class="nc" id="L220">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                body,
+                response -&gt; {
+<span class="nc" id="L225">                    new AlertDialog.Builder(this)</span>
+<span class="nc" id="L226">                            .setTitle(&quot;Request Sent!&quot;)</span>
+<span class="nc" id="L227">                            .setMessage(&quot;Your appointment request has been sent to &quot;</span>
+                                    + counsellor.displayName + &quot; for &quot; + date
+                                    + &quot; at &quot; + timeSlot
+                                    + &quot;. Please wait for them to accept.&quot;)
+<span class="nc" id="L231">                            .setPositiveButton(&quot;OK&quot;, null)</span>
+<span class="nc" id="L232">                            .show();</span>
+<span class="nc" id="L233">                },</span>
+                error -&gt; {
+<span class="nc" id="L235">                    String msg = &quot;Booking failed&quot;;</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L237">                        msg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc" id="L238">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L239">                }</span>
+<span class="nc" id="L240">        ) {</span>
+            @Override
+<span class="nc" id="L242">            public byte[] getBody() { return body.toString().getBytes(); }</span>
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L246">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L250">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L251">    }</span>
+
+    private CounsellorItem parseCounsellor(JSONObject obj) throws JSONException {
+<span class="nc" id="L254">        CounsellorItem c = new CounsellorItem();</span>
+<span class="nc" id="L255">        c.id             = obj.optLong(&quot;id&quot;,             -1);</span>
+<span class="nc" id="L256">        c.userId         = obj.optLong(&quot;userId&quot;,         -1);</span>
+<span class="nc" id="L257">        c.displayName    = obj.optString(&quot;displayName&quot;,  &quot;&quot;);</span>
+<span class="nc" id="L258">        c.specialization = obj.optString(&quot;specialization&quot;, &quot;&quot;);</span>
+<span class="nc" id="L259">        c.bio            = obj.optString(&quot;bio&quot;,          &quot;&quot;);</span>
+<span class="nc" id="L260">        c.status         = obj.optString(&quot;status&quot;,       &quot;OFFLINE&quot;);</span>
+<span class="nc" id="L261">        c.ratingAverage  = obj.optDouble(&quot;ratingAverage&quot;, 0.0);</span>
+<span class="nc" id="L262">        c.ratingCount    = obj.optInt(&quot;ratingCount&quot;,     0);</span>
+<span class="nc" id="L263">        return c;</span>
+    }
+
+    // ── Model ─────────────────────────────────────────────────────────────────
+<span class="nc" id="L267">    static class CounsellorItem {</span>
+        long   id, userId;
+        String displayName, specialization, bio, status;
+        double ratingAverage;
+        int    ratingCount;
+    }
+
+    // ── Adapter ───────────────────────────────────────────────────────────────
+    interface OnBookClick { void onBook(CounsellorItem c); }
+
+    static class CounsellorAdapter
+            extends RecyclerView.Adapter&lt;CounsellorAdapter.VH&gt; {
+
+        private final List&lt;CounsellorItem&gt; list;
+        private final OnBookClick onBookClick;
+
+<span class="nc" id="L283">        CounsellorAdapter(List&lt;CounsellorItem&gt; list, OnBookClick cb) {</span>
+<span class="nc" id="L284">            this.list = list;</span>
+<span class="nc" id="L285">            this.onBookClick = cb;</span>
+<span class="nc" id="L286">        }</span>
+
+        @Override
+        public VH onCreateViewHolder(ViewGroup parent, int viewType) {
+<span class="nc" id="L290">            View v = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L291">                    .inflate(R.layout.item_counsellor_card, parent, false);</span>
+<span class="nc" id="L292">            return new VH(v);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(VH h, int position) {
+<span class="nc" id="L297">            CounsellorItem c = list.get(position);</span>
+
+<span class="nc" id="L299">            h.tvName.setText(c.displayName);</span>
+<span class="nc" id="L300">            h.tvSpecialization.setText(c.specialization);</span>
+<span class="nc" id="L301">            h.tvBio.setText(c.bio);</span>
+<span class="nc" id="L302">            h.tvRating.setText(String.format(Locale.getDefault(),</span>
+<span class="nc" id="L303">                    &quot;★ %.1f (%d reviews)&quot;, c.ratingAverage, c.ratingCount));</span>
+
+<span class="nc" id="L305">            h.tvStatus.setText(c.status);</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (c.status.equalsIgnoreCase(&quot;AVAILABLE&quot;)) {</span>
+<span class="nc" id="L307">                h.tvStatus.setBackgroundResource(R.drawable.dark_green_background);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            } else if (c.status.equalsIgnoreCase(&quot;BUSY&quot;)) {</span>
+<span class="nc" id="L309">                h.tvStatus.setBackgroundColor(0xFFE65100);</span>
+            } else {
+<span class="nc" id="L311">                h.tvStatus.setBackgroundColor(0xFF9E9E9E);</span>
+            }
+
+<span class="nc" id="L314">            h.btnBook.setOnClickListener(v -&gt; onBookClick.onBook(c));</span>
+<span class="nc" id="L315">            h.btnBook.setEnabled(c.status.equalsIgnoreCase(&quot;AVAILABLE&quot;));</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">            h.btnBook.setAlpha(c.status.equalsIgnoreCase(&quot;AVAILABLE&quot;) ? 1f : 0.4f);</span>
+<span class="nc" id="L317">        }</span>
+
+<span class="nc" id="L319">        @Override public int getItemCount() { return list.size(); }</span>
+
+        static class VH extends RecyclerView.ViewHolder {
+            TextView tvName, tvSpecialization, tvBio, tvRating, tvStatus;
+            com.google.android.material.button.MaterialButton btnBook;
+
+            VH(View v) {
+<span class="nc" id="L326">                super(v);</span>
+<span class="nc" id="L327">                tvName           = v.findViewById(R.id.tvName);</span>
+<span class="nc" id="L328">                tvSpecialization = v.findViewById(R.id.tvSpecialization);</span>
+<span class="nc" id="L329">                tvBio            = v.findViewById(R.id.tvBio);</span>
+<span class="nc" id="L330">                tvRating         = v.findViewById(R.id.tvRating);</span>
+<span class="nc" id="L331">                tvStatus         = v.findViewById(R.id.tvStatus);</span>
+<span class="nc" id="L332">                btnBook          = v.findViewById(R.id.btnBook);</span>
+<span class="nc" id="L333">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

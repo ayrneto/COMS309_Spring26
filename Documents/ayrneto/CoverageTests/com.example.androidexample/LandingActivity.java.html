@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LandingActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">LandingActivity.java</span></div><h1>LandingActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.button.MaterialButton;
+
+<span class="nc" id="L16">public class LandingActivity extends AppCompatActivity {</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L20">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L21">        setContentView(R.layout.activity_landing);</span>
+
+<span class="nc" id="L23">        LinearLayout logoContainer = findViewById(R.id.logoContainer);</span>
+<span class="nc" id="L24">        TextView      tagline      = findViewById(R.id.tagline);</span>
+<span class="nc" id="L25">        MaterialButton btnGetStarted = findViewById(R.id.btnGetStarted);</span>
+<span class="nc" id="L26">        LinearLayout  btnGoToLogin  = findViewById(R.id.btnGoToLogin);</span>
+
+        // Start everything invisible
+<span class="nc" id="L29">        logoContainer.setAlpha(0f);</span>
+<span class="nc" id="L30">        logoContainer.setTranslationY(-60f);</span>
+<span class="nc" id="L31">        tagline.setAlpha(0f);</span>
+<span class="nc" id="L32">        btnGetStarted.setAlpha(0f);</span>
+<span class="nc" id="L33">        btnGoToLogin.setAlpha(0f);</span>
+
+        // ── Logo: fade in + slide down ─────────────────────────────────────
+<span class="nc" id="L36">        ObjectAnimator logoAlpha = ObjectAnimator.ofFloat(logoContainer, View.ALPHA, 0f, 1f);</span>
+<span class="nc" id="L37">        ObjectAnimator logoSlide = ObjectAnimator.ofFloat(logoContainer, View.TRANSLATION_Y, -60f, 0f);</span>
+<span class="nc" id="L38">        AnimatorSet logoAnim = new AnimatorSet();</span>
+<span class="nc" id="L39">        logoAnim.playTogether(logoAlpha, logoSlide);</span>
+<span class="nc" id="L40">        logoAnim.setDuration(700);</span>
+<span class="nc" id="L41">        logoAnim.setInterpolator(new DecelerateInterpolator());</span>
+<span class="nc" id="L42">        logoAnim.setStartDelay(200);</span>
+
+        // ── Tagline: fade in ───────────────────────────────────────────────
+<span class="nc" id="L45">        ObjectAnimator taglineAnim = ObjectAnimator.ofFloat(tagline, View.ALPHA, 0f, 1f);</span>
+<span class="nc" id="L46">        taglineAnim.setDuration(600);</span>
+<span class="nc" id="L47">        taglineAnim.setStartDelay(750);</span>
+
+        // ── Buttons: fade in ───────────────────────────────────────────────
+<span class="nc" id="L50">        ObjectAnimator btnAnim1 = ObjectAnimator.ofFloat(btnGetStarted, View.ALPHA, 0f, 1f);</span>
+<span class="nc" id="L51">        btnAnim1.setDuration(500);</span>
+<span class="nc" id="L52">        btnAnim1.setStartDelay(1100);</span>
+
+<span class="nc" id="L54">        ObjectAnimator btnAnim2 = ObjectAnimator.ofFloat(btnGoToLogin, View.ALPHA, 0f, 1f);</span>
+<span class="nc" id="L55">        btnAnim2.setDuration(500);</span>
+<span class="nc" id="L56">        btnAnim2.setStartDelay(1300);</span>
+
+        // Play all
+<span class="nc" id="L59">        logoAnim.start();</span>
+<span class="nc" id="L60">        taglineAnim.start();</span>
+<span class="nc" id="L61">        btnAnim1.start();</span>
+<span class="nc" id="L62">        btnAnim2.start();</span>
+
+        // ── Get Started → SignUp ───────────────────────────────────────────
+<span class="nc" id="L65">        btnGetStarted.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L66">                startActivity(new Intent(this, SignUpActivity.class))</span>
+        );
+
+        // ── Log In → LoginActivity ─────────────────────────────────────────
+<span class="nc" id="L70">        btnGoToLogin.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L71">                startActivity(new Intent(this, LoginActivity.class))</span>
+        );
+<span class="nc" id="L73">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

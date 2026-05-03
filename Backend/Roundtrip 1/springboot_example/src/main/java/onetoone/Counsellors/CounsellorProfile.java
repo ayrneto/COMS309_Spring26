@@ -21,7 +21,7 @@ public class CounsellorProfile {
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)  // maps to the user_id column
     @Schema(description = "User associated with the counsellor profile")
-    private User user;
+    private User user; //pipeline trigger
 
     @Column(nullable = false)
     @Schema(description = "Display name of the counsellor", example = "Dr. Jane Doe")

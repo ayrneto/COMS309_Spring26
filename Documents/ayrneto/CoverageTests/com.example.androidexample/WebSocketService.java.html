@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebSocketService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">WebSocketService.java</span></div><h1>WebSocketService.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.reactivex.disposables.CompositeDisposable;
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
+
+<span class="nc" id="L22">public class WebSocketService extends Service {</span>
+
+    private StompClient stompClient;
+    private CompositeDisposable compositeDisposable;
+    private static final String TAG = &quot;WebSocketService&quot;;
+
+    @Override
+    public void onCreate() {
+<span class="nc" id="L30">        super.onCreate();</span>
+<span class="nc" id="L31">        compositeDisposable = new CompositeDisposable();</span>
+<span class="nc" id="L32">        connectWebSocket();</span>
+<span class="nc" id="L33">    }</span>
+
+    private void connectWebSocket() {
+        // Get userId from SharedPreferences
+<span class="nc" id="L37">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L38">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (userId.equals(&quot;-1&quot;)) {</span>
+<span class="nc" id="L41">            Log.e(TAG, &quot;No user logged in&quot;);</span>
+<span class="nc" id="L42">            return;</span>
+        }
+
+        // Connect to STOMP WebSocket - use your backend URL
+<span class="nc" id="L46">        String wsUrl = &quot;ws://REDACTED:8080/websocket&quot;;  // TODO: Update with your backend IP</span>
+<span class="nc" id="L47">        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, wsUrl);</span>
+
+        // Listen for connection
+<span class="nc" id="L50">        compositeDisposable.add(stompClient.lifecycle().subscribe(lifecycleEvent -&gt; {</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">            switch (lifecycleEvent.getType()) {</span>
+                case OPENED:
+<span class="nc" id="L53">                    Log.d(TAG, &quot;WebSocket Connected&quot;);</span>
+<span class="nc" id="L54">                    subscribeToTopic(userId);</span>
+<span class="nc" id="L55">                    break;</span>
+                case ERROR:
+<span class="nc" id="L57">                    Log.e(TAG, &quot;WebSocket Error&quot;, lifecycleEvent.getException());</span>
+<span class="nc" id="L58">                    break;</span>
+                case CLOSED:
+<span class="nc" id="L60">                    Log.d(TAG, &quot;WebSocket Closed&quot;);</span>
+                    break;
+            }
+<span class="nc" id="L63">        }));</span>
+
+<span class="nc" id="L65">        stompClient.connect();</span>
+<span class="nc" id="L66">    }</span>
+
+    private void subscribeToTopic(String userId) {
+        // Subscribe to user-specific topic
+<span class="nc" id="L70">        compositeDisposable.add(stompClient.topic(&quot;/topic/user/&quot; + userId)</span>
+<span class="nc" id="L71">                .subscribe(topicMessage -&gt; {</span>
+<span class="nc" id="L72">                    Log.d(TAG, &quot;Message received: &quot; + topicMessage.getPayload());</span>
+<span class="nc" id="L73">                    handleTaskNotification(topicMessage.getPayload());</span>
+<span class="nc" id="L74">                }, throwable -&gt; {</span>
+<span class="nc" id="L75">                    Log.e(TAG, &quot;Error subscribing to topic&quot;, throwable);</span>
+<span class="nc" id="L76">                }));</span>
+<span class="nc" id="L77">    }</span>
+
+    private void handleTaskNotification(String message) {
+        try {
+<span class="nc" id="L81">            JSONObject json = new JSONObject(message);</span>
+
+            // Check event type
+<span class="nc" id="L84">            String eventType = json.optString(&quot;eventType&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L86">            long taskId = json.getLong(&quot;taskId&quot;);</span>
+<span class="nc" id="L87">            String title = json.getString(&quot;title&quot;);</span>
+<span class="nc" id="L88">            String description = json.getString(&quot;description&quot;);</span>
+<span class="nc" id="L89">            String dueDate = json.optString(&quot;dueDate&quot;, &quot;No due date&quot;);</span>
+<span class="nc" id="L90">            String status = json.optString(&quot;status&quot;, &quot;Not Started&quot;);</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (eventType.equals(&quot;TASK_ASSIGNED&quot;)) {</span>
+<span class="nc" id="L93">                showNotification(taskId, title, description, dueDate, status);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            } else if (eventType.equals(&quot;TASK_REMINDER&quot;)) {</span>
+<span class="nc" id="L95">                showReminderNotification(taskId, title, description, dueDate);</span>
+            }
+
+<span class="nc" id="L98">        } catch (JSONException e) {</span>
+<span class="nc" id="L99">            Log.e(TAG, &quot;Error parsing notification: &quot; + e.getMessage());</span>
+<span class="nc" id="L100">        }</span>
+<span class="nc" id="L101">    }</span>
+
+    private void showReminderNotification(long taskId, String title, String description, String dueDate) {
+<span class="nc" id="L104">        Intent intent = new Intent(this, TaskDetailsActivity.class);</span>
+<span class="nc" id="L105">        intent.putExtra(&quot;taskId&quot;, taskId);</span>
+<span class="nc" id="L106">        intent.putExtra(&quot;title&quot;, title);</span>
+<span class="nc" id="L107">        intent.putExtra(&quot;description&quot;, description);</span>
+<span class="nc" id="L108">        intent.putExtra(&quot;dueDate&quot;, dueDate);</span>
+<span class="nc" id="L109">        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+
+<span class="nc" id="L111">        PendingIntent pendingIntent = PendingIntent.getActivity(</span>
+                this,
+                (int) taskId + 1000,  // Different request code for reminders
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+<span class="nc" id="L118">        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, &quot;TASK_CHANNEL&quot;)</span>
+<span class="nc" id="L119">                .setSmallIcon(android.R.drawable.ic_dialog_info)</span>
+<span class="nc" id="L120">                .setContentTitle(&quot;Task Reminder&quot;)</span>
+<span class="nc" id="L121">                .setContentText(title + &quot; - Due: &quot; + dueDate)</span>
+<span class="nc" id="L122">                .setStyle(new NotificationCompat.BigTextStyle().bigText(description))</span>
+<span class="nc" id="L123">                .setPriority(NotificationCompat.PRIORITY_HIGH)</span>
+<span class="nc" id="L124">                .setContentIntent(pendingIntent)</span>
+<span class="nc" id="L125">                .setAutoCancel(true);</span>
+
+<span class="nc" id="L127">        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) {</span>
+<span class="nc" id="L130">            NotificationChannel channel = new NotificationChannel(</span>
+                    &quot;TASK_CHANNEL&quot;,
+                    &quot;Task Notifications&quot;,
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+<span class="nc" id="L135">            notificationManager.createNotificationChannel(channel);</span>
+        }
+
+<span class="nc" id="L138">        notificationManager.notify((int) taskId + 1000, builder.build());</span>
+<span class="nc" id="L139">    }</span>
+
+    private void showNotification(long taskId, String title, String description, String dueDate, String status) {
+        // Check notification permission (Android 13+)
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.TIRAMISU) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)</span>
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L146">                Log.e(TAG, &quot;Notification permission not granted&quot;);</span>
+<span class="nc" id="L147">                return;</span>
+            }
+        }
+
+<span class="nc" id="L151">        Intent intent = new Intent(this, TaskDetailsActivity.class);</span>
+<span class="nc" id="L152">        intent.putExtra(&quot;taskId&quot;, taskId);</span>
+<span class="nc" id="L153">        intent.putExtra(&quot;title&quot;, title);</span>
+<span class="nc" id="L154">        intent.putExtra(&quot;description&quot;, description);</span>
+<span class="nc" id="L155">        intent.putExtra(&quot;dueDate&quot;, dueDate);</span>
+<span class="nc" id="L156">        intent.putExtra(&quot;status&quot;, status);</span>
+<span class="nc" id="L157">        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);</span>
+
+<span class="nc" id="L159">        PendingIntent pendingIntent = PendingIntent.getActivity(</span>
+                this,
+                (int) taskId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+<span class="nc" id="L166">        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, &quot;TASK_CHANNEL&quot;)</span>
+<span class="nc" id="L167">                .setSmallIcon(android.R.drawable.ic_dialog_info)</span>
+<span class="nc" id="L168">                .setContentTitle(&quot;New Task Assigned&quot;)</span>
+<span class="nc" id="L169">                .setContentText(title)</span>
+<span class="nc" id="L170">                .setStyle(new NotificationCompat.BigTextStyle().bigText(description))</span>
+<span class="nc" id="L171">                .setPriority(NotificationCompat.PRIORITY_HIGH)</span>
+<span class="nc" id="L172">                .setContentIntent(pendingIntent)</span>
+<span class="nc" id="L173">                .setAutoCancel(true);</span>
+
+<span class="nc" id="L175">        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.O) {</span>
+<span class="nc" id="L178">            NotificationChannel channel = new NotificationChannel(</span>
+                    &quot;TASK_CHANNEL&quot;,
+                    &quot;Task Notifications&quot;,
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+<span class="nc" id="L183">            notificationManager.createNotificationChannel(channel);</span>
+        }
+
+<span class="nc" id="L186">        notificationManager.notify((int) taskId, builder.build());</span>
+<span class="nc" id="L187">    }</span>
+
+    @Override
+    public void onDestroy() {
+<span class="nc" id="L191">        super.onDestroy();</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (stompClient != null) {</span>
+<span class="nc" id="L193">            stompClient.disconnect();</span>
+        }
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (compositeDisposable != null) {</span>
+<span class="nc" id="L196">            compositeDisposable.dispose();</span>
+        }
+<span class="nc" id="L198">    }</span>
+
+    @Override
+    public IBinder onBind(Intent intent) {
+<span class="nc" id="L202">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
