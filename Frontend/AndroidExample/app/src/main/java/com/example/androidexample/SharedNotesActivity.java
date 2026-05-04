@@ -68,9 +68,9 @@ public class SharedNotesActivity extends AppCompatActivity {
                 String dueDate = note.optString("dueDate", "No due date");
                 String label = note.optString("label", "");
                 String userId = note.getString("userId");
-                // String userName = note.optString("userName", "Patient #" + userId); // Use this when backend adds userName
+                String userName = note.optString("userName", "Patient #" + userId);
 
-                addSharedNoteCard(container, noteId, title, content, dueDate, label, userId);
+                addSharedNoteCard(container, noteId, title, content, dueDate, label, userName);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -78,7 +78,7 @@ public class SharedNotesActivity extends AppCompatActivity {
     }
 
     private void addSharedNoteCard(GridLayout container, String noteId, String title,
-                                   String content, String dueDate, String label, String userId) {
+                                   String content, String dueDate, String label, String userName) {
         View cardView = getLayoutInflater().inflate(R.layout.shared_note_card, container, false);
 
         TextView sharedByText = cardView.findViewById(R.id.sharedByText);
@@ -87,25 +87,24 @@ public class SharedNotesActivity extends AppCompatActivity {
         TextView dueDateView = cardView.findViewById(R.id.noteDueDate);
         TextView labelView = cardView.findViewById(R.id.noteLabel);
 
-        sharedByText.setText("Shared by: Patient #" + userId);  // Will show name when backend adds it
+        sharedByText.setText("Shared by: " + userName);
         titleView.setText(title);
         contentView.setText(content);
         dueDateView.setText("Due: " + dueDate);
         labelView.setText(label);
 
-        // Click to view full note
         cardView.setOnClickListener(v -> {
-            showNoteDetails(title, content, dueDate, label, userId);
+            showNoteDetails(title, content, dueDate, label, userName);
         });
 
         container.addView(cardView);
     }
 
-    private void showNoteDetails(String title, String content, String dueDate, String label, String userId) {
+    private void showNoteDetails(String title, String content, String dueDate, String label, String userName) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
         builder.setMessage(
-                "Shared by: Patient #" + userId + "\n\n" +
+                "Shared by: " + userName + "\n\n" +  // Changed
                         content + "\n\n" +
                         "Due: " + dueDate + "\n" +
                         "Label: " + label

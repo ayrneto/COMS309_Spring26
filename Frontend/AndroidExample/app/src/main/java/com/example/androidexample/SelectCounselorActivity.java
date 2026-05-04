@@ -36,16 +36,18 @@ public class SelectCounselorActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
 
-        // TODO: CHANGE ENDPOINT - Backend needs to provide endpoint for user's assigned counselors
-        // Option 1: GET /api/users/{userId}/counsellors
-        // Option 2: GET /api/appointments/user/{userId}/accepted (if it returns counselor info)
-        String url = ApiConstants.BASE_URL + "/api/users/" + userId + "/counsellors";
+        String url = ApiConstants.BASE_URL + "/users/" + userId + "/counsellors";
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
+                    if (response.length() == 0) {
+                        Toast.makeText(this, "No counselors assigned to you yet", Toast.LENGTH_LONG).show();
+                        finish();
+                        return;
+                    }
                     displayCounselors(response);
                 },
                 error -> {
