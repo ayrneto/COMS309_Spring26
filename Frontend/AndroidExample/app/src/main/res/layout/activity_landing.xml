@@ -72,7 +72,7 @@
         android:id="@+id/tagline"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Your journey to calm\nstarts here"
+        android:text="Your journey starts here"
         android:textColor="#C8E6DE"
         android:textSize="20sp"
         android:textStyle="bold"
