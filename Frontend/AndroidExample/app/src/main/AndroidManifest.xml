@@ -49,6 +49,16 @@
         <activity android:name=".CheckInActivity" />
         <activity android:name=".CheckInSummaryActivity" />
         <activity android:name=".AIChatActivity" />
+        <activity android:name=".CounsellorViewActivity" />
+
+
+        <!-- Prescription Feature -->
+        <activity android:name=".PrescriptionsActivity" />
+        <activity android:name=".AssignPrescriptionActivity" />
+
+        <!-- Therapist User Profile Navigation -->
+        <activity android:name=".UserListActivity" />
+        <activity android:name=".UserProfileActivity" />
 
         <meta-data
             android:name="preloaded_fonts"
