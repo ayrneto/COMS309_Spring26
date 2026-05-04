@@ -45,6 +45,11 @@ public class HomeActivity extends AppCompatActivity {
         String firstName = name.isEmpty() ? "" : name.split(" ")[0];
         ((TextView) findViewById(R.id.tvWelcome))
                 .setText(firstName.isEmpty() ? "Welcome" : firstName);
+        // Update hint if we have a name
+        if (!firstName.isEmpty()) {
+            ((TextView) findViewById(R.id.tvHint))
+                    .setText("How are you feeling today, " + firstName + "?");
+        }
 
         // Load quote and stats
         loadDailyQuote();
@@ -53,9 +58,15 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         // Drawer header
-        ((TextView) findViewById(R.id.drawerName))
-                .setText(name.isEmpty() ? "Hello!" : "Hi, " + name);
+        String displayName = name.isEmpty() ? "Hello!" : "Hi, " + name;
+        ((TextView) findViewById(R.id.drawerName)).setText(displayName);
         ((TextView) findViewById(R.id.drawerEmail)).setText(email);
+
+        // Drawer avatar — show profile pic or initial
+        String picUrl = prefs.getString("USER_PIC_URL", "");
+        AvatarHelper.load(this, name, picUrl,
+                findViewById(R.id.tvDrawerAvatar),
+                findViewById(R.id.ivDrawerAvatar));
 
         // Hamburger
         ((ImageButton) findViewById(R.id.btnHamburger))
@@ -163,6 +174,31 @@ public class HomeActivity extends AppCompatActivity {
 
         // Load the summaries
         loadDashboard();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Re-read name from SharedPreferences in case user just updated it in EditProfile
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        String name      = prefs.getString("USER_NAME",  "");
+        String email     = prefs.getString("USER_EMAIL", "");
+        String firstName = name.isEmpty() ? "" : name.split(" ")[0];
+
+        ((TextView) findViewById(R.id.tvWelcome))
+                .setText(firstName.isEmpty() ? "Welcome" : firstName);
+        ((TextView) findViewById(R.id.tvHint))
+                .setText(firstName.isEmpty()
+                        ? "How are you feeling today?"
+                        : "How are you feeling today, " + firstName + "?");
+        ((TextView) findViewById(R.id.drawerName))
+                .setText(name.isEmpty() ? "Hello!" : "Hi, " + name);
+        ((TextView) findViewById(R.id.drawerEmail)).setText(email);
+
+        String picUrl = prefs.getString("USER_PIC_URL", "");
+        AvatarHelper.load(this, name, picUrl,
+                findViewById(R.id.tvDrawerAvatar),
+                findViewById(R.id.ivDrawerAvatar));
     }
 
     private void loadDashboard() {

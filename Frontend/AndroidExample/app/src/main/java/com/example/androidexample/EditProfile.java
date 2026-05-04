@@ -32,19 +32,29 @@ public class EditProfile extends AppCompatActivity {
         EditText emailField           = findViewById(R.id.editEmail);
         EditText passwordField        = findViewById(R.id.editPassword);
         EditText confirmPasswordField = findViewById(R.id.editConfirmPassword);
+        EditText picUrlField          = findViewById(R.id.editProfilePicUrl);
         Button   btnSave              = findViewById(R.id.btnSave);
         Button   btnDelete            = findViewById(R.id.btnDeleteAccount);
 
         // Back button in top bar
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        // ── Pre-fill from Intent extras ───────────────────────────────────────
+        // ── Pre-fill from SharedPreferences (always up to date) ──────────────
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        userId = prefs.getString("USER_ID", "");
+        String savedName  = prefs.getString("USER_NAME",  "");
+        String savedEmail  = prefs.getString("USER_EMAIL", "");
+        String savedPicUrl = prefs.getString("USER_PIC_URL", "");
+
+        nameField.setText(savedName);
+        emailField.setText(savedEmail);
+        picUrlField.setText(savedPicUrl);
+
+        // Also accept overrides from intent extras if provided
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            userId = extras.getString("userId", "");
-            nameField.setText(extras.getString("name",     ""));
-            emailField.setText(extras.getString("email",   ""));
-            passwordField.setText(extras.getString("password", ""));
+            String intentUserId = extras.getString("userId", "");
+            if (!intentUserId.isEmpty()) userId = intentUserId;
         }
 
         // ── Save ──────────────────────────────────────────────────────────────
@@ -58,17 +68,18 @@ public class EditProfile extends AppCompatActivity {
                 Toast.makeText(this, "User ID missing", Toast.LENGTH_LONG).show();
                 return;
             }
-            if (newName.isEmpty() || newEmail.isEmpty() ||
-                    newPassword.isEmpty() || confirmPwd.isEmpty()) {
-                Toast.makeText(this, "All fields required", Toast.LENGTH_SHORT).show();
+            if (newName.isEmpty() || newEmail.isEmpty()) {
+                Toast.makeText(this, "Name and email are required", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (!newPassword.equals(confirmPwd)) {
+            // Password is optional — only validate if user typed something
+            if (!newPassword.isEmpty() && !newPassword.equals(confirmPwd)) {
                 Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            updateProfile(newName, newEmail, newPassword, confirmPwd);
+            String picUrl = picUrlField.getText().toString().trim();
+            updateProfile(newName, newEmail, newPassword, confirmPwd, picUrl);
         });
 
         // ── Delete account ────────────────────────────────────────────────────
@@ -90,16 +101,21 @@ public class EditProfile extends AppCompatActivity {
     // Update profile
     // ─────────────────────────────────────────────────────────────────────────
     private void updateProfile(String name, String email,
-                               String password, String confirmPassword) {
+                               String password, String confirmPassword,
+                               String profilePicUrl) {
         String url = ApiConstants.EDIT + userId;
 
         JSONObject updateData = new JSONObject();
         try {
-            updateData.put("name",            name);
-            updateData.put("email",           email);
-            updateData.put("active",          true);
-            updateData.put("password",        password);
-            updateData.put("confirmPassword", confirmPassword);
+            updateData.put("name",              name);
+            updateData.put("email",             email);
+            updateData.put("active",            true);
+            updateData.put("profilePictureUrl", profilePicUrl);
+            // Only send password fields if the user actually entered one
+            if (!password.isEmpty()) {
+                updateData.put("password",        password);
+                updateData.put("confirmPassword", confirmPassword);
+            }
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
@@ -112,8 +128,9 @@ public class EditProfile extends AppCompatActivity {
                     // Update cached name + email in SharedPreferences
                     getSharedPreferences("AA_PREFS", MODE_PRIVATE)
                             .edit()
-                            .putString("USER_NAME",  name)
-                            .putString("USER_EMAIL", email)
+                            .putString("USER_NAME",    name)
+                            .putString("USER_EMAIL",   email)
+                            .putString("USER_PIC_URL", profilePicUrl)
                             .apply();
 
                     Toast.makeText(this, "Profile updated!", Toast.LENGTH_SHORT).show();

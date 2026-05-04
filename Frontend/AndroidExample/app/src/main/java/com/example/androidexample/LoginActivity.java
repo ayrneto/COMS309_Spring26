@@ -105,16 +105,27 @@ public class LoginActivity extends AppCompatActivity {
                         String userId        = String.valueOf(response.getLong("id"));
                         String emailReturned = response.getString("email");
                         String returnedRole  = response.getString("role");
+                        String nameReturned  = response.optString("name", "");
 
-                        SharedPreferences.Editor editor =
-                                getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
+                        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
 
-                        // Clear ALL previous session data first
+                        // Get name from response (backend returns it), fallback to previously saved name
+                        String nameFromServer = response.optString("name", "");
+                        String savedName      = prefs.getString("USER_NAME", "");
+                        String finalName      = nameFromServer.isEmpty() ? savedName : nameFromServer;
+
+                        SharedPreferences.Editor editor = prefs.edit();
                         editor.clear();
 
-                        editor.putString("USER_ID",    userId);
-                        editor.putString("USER_EMAIL", emailReturned);
-                        editor.putString("USER_ROLE",  returnedRole);
+                        String picFromServer = response.optString("profilePictureUrl", "");
+                        String savedPic      = prefs.getString("USER_PIC_URL", "");
+                        String finalPic      = picFromServer.isEmpty() ? savedPic : picFromServer;
+
+                        editor.putString("USER_ID",      userId);
+                        editor.putString("USER_EMAIL",   emailReturned);
+                        editor.putString("USER_ROLE",    returnedRole);
+                        editor.putString("USER_NAME",    finalName);
+                        editor.putString("USER_PIC_URL", finalPic);
                         editor.apply();
 
                         // Start WebSocket service

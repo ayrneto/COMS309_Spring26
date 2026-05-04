@@ -23,18 +23,32 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="10dp">
 
-            <!-- Avatar -->
-            <TextView
-                android:id="@+id/tvAvatar"
+            <!-- Avatar — shows profile pic if available, else initial -->
+            <FrameLayout
                 android:layout_width="44dp"
                 android:layout_height="44dp"
-                android:gravity="center"
-                android:textSize="18sp"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:fontFamily="@font/alata"
-                android:background="@drawable/dark_green_background"
-                android:layout_marginEnd="12dp" />
+                android:layout_marginEnd="12dp">
+
+                <TextView
+                    android:id="@+id/tvAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:gravity="center"
+                    android:textSize="18sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/alata"
+                    android:background="@drawable/dark_green_background" />
+
+                <ImageView
+                    android:id="@+id/ivAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/dark_green_background"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
