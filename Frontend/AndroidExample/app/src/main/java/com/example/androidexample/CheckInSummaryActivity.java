@@ -27,6 +27,9 @@ public class CheckInSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_in_summary);
 
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
 
