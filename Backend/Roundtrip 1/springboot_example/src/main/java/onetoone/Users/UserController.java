@@ -2,6 +2,7 @@ package onetoone.Users;
 
 import java.util.List;
 
+import onetoone.Appointments.AppointmentRepository;
 import onetoone.Assignments.UserCounsellorAssignmentRepository;
 
 import jakarta.transaction.Transactional;
@@ -17,10 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,6 +58,9 @@ public class UserController {
     @Autowired
     UserCounsellorAssignmentRepository assignmentRepository;
 
+    @Autowired
+    AppointmentRepository appointmentRepository;
+
     CounsellorProfileController counsellorProfileController;
     CounsellorProfile counsellorProfile;
     CounsellorStatus counsellorStatus;
@@ -69,16 +73,16 @@ public class UserController {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-     @Operation(summary = "Get user by email", description = "Fetch user details using email")
-     @ApiResponses(value = {
+
+    @Operation(summary = "Get user by email", description = "Fetch user details using email")
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found"),
             @ApiResponse(responseCode = "404", description = "User not found")
-     })
-
+    })
     @GetMapping("/LoginPage/user/{email}")
     public ResponseEntity<User> getUserByEmail(
             @Parameter(description = "User email", example = "test@example.com")
-            @PathVariable("email") String email) {
+            @PathVariable(value = "email") String email) {
         User user = userRepository.findByEmail(email.toLowerCase().trim());
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -107,7 +111,6 @@ public class UserController {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Check-in not found"));
 
-        // Validate rating
         if (!body.containsKey("rating")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating is required (1-5)");
         }
@@ -123,7 +126,6 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5");
         }
 
-        // Update fields
         checkIn.setRating(rating);
 
         if (body.containsKey("description")) {
@@ -167,7 +169,6 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        // Delete assignments where this user is the patient or the counsellor
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -185,24 +186,42 @@ public class UserController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-    /**
-     * Daily Check-in endpoint
-     * User submits their anxiety level (1-10) and an optional note
-     *
-     * POST /users/{id}/checkin
-     * Body: { "anxietyLevel": 7, "note": "Feeling stressed about exams" }
-     */
+    @Operation(
+            summary = "Get counsellors connected to a user",
+            description = "Returns all counsellors who have a CONFIRMED appointment with this user"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Counsellors retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/{userId}/counsellors")
+    public ResponseEntity<List<Map<String, Object>>> getUserCounsellors(@PathVariable Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        List<Map<String, Object>> result = appointmentRepository
+                .findConfirmedCounsellorsByUserId(userId)
+                .stream()
+                .map(c -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", c.getId());
+                    m.put("name", c.getName());
+                    m.put("email", c.getEmail());
+                    return m;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/{userId}/checkins")
     public ResponseEntity<?> createCheckIn(
             @PathVariable Long userId,
             @RequestBody Map<String, Object> body) {
 
-        // ✅ Validate user exists
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "User not found"));
 
-        // ✅ Validate rating
         if (!body.containsKey("rating")) {
             return ResponseEntity.badRequest()
                     .body("{\"message\":\"rating is required (1-5)\"}");
@@ -221,7 +240,6 @@ public class UserController {
                     .body("{\"message\":\"rating must be between 1 and 5\"}");
         }
 
-
         String description = body.containsKey("description")
                 ? body.get("description").toString()
                 : "";
@@ -230,7 +248,6 @@ public class UserController {
                 ? body.get("reminderTime").toString()
                 : null;
 
-        // ✅ Validate & parse date
         if (!body.containsKey("date")) {
             return ResponseEntity.badRequest()
                     .body("{\"message\":\"date is required (yyyy-MM-dd)\"}");
@@ -244,13 +261,11 @@ public class UserController {
                     .body("{\"message\":\"Invalid date format (yyyy-MM-dd)\"}");
         }
 
-        // ✅ OPTIONAL: Prevent duplicate check-ins for same day
         if (dailyCheckInRepository.findByUserIdAndDate(userId, date).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("{\"message\":\"Check-in already exists for this date\"}");
         }
 
-        // ✅ Create entity
         DailyCheckIn checkIn = new DailyCheckIn();
         checkIn.setUser(user);
         checkIn.setRating(rating);
@@ -263,14 +278,12 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(checkIn);
     }
 
-
     @Operation(summary = "Register user", description = "Creates a new user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created"),
             @ApiResponse(responseCode = "400", description = "Passwords do not match"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
-
     @PostMapping("/signup")
     @Transactional
     public ResponseEntity<UserResponse> signup(
@@ -316,18 +329,12 @@ public class UserController {
                 .body(new UserResponse(saved.getId(), saved.getEmail()));
     }
 
-
-
-
-
-    // ===================== LOGIN =====================
     @Operation(summary = "Login user", description = "Authenticate using email, password, and role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials"),
             @ApiResponse(responseCode = "403", description = "Role mismatch")
     })
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Parameter(description = "Login credentials")
@@ -338,7 +345,7 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
-        if(!user.isActive())
+        if (!user.isActive())
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Account deactivated");
 
         if (!user.getPassword().equals(req.getPassword())) {
