@@ -23,6 +23,7 @@ public class AssignPrescriptionActivity extends AppCompatActivity {
     private Button   btnSubmit;
     private RequestQueue requestQueue;
     private long targetUserId;
+    private String counsellorId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +37,11 @@ public class AssignPrescriptionActivity extends AppCompatActivity {
         etDurationDays = findViewById(R.id.etDurationDays);
         btnSubmit      = findViewById(R.id.btnSubmit);
 
+        // Logged-in counsellor's user ID
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        counsellorId = prefs.getString("USER_ID", "1");
+
+        // Target patient's user ID passed from UserProfileActivity
         targetUserId = getIntent().getLongExtra("TARGET_USER_ID", -1);
         String targetName = getIntent().getStringExtra("TARGET_USER_NAME");
 
@@ -83,7 +89,10 @@ public class AssignPrescriptionActivity extends AppCompatActivity {
             body.put("startDate",      startDate);
             body.put("durationDays",   durationDays);
 
-            String url = ApiConstants.userPrescriptions(targetUserId);
+            // URL: /prescriptions/users/{patientUserId}?counsellorId={counsellorUserId}
+            String url = ApiConstants.userPrescriptions(targetUserId)
+                    + "?counsellorId=" + counsellorId;
+
             final String requestBody = body.toString();
 
             btnSubmit.setEnabled(false);
