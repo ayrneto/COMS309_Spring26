@@ -173,7 +173,7 @@
 
             </LinearLayout>
 
-            <!-- Chat with User -->
+            <!-- My Users (was "Chat with User") -->
             <LinearLayout
                 android:id="@+id/drawerItemChat"
                 android:layout_width="match_parent"
@@ -189,14 +189,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chat with User"
+                    android:text="My Users"
                     android:textSize="16sp"
                     android:textColor="#1B1B1B"
                     android:fontFamily="@font/alata" />
 
             </LinearLayout>
 
-            <!-- Assign Task (for counselors) -->
+            <!-- Assign Task -->
             <LinearLayout
                 android:id="@+id/drawerItemAssignTask"
                 android:layout_width="match_parent"

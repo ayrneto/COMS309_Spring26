@@ -69,23 +69,32 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // ── Prescriptions (USER only) ─────────────────────────────────────────
+        findViewById(R.id.drawerItemPrescriptions).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, PrescriptionsActivity.class));
+        });
+
         // ── Show/hide menu items based on role ────────────────────────────────
         if (role.equals("COUNSELLOR")) {
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
             findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);
         } else if (role.equals("ADMIN")) {
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
             findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);
         } else {
             // USER
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
             findViewById(R.id.drawerItemAiChat).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.VISIBLE);
         }
 
         // ── My Tasks ──────────────────────────────────────────────────────────

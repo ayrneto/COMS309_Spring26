@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F7F6">
+
+    <!-- Toolbar -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#4A6E60">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_revert"
+                android:tint="#FFFFFF"
+                android:contentDescription="Back"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Assign Prescription"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/alata"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Patient label -->
+            <TextView
+                android:id="@+id/tvPatientName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Prescribing for: Patient"
+                android:textSize="15sp"
+                android:textColor="#4A6E60"
+                android:textStyle="bold"
+                android:fontFamily="@font/alata"
+                android:background="#E8F2ED"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Medication Name -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Medication Name *"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etMedName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. Sertraline"
+                android:inputType="textCapWords"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Dosage -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Dosage *"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etDosage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. 50mg once daily"
+                android:inputType="text"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Instructions -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Instructions"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etInstructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. Take with food in the morning"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="14dp"
+                android:gravity="top" />
+
+            <!-- Start Date -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Date * (YYYY-MM-DD)"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etStartDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="2025-05-01"
+                android:inputType="text"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- End Date -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="End Date * (YYYY-MM-DD)"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etEndDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="2025-06-01"
+                android:inputType="text"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="14dp" />
+
+            <!-- Duration Days -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Duration (days)"
+                android:textSize="13sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="4dp" />
+            <EditText
+                android:id="@+id/etDurationDays"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g. 30"
+                android:inputType="number"
+                android:background="@drawable/input_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Submit button -->
+            <Button
+                android:id="@+id/btnSubmit"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Assign Prescription"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:fontFamily="@font/alata"
+                android:backgroundTint="#4A6E60"
+                android:layout_marginBottom="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

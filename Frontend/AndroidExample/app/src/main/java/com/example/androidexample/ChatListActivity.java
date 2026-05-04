@@ -46,16 +46,26 @@ public class ChatListActivity extends AppCompatActivity {
         tvEmpty          = findViewById(R.id.tvChatListEmpty);
         tvTitle          = findViewById(R.id.tvChatListTitle);
 
-        tvTitle.setText("COUNSELLOR".equals(myRole) ? "Chats with Users" : "Chats with Counselors");
+        tvTitle.setText("COUNSELLOR".equals(myRole) ? "Chats with Users" : "My Counsellors");
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         adapter = new ChatPersonAdapter(personList, person -> {
-            Intent intent = new Intent(this, ChatActivity.class);
-            intent.putExtra("partnerUserId", person.partnerId);
-            intent.putExtra("partnerName",   person.partnerName);
-            startActivity(intent);
+            if ("COUNSELLOR".equals(myRole)) {
+                // Counsellor taps a user → go directly to chat
+                Intent intent = new Intent(this, ChatActivity.class);
+                intent.putExtra("partnerUserId", person.partnerId);
+                intent.putExtra("partnerName",   person.partnerName);
+                startActivity(intent);
+            } else {
+                // User taps a counsellor → go to counsellor profile first
+                Intent intent = new Intent(this, CounsellorViewActivity.class);
+                intent.putExtra("counsellorId",   person.partnerId);
+                intent.putExtra("counsellorName", person.partnerName);
+                startActivity(intent);
+            }
         });
+
         recyclerChatList.setLayoutManager(new LinearLayoutManager(this));
         recyclerChatList.setAdapter(adapter);
 
@@ -82,13 +92,11 @@ public class ChatListActivity extends AppCompatActivity {
                             ChatPerson p = new ChatPerson();
 
                             if ("COUNSELLOR".equals(myRole)) {
-                                // Counsellor sees users — partner is the user
                                 p.partnerId   = obj.optLong("userId", -1);
                                 p.partnerName = obj.optString("userName", "Unknown User");
                                 p.subtitle    = obj.optString("date", "") + "  ·  " +
                                         obj.optString("timeSlot", "");
                             } else {
-                                // User sees counsellors — partner is the counsellor
                                 p.partnerId   = obj.optLong("counsellorId", -1);
                                 p.partnerName = obj.optString("counsellorName", "Unknown Counsellor");
                                 p.subtitle    = obj.optString("date", "") + "  ·  " +
@@ -98,11 +106,24 @@ public class ChatListActivity extends AppCompatActivity {
                             if (p.partnerId != -1) personList.add(p);
                         } catch (JSONException e) { e.printStackTrace(); }
                     }
+
+                    // Deduplicate by partnerId
+                    List<ChatPerson> deduped = new ArrayList<>();
+                    List<Long> seen = new ArrayList<>();
+                    for (ChatPerson p : personList) {
+                        if (!seen.contains(p.partnerId)) {
+                            seen.add(p.partnerId);
+                            deduped.add(p);
+                        }
+                    }
+                    personList.clear();
+                    personList.addAll(deduped);
+
                     adapter.notifyDataSetChanged();
                     updateEmptyState();
                 },
                 error -> {
-                    Toast.makeText(this, "Failed to load chats", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show();
                     updateEmptyState();
                 }
         );
