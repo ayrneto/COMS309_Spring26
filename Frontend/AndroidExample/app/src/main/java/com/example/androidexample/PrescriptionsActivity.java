@@ -81,6 +81,16 @@ public class PrescriptionsActivity extends AppCompatActivity {
                 String instructions   = p.optString("instructions", "—");
                 String startDate      = p.optString("startDate", "—");
                 String endDate        = p.optString("endDate", "—");
+
+                // Parse counsellor name from nested object
+                String counsellorName = "—";
+                if (!p.isNull("counsellor")) {
+                    org.json.JSONObject counsellorObj = p.optJSONObject("counsellor");
+                    if (counsellorObj != null) {
+                        counsellorName = counsellorObj.optString("name",
+                                counsellorObj.optString("username", "—"));
+                    }
+                }
                 int    durationDays   = p.optInt("durationDays", 0);
                 boolean active        = p.optBoolean("active", false);
 
@@ -90,6 +100,7 @@ public class PrescriptionsActivity extends AppCompatActivity {
                 ((TextView) row.findViewById(R.id.tvMedName)).setText(medicationName);
                 ((TextView) row.findViewById(R.id.tvDosage)).setText("Dosage: " + dosage);
                 ((TextView) row.findViewById(R.id.tvInstructions)).setText("Instructions: " + instructions);
+                ((TextView) row.findViewById(R.id.tvPrescribedBy)).setText("Prescribed by: " + counsellorName);
                 ((TextView) row.findViewById(R.id.tvDates)).setText("From " + startDate + " to " + endDate
                         + (durationDays > 0 ? " (" + durationDays + " days)" : ""));
 

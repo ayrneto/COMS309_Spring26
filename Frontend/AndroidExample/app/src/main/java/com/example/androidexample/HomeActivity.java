@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Calendar;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -40,9 +41,16 @@ public class HomeActivity extends AppCompatActivity {
 
         drawerLayout = findViewById(R.id.drawerLayout);
 
-        // Welcome text
+        // Welcome text — show first name only
+        String firstName = name.isEmpty() ? "" : name.split(" ")[0];
         ((TextView) findViewById(R.id.tvWelcome))
-                .setText("Welcome" + (name.isEmpty() ? "" : ",\n" + name));
+                .setText(firstName.isEmpty() ? "Welcome" : firstName);
+
+        // Load quote and stats
+        loadDailyQuote();
+        if (role.equals("USER")) {
+            loadQuickStats(userId);
+        }
 
         // Drawer header
         ((TextView) findViewById(R.id.drawerName))
@@ -159,6 +167,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void loadDashboard() {
         LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        dashboardContainer.setVisibility(android.view.View.VISIBLE);
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String role = prefs.getString("USER_ROLE", "");
 
@@ -465,4 +474,109 @@ public class HomeActivity extends AppCompatActivity {
             default: return R.drawable.circle_rating_3;
         }
     }
+    // ── Daily Quote ───────────────────────────────────────────────────────────
+    private void loadDailyQuote() {
+        String[] quotes = {
+                "You don't have to be positive all the time. It's perfectly okay to feel sad, angry, or stressed.|Let yourself feel it.",
+                "Mental health is not a destination, but a process.|It's about how you drive, not where you're going.",
+                "You are allowed to be both a masterpiece and a work in progress simultaneously.|— Sophia Bush",
+                "Healing is not linear.|Be patient with yourself.",
+                "Your present circumstances don't determine where you can go.|They merely determine where you start.",
+                "Self-care is how you take your power back.|— Lalah Delia",
+                "It's okay to ask for help.|Reaching out is a sign of courage, not weakness.",
+                "Small steps still move you forward.|Every day counts.",
+                "You survived 100% of your worst days.|You are stronger than you think.",
+                "Rest is not a reward.|It is a necessity.",
+                "Progress, not perfection.|That's the goal.",
+                "Take care of your body. It's the only place you have to live.|— Jim Rohn",
+                "What we think, we become.|— Buddha",
+                "Be gentle with yourself.|You are a child of the universe.",
+                "The greatest glory in living lies not in never falling,|but in rising every time we fall."
+        };
+
+        // Pick quote based on day of year so it changes daily
+        int dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+        String[] parts = quotes[dayOfYear % quotes.length].split(java.util.regex.Pattern.quote("|"));
+
+        TextView tvQuote  = findViewById(R.id.tvDailyQuote);
+        TextView tvAuthor = findViewById(R.id.tvQuoteAuthor);
+
+        if (tvQuote  != null) tvQuote.setText(parts[0].trim());
+        if (tvAuthor != null) tvAuthor.setText(parts.length > 1 ? parts[1].trim() : "");
+    }
+
+    // ── Quick Stats ───────────────────────────────────────────────────────────
+    private void loadQuickStats(String userId) {
+        // Tasks stat
+        String tasksUrl = ApiConstants.BASE_URL + "/api/users/" + userId + "/tasks";
+        JsonArrayRequest tasksReq = new JsonArrayRequest(Request.Method.GET, tasksUrl, null,
+                response -> {
+                    int pending = 0;
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            String status = response.getJSONObject(i).optString("status", "");
+                            if (!status.equals("Completed")) pending++;
+                        } catch (JSONException e) { e.printStackTrace(); }
+                    }
+                    TextView tv = findViewById(R.id.tvStatTasks);
+                    if (tv != null) tv.setText(String.valueOf(pending));
+                },
+                error -> {
+                    TextView tv = findViewById(R.id.tvStatTasks);
+                    if (tv != null) tv.setText("0");
+                }
+        );
+        Volley.newRequestQueue(this).add(tasksReq);
+
+        // Routines stat
+        String routinesUrl = ApiConstants.BASE_URL + "/api/users/" + userId + "/routines";
+        JsonArrayRequest routinesReq = new JsonArrayRequest(Request.Method.GET, routinesUrl, null,
+                response -> {
+                    int active = 0;
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            boolean completed = response.getJSONObject(i).optBoolean("completed", false);
+                            if (!completed) active++;
+                        } catch (JSONException e) { e.printStackTrace(); }
+                    }
+                    TextView tv = findViewById(R.id.tvStatRoutines);
+                    if (tv != null) tv.setText(String.valueOf(active));
+                },
+                error -> {
+                    TextView tv = findViewById(R.id.tvStatRoutines);
+                    if (tv != null) tv.setText("0");
+                }
+        );
+        Volley.newRequestQueue(this).add(routinesReq);
+
+        // Check-in stat — today's mood
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        String checkInUrl = ApiConstants.BASE_URL + "/users/" + userId + "/checkins";
+        JsonArrayRequest checkInReq = new JsonArrayRequest(Request.Method.GET, checkInUrl, null,
+                response -> {
+                    int todayRating = 0;
+                    try {
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject obj = response.getJSONObject(i);
+                            if (today.equals(obj.optString("date", ""))) {
+                                todayRating = obj.optInt("rating", 0);
+                                break;
+                            }
+                        }
+                    } catch (JSONException e) { e.printStackTrace(); }
+                    TextView tv = findViewById(R.id.tvStatCheckIn);
+                    if (tv != null) {
+                        String[] emojis = {"—", "😢", "😕", "😐", "🙂", "😄"};
+                        tv.setText(todayRating > 0 ? emojis[todayRating] : "—");
+                    }
+                },
+                error -> {
+                    TextView tv = findViewById(R.id.tvStatCheckIn);
+                    if (tv != null) tv.setText("—");
+                }
+        );
+        Volley.newRequestQueue(this).add(checkInReq);
+    }
+
+
 }
