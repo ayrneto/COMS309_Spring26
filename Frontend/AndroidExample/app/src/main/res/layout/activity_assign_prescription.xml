@@ -143,25 +143,7 @@
                 android:id="@+id/etStartDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="2025-05-01"
-                android:inputType="text"
-                android:background="@drawable/input_bg"
-                android:padding="12dp"
-                android:layout_marginBottom="14dp" />
-
-            <!-- End Date -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="End Date * (YYYY-MM-DD)"
-                android:textSize="13sp"
-                android:textColor="#555555"
-                android:layout_marginBottom="4dp" />
-            <EditText
-                android:id="@+id/etEndDate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="2025-06-01"
+                android:hint="e.g. 2026-05-04"
                 android:inputType="text"
                 android:background="@drawable/input_bg"
                 android:padding="12dp"
@@ -171,7 +153,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Duration (days)"
+                android:text="Duration (days) *"
                 android:textSize="13sp"
                 android:textColor="#555555"
                 android:layout_marginBottom="4dp" />
