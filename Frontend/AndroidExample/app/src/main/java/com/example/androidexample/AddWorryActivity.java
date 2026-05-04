@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 import android.app.DatePickerDialog;
 import java.util.Calendar;
+import android.util.Log;
 
 public class AddWorryActivity extends AppCompatActivity {
 
@@ -108,10 +109,17 @@ public class AddWorryActivity extends AppCompatActivity {
 
         JSONObject noteData = new JSONObject();
         try {
-            noteData.put("title",   title);
+            noteData.put("title", title);
             noteData.put("content", content);
-            noteData.put("dueDate", dueDate);
             noteData.put("label", label);
+
+            // Only send dueDate if user picked a date
+            if (!dueDate.isEmpty()) {
+                noteData.put("dueDate", dueDate);
+            }
+
+            Log.d("AddWorry", "Sending JSON: " + noteData.toString());
+
         } catch (JSONException e) {
             e.printStackTrace();
         }

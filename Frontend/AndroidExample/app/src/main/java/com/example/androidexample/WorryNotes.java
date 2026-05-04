@@ -118,7 +118,12 @@ public class WorryNotes extends AppCompatActivity {
             deleteNote(noteId);
         });
 
-        builder.setNeutralButton("Cancel", null);
+        builder.setNeutralButton("Share", (dialog, which) -> {
+            // Open counselor selection page
+            Intent intent = new Intent(WorryNotes.this, SelectCounselorActivity.class);
+            intent.putExtra("noteId", noteId);
+            startActivity(intent);
+        });
 
         builder.show();
     }

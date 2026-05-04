@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="240dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
+    android:elevation="4dp"
+    app:cardCornerRadius="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/sharedByText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Shared by: Patient #123"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:textColor="#666666"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/noteTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Note Title"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:id="@+id/noteContent"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="Note content here..."
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/noteDueDate"
+            android:background="@drawable/light_green_background"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="168dp"
+            android:layout_height="wrap_content"
+            android:text="Due: 2026-05-15"
+            android:textColor="#000000"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/noteLabel"
+            android:background="@drawable/dark_green_background"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textColor="#FFFFFF"
+            android:layout_width="168dp"
+            android:layout_height="25dp"
+            android:text="Work"
+            android:layout_marginTop="6dp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

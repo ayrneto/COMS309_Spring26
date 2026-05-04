@@ -83,6 +83,12 @@ public class CounselorHomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Shared WorryNotes
+        findViewById(R.id.drawerItemSharedNotes).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, SharedNotesActivity.class));
+        });
+
         // ── Log Out ───────────────────────────────────────────────────────────
         findViewById(R.id.drawerItemLogout).setOnClickListener(v -> {
             drawerLayout.close();
