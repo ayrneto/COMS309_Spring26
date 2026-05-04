@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CheckInActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CheckInActivity.java</span></div><h1>CheckInActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+
+import com.android.volley.toolbox.JsonArrayRequest;
+
+<span class="nc" id="L34">public class CheckInActivity extends AppCompatActivity {</span>
+    private View[] circles;
+<span class="nc" id="L36">    private int selectedRating = 0;</span>
+    private EditText reminderTimeInput;
+    private EditText descriptionInput;
+<span class="nc" id="L39">    private String checkInId = null;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L43">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L44">        setContentView(R.layout.activity_check_in);</span>
+
+        // Force light mode for colors to show correctly
+<span class="nc" id="L47">        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);</span>
+
+        // Initialize circles
+<span class="nc" id="L50">        circles = new View[]{</span>
+<span class="nc" id="L51">                findViewById(R.id.circle1),</span>
+<span class="nc" id="L52">                findViewById(R.id.circle2),</span>
+<span class="nc" id="L53">                findViewById(R.id.circle3),</span>
+<span class="nc" id="L54">                findViewById(R.id.circle4),</span>
+<span class="nc" id="L55">                findViewById(R.id.circle5)</span>
+        };
+
+<span class="nc" id="L58">        reminderTimeInput = findViewById(R.id.inputReminderTime);</span>
+<span class="nc" id="L59">        descriptionInput = findViewById(R.id.inputDescription);</span>
+<span class="nc" id="L60">        Button summaryBtn = findViewById(R.id.btnSummary);</span>
+<span class="nc" id="L61">        Button saveBtn = findViewById(R.id.btnSave);</span>
+
+        // Set up circle clicks
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        for (int i = 0; i &lt; circles.length; i++) {</span>
+<span class="nc" id="L65">            final int rating = i + 1;</span>
+<span class="nc" id="L66">            circles[i].setOnClickListener(v -&gt; updateRating(rating));</span>
+        }
+
+        // Time picker
+<span class="nc" id="L70">        reminderTimeInput.setOnClickListener(v -&gt; showTimePicker());</span>
+
+        // Summary button
+<span class="nc" id="L73">        summaryBtn.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L74">            Intent intent = new Intent(CheckInActivity.this, CheckInSummaryActivity.class);</span>
+<span class="nc" id="L75">            startActivity(intent);</span>
+<span class="nc" id="L76">        });</span>
+
+        // Save button
+<span class="nc" id="L79">        saveBtn.setOnClickListener(v -&gt; saveCheckIn());</span>
+
+        // Check if editing existing check-in from summary
+<span class="nc" id="L82">        Bundle extras = getIntent().getExtras();</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">        if (extras != null &amp;&amp; extras.containsKey(&quot;checkInId&quot;)) {</span>
+<span class="nc" id="L84">            checkInId = extras.getString(&quot;checkInId&quot;);</span>
+<span class="nc" id="L85">            int rating = extras.getInt(&quot;rating&quot;);</span>
+<span class="nc" id="L86">            String description = extras.getString(&quot;description&quot;);</span>
+<span class="nc" id="L87">            String reminderTime = extras.getString(&quot;reminderTime&quot;);</span>
+
+<span class="nc" id="L89">            updateRating(rating);</span>
+<span class="nc" id="L90">            descriptionInput.setText(description);</span>
+<span class="nc" id="L91">            reminderTimeInput.setText(reminderTime);</span>
+        }
+
+        // Commented out for better UI look (PLEASE. DON'T. DELETE.)
+//        else {
+//            // Load today's check-in if it exists
+//            loadTodayCheckIn();
+//        }
+
+<span class="nc" id="L100">    }</span>
+
+    private void updateRating(int rating) {
+<span class="nc" id="L103">        selectedRating = rating;</span>
+
+        // Update circle appearances
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (int i = 0; i &lt; circles.length; i++) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (rating == 0) {</span>
+                // No selection - all faded
+<span class="nc" id="L109">                circles[i].setBackgroundResource(getCircleDrawable(i + 1, true));</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            } else if (i &lt; rating) {</span>
+                // Solid color for selected
+<span class="nc" id="L112">                circles[i].setBackgroundResource(getCircleDrawable(i + 1, false));</span>
+            } else {
+                // Faded color for unselected
+<span class="nc" id="L115">                circles[i].setBackgroundResource(getCircleDrawable(i + 1, true));</span>
+            }
+        }
+<span class="nc" id="L118">    }</span>
+
+    private int getCircleDrawable(int position, boolean faded) {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (faded) {</span>
+<span class="nc bnc" id="L122" title="All 6 branches missed.">            switch (position) {</span>
+<span class="nc" id="L123">                case 1: return R.drawable.circle_rating_1_faded;</span>
+<span class="nc" id="L124">                case 2: return R.drawable.circle_rating_2_faded;</span>
+<span class="nc" id="L125">                case 3: return R.drawable.circle_rating_3_faded;</span>
+<span class="nc" id="L126">                case 4: return R.drawable.circle_rating_4_faded;</span>
+<span class="nc" id="L127">                case 5: return R.drawable.circle_rating_5_faded;</span>
+            }
+        } else {
+<span class="nc bnc" id="L130" title="All 6 branches missed.">            switch (position) {</span>
+<span class="nc" id="L131">                case 1: return R.drawable.circle_rating_1;</span>
+<span class="nc" id="L132">                case 2: return R.drawable.circle_rating_2;</span>
+<span class="nc" id="L133">                case 3: return R.drawable.circle_rating_3;</span>
+<span class="nc" id="L134">                case 4: return R.drawable.circle_rating_4;</span>
+<span class="nc" id="L135">                case 5: return R.drawable.circle_rating_5;</span>
+            }
+        }
+<span class="nc" id="L138">        return R.drawable.circle_rating_1;</span>
+    }
+
+    private void showTimePicker() {
+<span class="nc" id="L142">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L143">        int hour = calendar.get(Calendar.HOUR_OF_DAY);</span>
+<span class="nc" id="L144">        int minute = calendar.get(Calendar.MINUTE);</span>
+
+<span class="nc" id="L146">        TimePickerDialog timePickerDialog = new TimePickerDialog(</span>
+                this,
+                (view, selectedHour, selectedMinute) -&gt; {
+<span class="nc" id="L149">                    String time = String.format(Locale.getDefault(), &quot;%02d:%02d&quot;, selectedHour, selectedMinute);</span>
+<span class="nc" id="L150">                    reminderTimeInput.setText(time);</span>
+<span class="nc" id="L151">                },</span>
+                hour, minute, true
+        );
+<span class="nc" id="L154">        timePickerDialog.show();</span>
+<span class="nc" id="L155">    }</span>
+
+    private void loadTodayCheckIn() {
+<span class="nc" id="L158">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L159">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+
+<span class="nc" id="L161">        String today = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.getDefault()).format(new Date());</span>
+<span class="nc" id="L162">        String url = ApiConstants.BASE_URL + &quot;/users/&quot; + userId + &quot;/checkins&quot;;</span>
+
+<span class="nc" id="L164">        Log.d(&quot;CheckIn&quot;, &quot;Fetching check-ins from: &quot; + url);</span>
+<span class="nc" id="L165">        Log.d(&quot;CheckIn&quot;, &quot;Looking for date: &quot; + today);</span>
+
+<span class="nc" id="L167">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L172">                    Log.d(&quot;CheckIn&quot;, &quot;Response received, length: &quot; + response.length());</span>
+
+                    try {
+<span class="nc" id="L175">                        boolean foundToday = false;</span>
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L178">                            JSONObject checkIn = response.getJSONObject(i);</span>
+<span class="nc" id="L179">                            String date = checkIn.getString(&quot;date&quot;);</span>
+
+<span class="nc" id="L181">                            Log.d(&quot;CheckIn&quot;, &quot;Checking date: &quot; + date + &quot; vs &quot; + today);</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                            if (date.equals(today)) {</span>
+<span class="nc" id="L184">                                foundToday = true;</span>
+<span class="nc" id="L185">                                Log.d(&quot;CheckIn&quot;, &quot;Found today's check-in!&quot;);</span>
+
+<span class="nc" id="L187">                                checkInId = checkIn.getString(&quot;id&quot;);</span>
+<span class="nc" id="L188">                                int rating = checkIn.getInt(&quot;rating&quot;);</span>
+<span class="nc" id="L189">                                String description = checkIn.getString(&quot;description&quot;);</span>
+<span class="nc" id="L190">                                String reminderTime = checkIn.optString(&quot;reminderTime&quot;, &quot;20:00&quot;);</span>
+
+<span class="nc" id="L192">                                updateRating(rating);</span>
+<span class="nc" id="L193">                                descriptionInput.setText(description);</span>
+<span class="nc" id="L194">                                reminderTimeInput.setText(reminderTime);</span>
+<span class="nc" id="L195">                                break;</span>
+                            }
+                        }
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                        if (!foundToday) {</span>
+<span class="nc" id="L200">                            Log.d(&quot;CheckIn&quot;, &quot;No check-in for today, setting defaults&quot;);</span>
+<span class="nc" id="L201">                            updateRating(0);</span>
+<span class="nc" id="L202">                            descriptionInput.setText(&quot;&quot;);</span>
+<span class="nc" id="L203">                            reminderTimeInput.setText(&quot;20:00&quot;);</span>
+                        }
+
+<span class="nc" id="L206">                    } catch (JSONException e) {</span>
+<span class="nc" id="L207">                        Log.e(&quot;CheckIn&quot;, &quot;JSON error: &quot; + e.getMessage());</span>
+<span class="nc" id="L208">                        e.printStackTrace();</span>
+<span class="nc" id="L209">                    }</span>
+<span class="nc" id="L210">                },</span>
+                error -&gt; {
+<span class="nc" id="L212">                    Log.e(&quot;CheckIn&quot;, &quot;API error: &quot; + error.toString());</span>
+<span class="nc" id="L213">                }</span>
+        );
+
+<span class="nc" id="L216">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L217">        queue.add(request);</span>
+<span class="nc" id="L218">    }</span>
+
+    private void saveCheckIn() {
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (selectedRating == 0) {</span>
+<span class="nc" id="L222">            Toast.makeText(this, &quot;Please select a rating&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L223">            return;</span>
+        }
+
+<span class="nc" id="L226">        String description = descriptionInput.getText().toString();</span>
+<span class="nc" id="L227">        String reminderTime = reminderTimeInput.getText().toString();</span>
+
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (reminderTime.isEmpty()) {</span>
+<span class="nc" id="L230">            reminderTime = &quot;20:00&quot;;  // Default to 8 PM</span>
+        }
+
+<span class="nc" id="L233">        final String finalReminderTime = reminderTime;</span>
+
+<span class="nc" id="L235">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L236">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+
+        String url;
+        int method;
+
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        if (checkInId == null) {</span>
+            // Create new
+<span class="nc" id="L243">            url = ApiConstants.BASE_URL + &quot;/users/&quot; + userId + &quot;/checkins&quot;;</span>
+<span class="nc" id="L244">            method = Request.Method.POST;</span>
+        } else {
+            // Update existing
+<span class="nc" id="L247">            url = ApiConstants.BASE_URL + &quot;/users/checkins/&quot; + checkInId;</span>
+<span class="nc" id="L248">            method = Request.Method.PUT;</span>
+        }
+
+<span class="nc" id="L251">        JSONObject checkInData = new JSONObject();</span>
+        try {
+<span class="nc" id="L253">            checkInData.put(&quot;rating&quot;, selectedRating);</span>
+<span class="nc" id="L254">            checkInData.put(&quot;description&quot;, description);</span>
+<span class="nc" id="L255">            checkInData.put(&quot;reminderTime&quot;, reminderTime);</span>
+<span class="nc" id="L256">            checkInData.put(&quot;date&quot;, new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.getDefault()).format(new Date()));</span>
+<span class="nc" id="L257">        } catch (JSONException e) {</span>
+<span class="nc" id="L258">            e.printStackTrace();</span>
+<span class="nc" id="L259">        }</span>
+
+<span class="nc" id="L261">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                method,
+                url,
+                checkInData,
+                response -&gt; {
+<span class="nc" id="L266">                    Toast.makeText(this, &quot;Check-in saved!&quot;, Toast.LENGTH_SHORT).show();</span>
+
+                    // Schedule reminder for tomorrow
+<span class="nc" id="L269">                    scheduleCheckInReminder(finalReminderTime);</span>
+
+<span class="nc" id="L271">                    finish();</span>
+<span class="nc" id="L272">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L274" title="All 4 branches missed.">                    if (error.networkResponse != null &amp;&amp; error.networkResponse.statusCode == 409) {</span>
+<span class="nc" id="L275">                        Toast.makeText(this, &quot;You already checked in today! Go to Summary to edit it.&quot;, Toast.LENGTH_LONG).show();</span>
+                    } else {
+<span class="nc" id="L277">                        Toast.makeText(this, &quot;Failed to save&quot;, Toast.LENGTH_SHORT).show();</span>
+                    }
+<span class="nc" id="L279">                }</span>
+        );
+
+<span class="nc" id="L282">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L283">        queue.add(request);</span>
+<span class="nc" id="L284">    }</span>
+
+    private void scheduleCheckInReminder(String reminderTime) {
+        // Parse time (format: &quot;HH:mm&quot;)
+<span class="nc" id="L288">        String[] parts = reminderTime.split(&quot;:&quot;);</span>
+<span class="nc" id="L289">        int hour = Integer.parseInt(parts[0]);</span>
+<span class="nc" id="L290">        int minute = Integer.parseInt(parts[1]);</span>
+
+        // Set up calendar for the reminder time
+<span class="nc" id="L293">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L294">        calendar.set(Calendar.HOUR_OF_DAY, hour);</span>
+<span class="nc" id="L295">        calendar.set(Calendar.MINUTE, minute);</span>
+<span class="nc" id="L296">        calendar.set(Calendar.SECOND, 0);</span>
+
+        // If time has passed today, schedule for tomorrow
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (calendar.getTimeInMillis() &lt; System.currentTimeMillis()) {</span>
+<span class="nc" id="L300">            calendar.add(Calendar.DAY_OF_MONTH, 1);</span>
+        }
+
+        // Create intent for alarm
+<span class="nc" id="L304">        Intent intent = new Intent(this, CheckInReminderReceiver.class);</span>
+<span class="nc" id="L305">        PendingIntent pendingIntent = PendingIntent.getBroadcast(</span>
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Schedule repeating alarm
+<span class="nc" id="L313">        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);</span>
+<span class="nc" id="L314">        alarmManager.setRepeating(</span>
+                AlarmManager.RTC_WAKEUP,
+<span class="nc" id="L316">                calendar.getTimeInMillis(),</span>
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+        );
+<span class="nc" id="L320">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditProfile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">EditProfile.java</span></div><h1>EditProfile.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="nc" id="L21">public class EditProfile extends AppCompatActivity {</span>
+
+<span class="nc" id="L23">    private String userId = &quot;&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L27">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L28">        setContentView(R.layout.activity_editprofile);</span>
+
+        // ── Views ─────────────────────────────────────────────────────────────
+<span class="nc" id="L31">        EditText nameField            = findViewById(R.id.editName);</span>
+<span class="nc" id="L32">        EditText emailField           = findViewById(R.id.editEmail);</span>
+<span class="nc" id="L33">        EditText passwordField        = findViewById(R.id.editPassword);</span>
+<span class="nc" id="L34">        EditText confirmPasswordField = findViewById(R.id.editConfirmPassword);</span>
+<span class="nc" id="L35">        Button   btnSave              = findViewById(R.id.btnSave);</span>
+<span class="nc" id="L36">        Button   btnDelete            = findViewById(R.id.btnDeleteAccount);</span>
+
+        // Back button in top bar
+<span class="nc" id="L39">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // ── Pre-fill from Intent extras ───────────────────────────────────────
+<span class="nc" id="L42">        Bundle extras = getIntent().getExtras();</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (extras != null) {</span>
+<span class="nc" id="L44">            userId = extras.getString(&quot;userId&quot;, &quot;&quot;);</span>
+<span class="nc" id="L45">            nameField.setText(extras.getString(&quot;name&quot;,     &quot;&quot;));</span>
+<span class="nc" id="L46">            emailField.setText(extras.getString(&quot;email&quot;,   &quot;&quot;));</span>
+<span class="nc" id="L47">            passwordField.setText(extras.getString(&quot;password&quot;, &quot;&quot;));</span>
+        }
+
+        // ── Save ──────────────────────────────────────────────────────────────
+<span class="nc" id="L51">        btnSave.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L52">            String newName     = nameField.getText().toString().trim();</span>
+<span class="nc" id="L53">            String newEmail    = emailField.getText().toString().trim();</span>
+<span class="nc" id="L54">            String newPassword = passwordField.getText().toString().trim();</span>
+<span class="nc" id="L55">            String confirmPwd  = confirmPasswordField.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (userId.isEmpty()) {</span>
+<span class="nc" id="L58">                Toast.makeText(this, &quot;User ID missing&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L59">                return;</span>
+            }
+<span class="nc bnc" id="L61" title="All 4 branches missed.">            if (newName.isEmpty() || newEmail.isEmpty() ||</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">                    newPassword.isEmpty() || confirmPwd.isEmpty()) {</span>
+<span class="nc" id="L63">                Toast.makeText(this, &quot;All fields required&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L64">                return;</span>
+            }
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (!newPassword.equals(confirmPwd)) {</span>
+<span class="nc" id="L67">                Toast.makeText(this, &quot;Passwords do not match&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L68">                return;</span>
+            }
+
+<span class="nc" id="L71">            updateProfile(newName, newEmail, newPassword, confirmPwd);</span>
+<span class="nc" id="L72">        });</span>
+
+        // ── Delete account ────────────────────────────────────────────────────
+<span class="nc" id="L75">        btnDelete.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (userId.isEmpty()) {</span>
+<span class="nc" id="L77">                Toast.makeText(this, &quot;User ID missing&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L78">                return;</span>
+            }
+<span class="nc" id="L80">            new AlertDialog.Builder(this)</span>
+<span class="nc" id="L81">                    .setTitle(&quot;Delete Account?&quot;)</span>
+<span class="nc" id="L82">                    .setMessage(&quot;Are you sure? This cannot be undone.&quot;)</span>
+<span class="nc" id="L83">                    .setPositiveButton(&quot;Yes, Delete&quot;, (dialog, which) -&gt; deleteUser())</span>
+<span class="nc" id="L84">                    .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L85">                    .show();</span>
+<span class="nc" id="L86">        });</span>
+<span class="nc" id="L87">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Update profile
+    // ─────────────────────────────────────────────────────────────────────────
+    private void updateProfile(String name, String email,
+                               String password, String confirmPassword) {
+<span class="nc" id="L94">        String url = ApiConstants.EDIT + userId;</span>
+
+<span class="nc" id="L96">        JSONObject updateData = new JSONObject();</span>
+        try {
+<span class="nc" id="L98">            updateData.put(&quot;name&quot;,            name);</span>
+<span class="nc" id="L99">            updateData.put(&quot;email&quot;,           email);</span>
+<span class="nc" id="L100">            updateData.put(&quot;active&quot;,          true);</span>
+<span class="nc" id="L101">            updateData.put(&quot;password&quot;,        password);</span>
+<span class="nc" id="L102">            updateData.put(&quot;confirmPassword&quot;, confirmPassword);</span>
+<span class="nc" id="L103">        } catch (JSONException e) {</span>
+<span class="nc" id="L104">            Toast.makeText(this, &quot;JSON error: &quot; + e.getMessage(), Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L105">            return;</span>
+<span class="nc" id="L106">        }</span>
+
+<span class="nc" id="L108">        StringRequest request = new StringRequest(</span>
+                Request.Method.PUT,
+                url,
+                response -&gt; {
+                    // Update cached name + email in SharedPreferences
+<span class="nc" id="L113">                    getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L114">                            .edit()</span>
+<span class="nc" id="L115">                            .putString(&quot;USER_NAME&quot;,  name)</span>
+<span class="nc" id="L116">                            .putString(&quot;USER_EMAIL&quot;, email)</span>
+<span class="nc" id="L117">                            .apply();</span>
+
+<span class="nc" id="L119">                    Toast.makeText(this, &quot;Profile updated!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L120">                    finish();</span>
+<span class="nc" id="L121">                },</span>
+                error -&gt; {
+<span class="nc" id="L123">                    String msg = &quot;Update failed&quot;;</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L125">                        msg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc" id="L126">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L127">                }</span>
+<span class="nc" id="L128">        ) {</span>
+            @Override
+            public byte[] getBody() {
+<span class="nc" id="L131">                return updateData.toString().getBytes();</span>
+            }
+
+            @Override
+            public String getBodyContentType() {
+<span class="nc" id="L136">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L140">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L141">        queue.add(request);</span>
+<span class="nc" id="L142">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Delete user
+    // ─────────────────────────────────────────────────────────────────────────
+    private void deleteUser() {
+<span class="nc" id="L148">        String url = ApiConstants.DELETE + userId;</span>
+
+<span class="nc" id="L150">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L154">                    getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit().clear().apply();</span>
+<span class="nc" id="L155">                    Toast.makeText(this, &quot;Account deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L156">                    Intent i = new Intent(this, SignUpActivity.class);</span>
+<span class="nc" id="L157">                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L158">                    startActivity(i);</span>
+<span class="nc" id="L159">                    finishAffinity();</span>
+<span class="nc" id="L160">                },</span>
+<span class="nc" id="L161">                error -&gt; Toast.makeText(this,</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">                        &quot;Delete failed: &quot; + (error.getMessage() != null</span>
+<span class="nc" id="L163">                                ? error.getMessage() : &quot;unknown error&quot;),</span>
+<span class="nc" id="L164">                        Toast.LENGTH_LONG).show()</span>
+        );
+
+<span class="nc" id="L167">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L168">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

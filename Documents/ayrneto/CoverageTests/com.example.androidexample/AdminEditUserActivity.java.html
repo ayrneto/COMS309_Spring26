@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminEditUserActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">AdminEditUserActivity.java</span></div><h1>AdminEditUserActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="nc" id="L23">public class AdminEditUserActivity extends AppCompatActivity {</span>
+
+<span class="nc" id="L25">    private static final String[] STATUSES = {&quot;AVAILABLE&quot;, &quot;BUSY&quot;, &quot;OFFLINE&quot;};</span>
+
+<span class="nc" id="L27">    private long   userId = -1;</span>
+<span class="nc" id="L28">    private String userRole = &quot;USER&quot;;</span>
+
+    // User fields
+    private EditText etName, etEmail, etPassword, etConfirmPassword;
+    private Switch   switchActive;
+
+    // Counsellor fields
+    private LinearLayout counsellorSection;
+    private EditText etCDisplayName, etCSpecialization, etCBio;
+    private Spinner  spCStatus;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L41">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L42">        setContentView(R.layout.activity_admin_edit_user);</span>
+
+        // ── Bind views ────────────────────────────────────────────────────────
+<span class="nc" id="L45">        TextView tvTitle         = findViewById(R.id.tvEditTitle);</span>
+<span class="nc" id="L46">        etName                   = findViewById(R.id.etEditName);</span>
+<span class="nc" id="L47">        etEmail                  = findViewById(R.id.etEditEmail);</span>
+<span class="nc" id="L48">        etPassword               = findViewById(R.id.etEditPassword);</span>
+<span class="nc" id="L49">        etConfirmPassword        = findViewById(R.id.etEditConfirmPassword);</span>
+<span class="nc" id="L50">        switchActive             = findViewById(R.id.switchActive);</span>
+<span class="nc" id="L51">        counsellorSection        = findViewById(R.id.counsellorFieldsSection);</span>
+<span class="nc" id="L52">        etCDisplayName           = findViewById(R.id.etCDisplayName);</span>
+<span class="nc" id="L53">        etCSpecialization        = findViewById(R.id.etCSpecialization);</span>
+<span class="nc" id="L54">        etCBio                   = findViewById(R.id.etCBio);</span>
+<span class="nc" id="L55">        spCStatus                = findViewById(R.id.spCStatus);</span>
+<span class="nc" id="L56">        Button btnSaveUser       = findViewById(R.id.btnSaveUser);</span>
+<span class="nc" id="L57">        Button btnSaveCounsellor = findViewById(R.id.btnSaveCounsellor);</span>
+<span class="nc" id="L58">        Button btnDeactivate     = findViewById(R.id.btnDeactivate);</span>
+<span class="nc" id="L59">        Button btnDelete         = findViewById(R.id.btnDeleteUser);</span>
+
+<span class="nc" id="L61">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // Status spinner
+<span class="nc" id="L64">        spCStatus.setAdapter(new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, STATUSES));
+
+        // ── Read Intent extras ────────────────────────────────────────────────
+<span class="nc" id="L68">        Bundle extras = getIntent().getExtras();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (extras != null) {</span>
+<span class="nc" id="L70">            userId   = extras.getLong(&quot;userId&quot;, -1);</span>
+<span class="nc" id="L71">            userRole = extras.getString(&quot;userRole&quot;, &quot;USER&quot;);</span>
+
+<span class="nc" id="L73">            etName.setText(extras.getString(&quot;userName&quot;,  &quot;&quot;));</span>
+<span class="nc" id="L74">            etEmail.setText(extras.getString(&quot;userEmail&quot;, &quot;&quot;));</span>
+<span class="nc" id="L75">            etPassword.setText(extras.getString(&quot;userPassword&quot;, &quot;&quot;));</span>
+<span class="nc" id="L76">            etConfirmPassword.setText(extras.getString(&quot;userConfirmPassword&quot;, &quot;&quot;));</span>
+<span class="nc" id="L77">            switchActive.setChecked(extras.getBoolean(&quot;userActive&quot;, true));</span>
+
+<span class="nc" id="L79">            tvTitle.setText(&quot;Edit &quot; + userRole.charAt(0) +</span>
+<span class="nc" id="L80">                    userRole.substring(1).toLowerCase());</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (&quot;COUNSELLOR&quot;.equals(userRole)) {</span>
+<span class="nc" id="L83">                counsellorSection.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L84">                etCDisplayName.setText(extras.getString(&quot;cDisplayName&quot;,    &quot;&quot;));</span>
+<span class="nc" id="L85">                etCSpecialization.setText(extras.getString(&quot;cSpecialization&quot;, &quot;&quot;));</span>
+<span class="nc" id="L86">                etCBio.setText(extras.getString(&quot;cBio&quot;,                    &quot;&quot;));</span>
+
+<span class="nc" id="L88">                String status = extras.getString(&quot;cStatus&quot;, &quot;AVAILABLE&quot;);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                for (int i = 0; i &lt; STATUSES.length; i++) {</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                    if (STATUSES[i].equalsIgnoreCase(status)) {</span>
+<span class="nc" id="L91">                        spCStatus.setSelection(i);</span>
+<span class="nc" id="L92">                        break;</span>
+                    }
+                }
+            }
+        }
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (userId == -1) {</span>
+<span class="nc" id="L99">            Toast.makeText(this, &quot;Error: user ID missing&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L100">            finish();</span>
+<span class="nc" id="L101">            return;</span>
+        }
+
+        // ── Save user ─────────────────────────────────────────────────────────
+<span class="nc" id="L105">        btnSaveUser.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L106">            String name            = etName.getText().toString().trim();</span>
+<span class="nc" id="L107">            String email           = etEmail.getText().toString().trim();</span>
+<span class="nc" id="L108">            String password        = etPassword.getText().toString().trim();</span>
+<span class="nc" id="L109">            String confirmPassword = etConfirmPassword.getText().toString().trim();</span>
+<span class="nc" id="L110">            boolean active         = switchActive.isChecked();</span>
+
+<span class="nc bnc" id="L112" title="All 4 branches missed.">            if (name.isEmpty() || email.isEmpty()) {</span>
+<span class="nc" id="L113">                Toast.makeText(this, &quot;Name and email required&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L114">                return;</span>
+            }
+<span class="nc bnc" id="L116" title="All 4 branches missed.">            if (!password.isEmpty() &amp;&amp; !password.equals(confirmPassword)) {</span>
+<span class="nc" id="L117">                Toast.makeText(this, &quot;Passwords do not match&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L118">                return;</span>
+            }
+<span class="nc" id="L120">            updateUser(name, email, password, confirmPassword, active);</span>
+<span class="nc" id="L121">        });</span>
+
+        // ── Save counsellor profile ───────────────────────────────────────────
+<span class="nc" id="L124">        btnSaveCounsellor.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L125">            String displayName    = etCDisplayName.getText().toString().trim();</span>
+<span class="nc" id="L126">            String specialization = etCSpecialization.getText().toString().trim();</span>
+<span class="nc" id="L127">            String bio            = etCBio.getText().toString().trim();</span>
+<span class="nc" id="L128">            String status         = spCStatus.getSelectedItem().toString();</span>
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            if (displayName.isEmpty()) {</span>
+<span class="nc" id="L131">                etCDisplayName.setError(&quot;Required&quot;);</span>
+<span class="nc" id="L132">                return;</span>
+            }
+<span class="nc" id="L134">            updateCounsellorProfile(displayName, specialization, bio, status);</span>
+<span class="nc" id="L135">        });</span>
+
+        // ── Deactivate ────────────────────────────────────────────────────────
+<span class="nc" id="L138">        btnDeactivate.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L139">                new AlertDialog.Builder(this)</span>
+<span class="nc" id="L140">                        .setTitle(&quot;Deactivate Account?&quot;)</span>
+<span class="nc" id="L141">                        .setMessage(&quot;This will prevent the user from logging in.&quot;)</span>
+<span class="nc" id="L142">                        .setPositiveButton(&quot;Deactivate&quot;, (d, w) -&gt; {</span>
+<span class="nc" id="L143">                            String name  = etName.getText().toString().trim();</span>
+<span class="nc" id="L144">                            String email = etEmail.getText().toString().trim();</span>
+<span class="nc" id="L145">                            updateUser(name, email, &quot;&quot;, &quot;&quot;, false);</span>
+<span class="nc" id="L146">                        })</span>
+<span class="nc" id="L147">                        .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L148">                        .show()</span>
+        );
+
+        // ── Delete ────────────────────────────────────────────────────────────
+<span class="nc" id="L152">        btnDelete.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L153">                new AlertDialog.Builder(this)</span>
+<span class="nc" id="L154">                        .setTitle(&quot;Delete Account?&quot;)</span>
+<span class="nc" id="L155">                        .setMessage(&quot;This cannot be undone.&quot;)</span>
+<span class="nc" id="L156">                        .setPositiveButton(&quot;Yes, Delete&quot;, (d, w) -&gt; deleteUser())</span>
+<span class="nc" id="L157">                        .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L158">                        .show()</span>
+        );
+<span class="nc" id="L160">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUT /api/admin/update/{id}
+    // ─────────────────────────────────────────────────────────────────────────
+    private void updateUser(String name, String email,
+                            String password, String confirmPassword,
+                            boolean active) {
+<span class="nc" id="L168">        String url = ApiConstants.EDIT + userId;</span>
+
+<span class="nc" id="L170">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L172">            body.put(&quot;name&quot;,   name);</span>
+<span class="nc" id="L173">            body.put(&quot;email&quot;,  email);</span>
+<span class="nc" id="L174">            body.put(&quot;active&quot;, active);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (!password.isEmpty()) {</span>
+<span class="nc" id="L176">                body.put(&quot;password&quot;,        password);</span>
+<span class="nc" id="L177">                body.put(&quot;confirmPassword&quot;, confirmPassword);</span>
+            }
+<span class="nc" id="L179">        } catch (JSONException e) {</span>
+<span class="nc" id="L180">            Toast.makeText(this, &quot;JSON error&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L181">            return;</span>
+<span class="nc" id="L182">        }</span>
+
+<span class="nc" id="L184">        StringRequest req = new StringRequest(</span>
+                Request.Method.PUT, url,
+                response -&gt; {
+<span class="nc" id="L187">                    switchActive.setChecked(active);</span>
+<span class="nc" id="L188">                    Toast.makeText(this,</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                            active ? &quot;User updated!&quot; : &quot;Account deactivated&quot;,</span>
+<span class="nc" id="L190">                            Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L191">                    finish();</span>
+<span class="nc" id="L192">                },</span>
+                error -&gt; {
+<span class="nc" id="L194">                    String msg = &quot;Update failed&quot;;</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L196">                        msg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc" id="L197">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L198">                }</span>
+<span class="nc" id="L199">        ) {</span>
+<span class="nc" id="L200">            @Override public byte[] getBody() { return body.toString().getBytes(); }</span>
+            @Override public String getBodyContentType() {
+<span class="nc" id="L202">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L206">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L207">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUT /api/counsellors/{userId}/profile
+    // ─────────────────────────────────────────────────────────────────────────
+    private void updateCounsellorProfile(String displayName, String specialization,
+                                         String bio, String status) {
+<span class="nc" id="L214">        String url = ApiConstants.counselorProfile(userId);</span>
+
+<span class="nc" id="L216">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L218">            body.put(&quot;displayName&quot;,       displayName);</span>
+<span class="nc" id="L219">            body.put(&quot;specialization&quot;,    specialization);</span>
+<span class="nc" id="L220">            body.put(&quot;bio&quot;,               bio);</span>
+<span class="nc" id="L221">            body.put(&quot;profilePictureUrl&quot;, &quot;&quot;);</span>
+<span class="nc" id="L222">            body.put(&quot;status&quot;,            status);</span>
+<span class="nc" id="L223">        } catch (JSONException e) {</span>
+<span class="nc" id="L224">            Toast.makeText(this, &quot;JSON error&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L225">            return;</span>
+<span class="nc" id="L226">        }</span>
+
+<span class="nc" id="L228">        StringRequest req = new StringRequest(</span>
+                Request.Method.PUT, url,
+<span class="nc" id="L230">                response -&gt; Toast.makeText(this,</span>
+<span class="nc" id="L231">                        &quot;Counsellor profile updated!&quot;, Toast.LENGTH_SHORT).show(),</span>
+                error -&gt; {
+<span class="nc" id="L233">                    String msg = &quot;Update failed&quot;;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L235">                        msg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc" id="L236">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L237">                }</span>
+<span class="nc" id="L238">        ) {</span>
+<span class="nc" id="L239">            @Override public byte[] getBody() { return body.toString().getBytes(); }</span>
+            @Override public String getBodyContentType() {
+<span class="nc" id="L241">                return &quot;application/json; charset=utf-8&quot;;</span>
+            }
+        };
+
+<span class="nc" id="L245">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L246">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DELETE /api/admin/{id}
+    // ─────────────────────────────────────────────────────────────────────────
+    private void deleteUser() {
+<span class="nc" id="L252">        String url = ApiConstants.ADMIN_DELETE + userId;</span>
+
+<span class="nc" id="L254">        StringRequest req = new StringRequest(</span>
+                Request.Method.DELETE, url,
+                response -&gt; {
+<span class="nc" id="L257">                    Toast.makeText(this, &quot;Account deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L258">                    finish();</span>
+<span class="nc" id="L259">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L261" title="All 6 branches missed.">                    if (error.networkResponse != null &amp;&amp;</span>
+                            (error.networkResponse.statusCode == 200 ||
+                                    error.networkResponse.statusCode == 204)) {
+<span class="nc" id="L264">                        Toast.makeText(this, &quot;Account deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L265">                        finish();</span>
+<span class="nc" id="L266">                        return;</span>
+                    }
+<span class="nc" id="L268">                    String msg = &quot;Delete failed&quot;;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L270">                        msg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc" id="L271">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L272">                }</span>
+        );
+
+<span class="nc" id="L275">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L276">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
