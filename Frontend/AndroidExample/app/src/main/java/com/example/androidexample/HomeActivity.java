@@ -157,6 +157,16 @@ public class HomeActivity extends AppCompatActivity {
         loadDashboard();
     }
 
+    // Reload dashboard when returning to home screen
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        dashboardContainer.removeAllViews();
+        loadDashboard();
+    }
+
     private void loadDashboard() {
         LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
@@ -188,7 +198,7 @@ public class HomeActivity extends AppCompatActivity {
                     }
 
                     try {
-                        // Find routine with highest progress (not completed)
+                        // Find routine with the highest progress (but uncompleted)
                         JSONObject topRoutine = null;
                         int maxProgress = -1;
 
