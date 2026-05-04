@@ -57,6 +57,7 @@ public class ApiConstants {
     }
 
     // ─── PRESCRIPTIONS ────────────────────────────────────────
+
     public static String userPrescriptions(long userId) {
         return BASE_URL + "/prescriptions/users/" + userId;
     }
