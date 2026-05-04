@@ -1,6 +1,9 @@
 package onetoone.Appointments;
 
+import onetoone.Users.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -11,4 +14,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     void deleteByUser_Id(Long userId);
 
+    @Query("SELECT DISTINCT a.counsellor FROM Appointment a WHERE a.user.id = :userId AND a.status = 'CONFIRMED'")
+    List<User> findConfirmedCounsellorsByUserId(@Param("userId") Long userId);
 }

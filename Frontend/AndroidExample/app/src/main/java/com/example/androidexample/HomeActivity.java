@@ -36,6 +36,7 @@ public class HomeActivity extends AppCompatActivity {
         String userId = prefs.getString("USER_ID",    "");
         String email  = prefs.getString("USER_EMAIL", "");
         String name   = prefs.getString("USER_NAME",  "");
+        String role   = prefs.getString("USER_ROLE",  "");
 
         drawerLayout = findViewById(R.id.drawerLayout);
 
@@ -64,7 +65,7 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, WorryNotes.class));
         });
 
-        // ── Chat with Counselor → shows list of accepted counselors ───────────
+        // ── Chat with Counselor ───────────────────────────────────────────────
         findViewById(R.id.drawerItemChat).setOnClickListener(v -> {
             drawerLayout.close();
             startActivity(new Intent(this, ChatListActivity.class));
@@ -81,34 +82,50 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        String role = prefs.getString("USER_ROLE", "");
+        // ── Prescriptions (USER only) ─────────────────────────────────────────
+        findViewById(R.id.drawerItemPrescriptions).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, PrescriptionsActivity.class));
+        });
 
-    // Show/hide menu items based on role
+        // ── Show/hide menu items based on role ────────────────────────────────
         if (role.equals("COUNSELLOR")) {
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
             findViewById(R.id.drawerRoutineTracker).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);
+        } else if (role.equals("ADMIN")) {
+            findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
+            findViewById(R.id.drawerRoutineTracker).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);
         } else {
+            // USER
             findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);
             findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);
             findViewById(R.id.drawerRoutineTracker).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemAiChat).setVisibility(View.VISIBLE);
+            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.VISIBLE);
         }
 
-    // My Tasks click listener
-            findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
-                drawerLayout.close();
-                startActivity(new Intent(this, TasksOverview.class));
-            });
+        // ── My Tasks ──────────────────────────────────────────────────────────
+        findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, TasksOverview.class));
+        });
 
-    // Assign Task click listener
-            findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
-                drawerLayout.close();
-                startActivity(new Intent(this, AssignTaskActivity.class));
-            });
+        // ── Assign Task ───────────────────────────────────────────────────────
+        findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, AssignTaskActivity.class));
+        });
 
-        // Check-In click listener
+        // ── Check-In ──────────────────────────────────────────────────────────
         findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -> {
             drawerLayout.close();
             startActivity(new Intent(this, CheckInActivity.class));
@@ -118,6 +135,12 @@ public class HomeActivity extends AppCompatActivity {
         findViewById(R.id.drawerRoutineTracker).setOnClickListener(v -> {
             drawerLayout.close();
             startActivity(new Intent(this, RoutineSummaryActivity.class));
+        });
+
+        // ── AI Assistant (USER only) ───────────────────────────────────────────
+        findViewById(R.id.drawerItemAiChat).setOnClickListener(v -> {
+            drawerLayout.close();
+            startActivity(new Intent(this, AIChatActivity.class));
         });
 
         // ── Log Out ───────────────────────────────────────────────────────────

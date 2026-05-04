@@ -55,10 +55,13 @@ public class CounselorHomeActivity extends AppCompatActivity {
             startActivity(new Intent(this, AppointmentRequestsActivity.class));
         });
 
-        // ── Chat with User → shows list of accepted users ─────────────────────
+        // ── My Users → User Profile navigation ───────────────────────────────
+        // Replaces the old "Chat with User" → ChatListActivity flow.
+        // Now opens UserListActivity; tapping a user goes to UserProfileActivity
+        // which has Chat, Assign Task, and Assign Prescription buttons.
         findViewById(R.id.drawerItemChat).setOnClickListener(v -> {
             drawerLayout.close();
-            startActivity(new Intent(this, ChatListActivity.class));
+            startActivity(new Intent(this, UserListActivity.class));
         });
 
         // ── Assign Task ───────────────────────────────────────────────────────
