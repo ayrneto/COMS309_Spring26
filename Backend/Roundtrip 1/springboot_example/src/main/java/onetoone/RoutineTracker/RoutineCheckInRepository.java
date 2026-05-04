@@ -11,4 +11,5 @@ public interface RoutineCheckInRepository extends JpaRepository<RoutineCheckIn, 
     boolean existsByRoutineIdAndCheckInDate(Long routineId, LocalDate date);
     List<RoutineCheckIn> findByRoutineUserId(Long userId);
     Optional<RoutineCheckIn> findTopByRoutineIdOrderByCheckInDateDesc(Long routineId);
+    void deleteByRoutineId(Long routineId);
 }

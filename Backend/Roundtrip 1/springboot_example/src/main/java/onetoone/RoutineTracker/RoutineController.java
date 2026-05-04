@@ -2,6 +2,7 @@ package onetoone.RoutineTracker;
 import onetoone.Users.User;
 import onetoone.Users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,7 +14,12 @@ public class RoutineController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RoutineCheckInRepository routineCheckInRepository;
+
     private final RoutineService routineService;
+
+    @Autowired
     private final RoutineRepository routineRepo;
 
     public RoutineController(RoutineService routineService,
@@ -57,11 +63,16 @@ public class RoutineController {
         System.out.println("DEBUG: Hit the getUserRoutines method for ID: " + userId);
         return routineRepo.findByUserId(userId);
     }
+
+    @Transactional
     @DeleteMapping("/{id}")
     public String deleteRoutine(@PathVariable Long id) {
         if (!routineRepo.existsById(id)) {
             throw new RuntimeException("Routine not found");
         }
+
+        // Delete related check-ins first
+        routineCheckInRepository.deleteByRoutineId(id);
 
         routineRepo.deleteById(id);
         return "Routine deleted successfully";
