@@ -43,6 +43,9 @@ public class CheckInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_check_in);
 
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         // Force light mode for colors to show correctly
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 

@@ -6,107 +6,281 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- ── Main content ───────────────────────────────────────────────────── -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ── Main content ──────────────────────────────────────────────── -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F5F7F6">
+        android:orientation="vertical"
+        android:background="@color/aa_input_bg">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/topBar"
-            android:layout_width="0dp"
+        <!-- Top bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#4A6E60"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="16dp"
+            android:background="@color/aa_primary"
+            android:elevation="4dp">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <ImageButton
+                android:id="@+id/btnHamburger"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:tint="#FFFFFF"
+                android:contentDescription="Open menu" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Calmify"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/alata"
+                android:gravity="center" />
+
+            <View android:layout_width="48dp" android:layout_height="48dp" />
+
+        </LinearLayout>
+
+        <!-- Hero banner -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/aa_secondary"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hello,"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:alpha="0.8" />
+
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Counsellor"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/alata"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/tvHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Here's your dashboard for today"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:alpha="0.75"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="16dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingStart="8dp"
-                android:paddingEnd="16dp">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <ImageButton
-                    android:id="@+id/btnHamburger"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_sort_by_size"
-                    android:tint="#FFFFFF"
-                    android:contentDescription="Open menu"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
+                <!-- ── Status toggle button ───────────────────────────── -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStatusToggle"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="14dp"
+                    android:text="AVAILABLE"
+                    android:textAllCaps="false"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    app:backgroundTint="@color/aa_primary"
+                    app:cornerRadius="26dp" />
 
+                <!-- ── Stats row ───────────────────────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="14dp">
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="82dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+                            <TextView android:id="@+id/tvStatUsers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="—" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/aa_primary" android:fontFamily="@font/alata" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Users" android:textSize="10sp" android:textColor="@color/aa_muted" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="82dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+                            <TextView android:id="@+id/tvStatPending" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="—" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/aa_primary" android:fontFamily="@font/alata" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pending" android:textSize="10sp" android:textColor="@color/aa_muted" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="82dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#FFFFFF">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" android:padding="8dp">
+                            <TextView android:id="@+id/tvStatSharedNotes" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="—" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/aa_primary" android:fontFamily="@font/alata" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Shared Notes" android:textSize="10sp" android:textColor="@color/aa_muted" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                </LinearLayout>
+
+                <!-- ── Upcoming Appointments ───────────────────────────── -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Calmify"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:text="Upcoming Appointments"
+                    android:textSize="14sp"
                     android:textStyle="bold"
+                    android:textColor="@color/aa_text"
                     android:fontFamily="@font/alata"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    android:layout_marginBottom="8dp" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+                <LinearLayout
+                    android:id="@+id/containerUpcoming"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="14dp">
 
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Welcome, Counsellor"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="#1E1E1E"
-            android:gravity="center"
-            android:layout_marginTop="48dp"
-            android:fontFamily="@font/alata"
-            app:layout_constraintTop_toBottomOf="@id/topBar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+                    <!-- Placeholder shown while loading -->
+                    <TextView
+                        android:id="@+id/tvNoUpcoming"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No upcoming appointments"
+                        android:textSize="13sp"
+                        android:textColor="@color/aa_muted"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:background="#FFFFFF"
+                        android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tvHint"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Tap ☰ to navigate the app."
-            android:textSize="14sp"
-            android:textColor="#6B6B6B"
-            android:gravity="center"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            app:layout_constraintTop_toBottomOf="@id/tvWelcome"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+                </LinearLayout>
+                <!-- ── Recent Activity ─────────────────────────────────── -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recent Activity"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/aa_text"
+                    android:fontFamily="@font/alata"
+                    android:layout_marginBottom="8dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <LinearLayout
+                    android:id="@+id/containerActivity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="8dp">
 
-    <!-- ── Navigation Drawer ──────────────────────────────────────────────── -->
+                    <TextView
+                        android:id="@+id/tvNoActivity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No recent activity"
+                        android:textSize="13sp"
+                        android:textColor="@color/aa_muted"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:background="#FFFFFF"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+    </LinearLayout>
+
+    <!-- ── Navigation Drawer ──────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/navDrawer"
-        android:layout_width="300dp"
+        android:layout_width="290dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
         android:background="#FFFFFF"
         android:elevation="8dp">
 
-        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="160dp"
             android:orientation="vertical"
             android:gravity="bottom"
-            android:padding="24dp"
-            android:background="@drawable/gradient_green_background">
+            android:padding="20dp"
+            android:background="@color/aa_primary">
+
+            <FrameLayout
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:id="@+id/tvDrawerAvatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:gravity="center"
+                    android:text="?"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/avatar_rounded_square" />
+
+                <ImageView
+                    android:id="@+id/ivDrawerAvatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/avatar_rounded_square"
+                    android:clipToOutline="true"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/drawerName"
@@ -114,7 +288,7 @@
                 android:layout_height="wrap_content"
                 android:text="Hello!"
                 android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/alata" />
 
@@ -123,13 +297,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:textColor="#D0EDE4"
-                android:textSize="13sp"
-                android:layout_marginTop="4dp" />
+                android:textColor="#C2E8DA"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
-        <!-- Menu items -->
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/aa_input_bg" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -137,164 +312,39 @@
             android:orientation="vertical"
             android:paddingTop="8dp">
 
-            <!-- Appointment Requests -->
-            <LinearLayout
-                android:id="@+id/drawerItemAppointments"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Appointment Requests"
-                    android:textSize="16sp"
-                    android:textColor="#1B1B1B"
-                    android:fontFamily="@font/alata" />
-
-                <!-- Badge showing pending count -->
-                <TextView
-                    android:id="@+id/tvAppointmentBadge"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:gravity="center"
-                    android:textSize="11sp"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    android:background="@drawable/dark_green_background"
-                    android:visibility="gone" />
-
+            <LinearLayout android:id="@+id/drawerItemAppointments" android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="📅" android:textSize="15sp" android:layout_marginEnd="12dp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Appointment Requests" android:textSize="14sp" android:textColor="@color/aa_text" android:fontFamily="@font/alata" />
+                <TextView android:id="@+id/tvAppointmentBadge" android:layout_width="22dp" android:layout_height="22dp" android:gravity="center" android:textSize="10sp" android:textColor="#FFFFFF" android:textStyle="bold" android:background="@drawable/dark_green_background" android:visibility="gone" />
             </LinearLayout>
 
-            <!-- My Users (was "Chat with User") -->
-            <LinearLayout
-                android:id="@+id/drawerItemChat"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="My Users"
-                    android:textSize="16sp"
-                    android:textColor="#1B1B1B"
-                    android:fontFamily="@font/alata" />
-
+            <LinearLayout android:id="@+id/drawerItemChat" android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="👥" android:textSize="15sp" android:layout_marginEnd="12dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="My Users" android:textSize="14sp" android:textColor="@color/aa_text" android:fontFamily="@font/alata" />
             </LinearLayout>
 
-            <!-- Assign Task -->
-            <LinearLayout
-                android:id="@+id/drawerItemAssignTask"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Assign Task"
-                    android:textSize="16sp"
-                    android:textColor="#1B1B1B"
-                    android:fontFamily="@font/alata" />
-
+            <LinearLayout android:id="@+id/drawerItemAssignTask" android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="✅" android:textSize="15sp" android:layout_marginEnd="12dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Assign Task" android:textSize="14sp" android:textColor="@color/aa_text" android:fontFamily="@font/alata" />
             </LinearLayout>
 
-            <!-- Shared Notes -->
-            <LinearLayout
-                android:id="@+id/drawerItemSharedNotes"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Shared Notes"
-                    android:textSize="16sp"
-                    android:textColor="#1B1B1B"
-                    android:fontFamily="@font/alata" />
-
+            <LinearLayout android:id="@+id/drawerItemSharedNotes" android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="📋" android:textSize="15sp" android:layout_marginEnd="12dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Shared Notes" android:textSize="14sp" android:textColor="@color/aa_text" android:fontFamily="@font/alata" />
             </LinearLayout>
 
-            <!-- Edit Profile -->
-            <LinearLayout
-                android:id="@+id/drawerItemEditProfile"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Edit Profile"
-                    android:textSize="16sp"
-                    android:textColor="#1B1B1B"
-                    android:fontFamily="@font/alata" />
-
+            <LinearLayout android:id="@+id/drawerItemEditProfile" android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="👤" android:textSize="15sp" android:layout_marginEnd="12dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Edit Profile" android:textSize="14sp" android:textColor="@color/aa_text" android:fontFamily="@font/alata" />
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0" />
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/aa_input_bg" />
 
-        <!-- Logout -->
-        <LinearLayout
-            android:id="@+id/drawerItemLogout"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Log Out"
-                android:textSize="16sp"
-                android:textColor="#4A6E60"
-                android:textStyle="bold"
-                android:fontFamily="@font/alata" />
-
+        <LinearLayout android:id="@+id/drawerItemLogout" android:layout_width="match_parent" android:layout_height="56dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+            <TextView android:layout_width="24dp" android:layout_height="wrap_content" android:text="↩" android:textSize="15sp" android:layout_marginEnd="12dp" android:textColor="#C0392B" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Log Out" android:textSize="14sp" android:textStyle="bold" android:textColor="#C0392B" android:fontFamily="@font/alata" />
         </LinearLayout>
 
     </LinearLayout>

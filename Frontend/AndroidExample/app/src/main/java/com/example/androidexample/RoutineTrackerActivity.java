@@ -29,6 +29,9 @@ public class RoutineTrackerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_routine_tracker);
 
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         // Force light mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 

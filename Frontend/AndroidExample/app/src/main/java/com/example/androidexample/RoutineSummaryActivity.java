@@ -43,6 +43,9 @@ public class RoutineSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_routine_summary);
 
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         routinesContainer = findViewById(R.id.routinesContainer);
         filterSpinner = findViewById(R.id.filterSpinner);
         FrameLayout btnAddRoutine = findViewById(R.id.btnAddRoutine);

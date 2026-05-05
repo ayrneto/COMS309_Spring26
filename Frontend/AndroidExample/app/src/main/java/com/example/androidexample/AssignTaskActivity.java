@@ -31,6 +31,10 @@ public class AssignTaskActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_assign_task);
 
+        // Back button
+        if (findViewById(R.id.btnBack) != null)
+            findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         // Force light mode for colors to show correctly
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
