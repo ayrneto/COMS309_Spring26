@@ -209,6 +209,10 @@ public class HomeActivity extends AppCompatActivity {
         AvatarHelper.load(this, name, picUrl,
                 findViewById(R.id.tvDrawerAvatar),
                 findViewById(R.id.ivDrawerAvatar));
+
+        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        dashboardContainer.removeAllViews();
+        loadDashboard();
     }
 
     private void loadDashboard() {
