@@ -766,40 +766,205 @@ public class MainSystemTest {
 
     // =========================================================================
     // TC-9  AI CHAT — history, clear
-    //        Covers: AiChatController — getHistory, clearHistory
+    //        Covers: AiChatController — POST chat (all branches), getHistory, clearHistory
     //
     // FIX: AiChatController is at /api/ai-chat (not /ai-chat).
+    //
+    // Branches in AiChatService.chat():
+    //   • Normal message          → calls Gemini, saves, returns reply
+    //   • Blank / null message    → 400 Bad Request (validated before Gemini call)
+    //   • Crisis keyword message  → Gemini called + crisis hotline appended to reply
+    //   • Unknown userId          → 404 Not Found
+    //   • History window (>5 msgs)→ getRecentHistory() subList branch exercised
+    //
+    // Branches in getHistory() / clearHistory():
+    //   • Valid user              → 200
+    //   • Unknown user            → 404
     // =========================================================================
     @Test @Order(9)
-    @DisplayName("TC-9: AI Chat — get history; clear history; history empty after clear; 404 on unknown user")
+    @DisplayName("TC-9a: AI Chat — POST normal message; blank message → 400; unknown user → 404; response shape")
     void tc09_aiChat() {
 
-        // 9a. Get history (may be empty) for user
-        given()
-                .when().get("/api/ai-chat/" + userId + "/history")
-                .then().statusCode(200)
-                .body("$", instanceOf(java.util.List.class));
-
-        // 9b. Clear history
+        // ── 9a. Pre-condition: clear any existing history so counts are predictable ─
         given()
                 .when().delete("/api/ai-chat/" + userId + "/history")
                 .then().statusCode(200);
 
-        // 9c. History is now empty
+        // History is empty
         given()
                 .when().get("/api/ai-chat/" + userId + "/history")
                 .then().statusCode(200)
                 .body("$", hasSize(0));
 
-        // 9d. Get history for unknown user → 404
+        // ── 9b. POST a normal message — exercises the full chat() happy path ────
+        // Gemini may or may not be reachable; the service has a fallback reply,
+        // so the endpoint always returns 200 with a non-blank aiReply.
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "I feel a bit stressed about my exams." }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("id",          notNullValue())
+                .body("userMessage", equalTo("I feel a bit stressed about my exams."))
+                .body("aiReply",     not(emptyOrNullString()))
+                .body("sentAt",      notNullValue());
+
+        // ── 9c. POST a second message — exercises history being passed to Gemini ──
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "What breathing exercises can help me calm down?" }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", not(emptyOrNullString()));
+
+        // ── 9d. POST a third message ─────────────────────────────────────────────
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "I feel anxious about my presentation tomorrow." }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", not(emptyOrNullString()));
+
+        // ── 9e. GET history — should now have 3 entries ───────────────────────
+        given()
+                .when().get("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200)
+                .body("$",              hasSize(3))
+                .body("[0].userMessage", equalTo("I feel a bit stressed about my exams."))
+                .body("[0].aiReply",     not(emptyOrNullString()))
+                .body("[0].sentAt",      notNullValue())
+                .body("[2].userMessage", equalTo("I feel anxious about my presentation tomorrow."));
+
+        // ── 9f. POST blank message → 400 Bad Request ─────────────────────────
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "   " }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(400);
+
+        // ── 9g. POST empty string → 400 ───────────────────────────────────────
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "" }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(400);
+
+        // ── 9h. POST to unknown userId → 404 ─────────────────────────────────
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "Hello?" }
+                        """)
+                .when().post("/api/ai-chat/999999")
+                .then().statusCode(404);
+
+        // ── 9i. GET history for unknown user → 404 ───────────────────────────
         given()
                 .when().get("/api/ai-chat/999999/history")
                 .then().statusCode(404);
 
-        // 9e. Clear history for unknown user → 404
+        // ── 9j. DELETE history for unknown user → 404 ────────────────────────
         given()
                 .when().delete("/api/ai-chat/999999/history")
                 .then().statusCode(404);
+    }
+
+    // =========================================================================
+    // TC-9b  AI CHAT — Crisis keyword branch + history-window branch (>5 messages)
+    //         Covers:
+    //           • containsCrisisKeyword() → true  (appends hotline text to aiReply)
+    //           • getRecentHistory() subList branch (only last 5 of N sent to Gemini)
+    //           • clearHistory() happy path
+    // =========================================================================
+    @Test @Order(9)   // same @Order — runs immediately after tc09_aiChat in declaration order
+    @DisplayName("TC-9b: AI Chat — crisis keyword appends hotline; history window > 5; clear history")
+    void tc09b_aiChatCrisisAndHistoryWindow() {
+
+        // ── 9b-1. Send crisis keyword message — exercises containsCrisisKeyword() ─
+        // Service appends CRISIS_HOTLINE_APPEND to whatever Gemini replied,
+        // so the reply must contain "988" (the crisis line number).
+        String crisisReply = given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "I feel like I want to hurt myself." }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("userMessage", equalTo("I feel like I want to hurt myself."))
+                .body("aiReply",     containsString("988"))   // crisis hotline always appended
+                .extract().jsonPath().getString("aiReply");
+
+        System.out.println("[TC-9b] Crisis reply (truncated): " + crisisReply.substring(0, Math.min(80, crisisReply.length())));
+
+        // ── 9b-2. Another crisis keyword variant: "suicidal" ──────────────────
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "I have been feeling suicidal lately." }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", containsString("988"));
+
+        // ── 9b-3. Non-crisis message after crisis — exercises normal branch again─
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "Can you suggest a journaling exercise?" }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", not(emptyOrNullString()));
+
+        // ── 9b-4. Send enough messages to push history past HISTORY_WINDOW (5) ─
+        // At this point we already have 3 (from TC-9a) + 3 above = 6 messages.
+        // Sending one more guarantees getRecentHistory() hits the subList branch.
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "I tried deep breathing and it helped a little." }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", not(emptyOrNullString()));
+
+        // 7th message — definitively exercises subList (size > HISTORY_WINDOW=5)
+        given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        { "message": "What else can I do to reduce exam anxiety?" }
+                        """)
+                .when().post("/api/ai-chat/" + userId)
+                .then().statusCode(200)
+                .body("aiReply", not(emptyOrNullString()));
+
+        // ── 9b-5. Verify history has all messages persisted (>=7) ─────────────
+        given()
+                .when().get("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200)
+                .body("$", hasSize(greaterThanOrEqualTo(7)));
+
+        // ── 9b-6. Clear history — exercises clearHistory() happy path ─────────
+        given()
+                .when().delete("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200)
+                .body(containsString("cleared"));
+
+        // ── 9b-7. Confirm history is now empty ────────────────────────────────
+        given()
+                .when().get("/api/ai-chat/" + userId + "/history")
+                .then().statusCode(200)
+                .body("$", hasSize(0));
     }
 
     // =========================================================================
