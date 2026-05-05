@@ -89,7 +89,7 @@ import java.util.Locale;
     private void saveRoutine(String title, String description, String startDate, String reminderTime, String label) {
 <span class="nc" id="L90">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
 <span class="nc" id="L91">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
-<span class="nc" id="L92">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/routines&quot;;</span>
+<span class="nc" id="L92">        String url = ApiConstants.BASE_URL + &quot;/routines/users/&quot; + userId + &quot;/routines&quot;;</span>
 
 <span class="nc" id="L94">        JSONObject routineData = new JSONObject();</span>
         try {

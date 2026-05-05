@@ -25,78 +25,78 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-<span class="nc" id="L28">public class WorryNotes extends AppCompatActivity {</span>
+<span class="fc" id="L28">public class WorryNotes extends AppCompatActivity {</span>
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-<span class="nc" id="L32">        super.onCreate(savedInstanceState);</span>
-<span class="nc" id="L33">        setContentView(R.layout.activity_worry_notes);</span>
+<span class="fc" id="L32">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L33">        setContentView(R.layout.activity_worry_notes);</span>
 
         //Getting global values:
-<span class="nc" id="L36">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
-<span class="nc" id="L37">        Long userId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+<span class="fc" id="L36">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L37">        Long userId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
 
         // Back button
-<span class="nc" id="L40">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+<span class="fc" id="L40">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
 
         // Add note button
-<span class="nc" id="L43">        FrameLayout btnAddWorryNote = findViewById(R.id.btnAddWorryNote);</span>
-<span class="nc" id="L44">        btnAddWorryNote.setOnClickListener(view -&gt;</span>
-<span class="nc" id="L45">                startActivity(new Intent(WorryNotes.this, AddWorryActivity.class))</span>
+<span class="fc" id="L43">        FrameLayout btnAddWorryNote = findViewById(R.id.btnAddWorryNote);</span>
+<span class="fc" id="L44">        btnAddWorryNote.setOnClickListener(view -&gt;</span>
+<span class="fc" id="L45">                startActivity(new Intent(WorryNotes.this, AddWorryActivity.class))</span>
         );
 
-<span class="nc" id="L48">        fetchUserNotes(userId);</span>
-<span class="nc" id="L49">    }</span>
+<span class="fc" id="L48">        fetchUserNotes(userId);</span>
+<span class="fc" id="L49">    }</span>
 
     private void fetchUserNotes(Long userId) {
-<span class="nc" id="L52">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
+<span class="fc" id="L52">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
 
-<span class="nc" id="L54">        JsonArrayRequest request = new JsonArrayRequest(</span>
+<span class="fc" id="L54">        JsonArrayRequest request = new JsonArrayRequest(</span>
                 Request.Method.GET, url, null,
-<span class="nc" id="L56">                response -&gt; displayNotes(response),</span>
+<span class="fc" id="L56">                response -&gt; displayNotes(response),</span>
 <span class="nc" id="L57">                error -&gt; Toast.makeText(this, &quot;Failed to load&quot;, Toast.LENGTH_SHORT).show()</span>
         );
 
-<span class="nc" id="L60">        RequestQueue queue = Volley.newRequestQueue(this);</span>
-<span class="nc" id="L61">        queue.add(request);</span>
-<span class="nc" id="L62">    }</span>
+<span class="fc" id="L60">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L61">        queue.add(request);</span>
+<span class="fc" id="L62">    }</span>
 
     private void displayNotes(JSONArray notes) {
-<span class="nc" id="L65">        GridLayout container = findViewById(R.id.worriesContainer);</span>
-<span class="nc" id="L66">        container.removeAllViews(); // This resets all the worries in view</span>
+<span class="fc" id="L65">        GridLayout container = findViewById(R.id.worriesContainer);</span>
+<span class="fc" id="L66">        container.removeAllViews(); // This resets all the worries in view</span>
 
         try {
-<span class="nc bnc" id="L69" title="All 2 branches missed.">            for (int i = notes.length() - 1; i &gt;= 0; i--) {</span>
-<span class="nc" id="L70">                JSONObject note = notes.getJSONObject(i);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            for (int i = notes.length() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L70">                JSONObject note = notes.getJSONObject(i);</span>
 
-<span class="nc" id="L72">                long noteId = note.getLong(&quot;id&quot;);</span>
-<span class="nc" id="L73">                String title = note.getString(&quot;title&quot;);</span>
-<span class="nc" id="L74">                String content = note.getString(&quot;content&quot;);</span>
-<span class="nc" id="L75">                String dueDate = note.getString(&quot;dueDate&quot;);</span>
-<span class="nc" id="L76">                String label = note.getString(&quot;label&quot;);</span>
+<span class="fc" id="L72">                long noteId = note.getLong(&quot;id&quot;);</span>
+<span class="fc" id="L73">                String title = note.getString(&quot;title&quot;);</span>
+<span class="fc" id="L74">                String content = note.getString(&quot;content&quot;);</span>
+<span class="fc" id="L75">                String dueDate = note.getString(&quot;dueDate&quot;);</span>
+<span class="fc" id="L76">                String label = note.getString(&quot;label&quot;);</span>
 
 
-<span class="nc" id="L79">                addNoteCard(container, title, content, dueDate, label, noteId);</span>
+<span class="fc" id="L79">                addNoteCard(container, title, content, dueDate, label, noteId);</span>
             }
 <span class="nc" id="L81">        } catch (JSONException e) {</span>
 <span class="nc" id="L82">            e.printStackTrace();</span>
-<span class="nc" id="L83">        }</span>
-<span class="nc" id="L84">    }</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">    }</span>
 
     private void addNoteCard(GridLayout container, String title, String content,
                              String dueDate, String label, long noteId) {
-<span class="nc" id="L88">        View cardView = getLayoutInflater().inflate(R.layout.note_card, container, false);</span>
+<span class="fc" id="L88">        View cardView = getLayoutInflater().inflate(R.layout.note_card, container, false);</span>
 
-<span class="nc" id="L90">        ((TextView) cardView.findViewById(R.id.worryTitle)).setText(title);</span>
-<span class="nc" id="L91">        ((TextView) cardView.findViewById(R.id.worryContent)).setText(content);</span>
-<span class="nc" id="L92">        ((TextView) cardView.findViewById(R.id.worryDueDate)).setText(&quot;Due: &quot; + dueDate);</span>
-<span class="nc" id="L93">        ((TextView) cardView.findViewById(R.id.worryLabel)).setText(label);</span>
+<span class="fc" id="L90">        ((TextView) cardView.findViewById(R.id.worryTitle)).setText(title);</span>
+<span class="fc" id="L91">        ((TextView) cardView.findViewById(R.id.worryContent)).setText(content);</span>
+<span class="fc" id="L92">        ((TextView) cardView.findViewById(R.id.worryDueDate)).setText(&quot;Due: &quot; + dueDate);</span>
+<span class="fc" id="L93">        ((TextView) cardView.findViewById(R.id.worryLabel)).setText(label);</span>
 
-<span class="nc" id="L95">        cardView.setOnClickListener(v -&gt;</span>
+<span class="fc" id="L95">        cardView.setOnClickListener(v -&gt;</span>
 <span class="nc" id="L96">                showEditDeleteDialog(noteId, title, content, dueDate, label));</span>
 
-<span class="nc" id="L98">        container.addView(cardView);</span>
-<span class="nc" id="L99">    }</span>
+<span class="fc" id="L98">        container.addView(cardView);</span>
+<span class="fc" id="L99">    }</span>
 
     // Methods for editing / deleting note popup:
     private void showEditDeleteDialog(long noteId, String title, String content, String dueDate, String label) {
@@ -118,45 +118,50 @@ import org.json.JSONObject;
 <span class="nc" id="L118">            deleteNote(noteId);</span>
 <span class="nc" id="L119">        });</span>
 
-<span class="nc" id="L121">        builder.setNeutralButton(&quot;Cancel&quot;, null);</span>
+<span class="nc" id="L121">        builder.setNeutralButton(&quot;Share&quot;, (dialog, which) -&gt; {</span>
+            // Open counselor selection page
+<span class="nc" id="L123">            Intent intent = new Intent(WorryNotes.this, SelectCounselorActivity.class);</span>
+<span class="nc" id="L124">            intent.putExtra(&quot;noteId&quot;, noteId);</span>
+<span class="nc" id="L125">            startActivity(intent);</span>
+<span class="nc" id="L126">        });</span>
 
-<span class="nc" id="L123">        builder.show();</span>
-<span class="nc" id="L124">    }</span>
+<span class="nc" id="L128">        builder.show();</span>
+<span class="nc" id="L129">    }</span>
 
     private void deleteNote(long noteId) {
-<span class="nc" id="L127">        String url = ApiConstants.BASE_URL + &quot;/api/notes/&quot; + noteId;</span>
+<span class="nc" id="L132">        String url = ApiConstants.BASE_URL + &quot;/api/notes/&quot; + noteId;</span>
 
-<span class="nc" id="L129">        StringRequest request = new StringRequest(</span>
+<span class="nc" id="L134">        StringRequest request = new StringRequest(</span>
                 Request.Method.DELETE,
                 url,
                 response -&gt; {
-<span class="nc" id="L133">                    Toast.makeText(this, &quot;Note deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L138">                    Toast.makeText(this, &quot;Note deleted&quot;, Toast.LENGTH_SHORT).show();</span>
                     // Refresh the list
-<span class="nc" id="L135">                    SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
-<span class="nc" id="L136">                    String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
-<span class="nc" id="L137">                    Long userId = Long.parseLong(userIdString);</span>
-<span class="nc" id="L138">                    fetchUserNotes(userId);</span>
-<span class="nc" id="L139">                },</span>
+<span class="nc" id="L140">                    SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L141">                    String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="nc" id="L142">                    Long userId = Long.parseLong(userIdString);</span>
+<span class="nc" id="L143">                    fetchUserNotes(userId);</span>
+<span class="nc" id="L144">                },</span>
                 error -&gt; {
-<span class="nc" id="L141">                    Toast.makeText(this, &quot;Delete failed&quot;, Toast.LENGTH_SHORT).show();</span>
-<span class="nc" id="L142">                }</span>
+<span class="nc" id="L146">                    Toast.makeText(this, &quot;Delete failed&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L147">                }</span>
         );
 
-<span class="nc" id="L145">        RequestQueue queue = Volley.newRequestQueue(this);</span>
-<span class="nc" id="L146">        queue.add(request);</span>
-<span class="nc" id="L147">    }</span>
+<span class="nc" id="L150">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L151">        queue.add(request);</span>
+<span class="nc" id="L152">    }</span>
 
     // Causes the WorryNotes page to refresh right away when updating or adding notes
     @Override
     protected void onResume() {
-<span class="nc" id="L152">        super.onResume();</span>
+<span class="fc" id="L157">        super.onResume();</span>
 
         // Refresh the notes list
-<span class="nc" id="L155">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
-<span class="nc" id="L156">        String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
-<span class="nc" id="L157">        Long userId = Long.parseLong(userIdString);</span>
-<span class="nc" id="L158">        fetchUserNotes(userId);</span>
-<span class="nc" id="L159">    }</span>
+<span class="fc" id="L160">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L161">        String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L162">        Long userId = Long.parseLong(userIdString);</span>
+<span class="fc" id="L163">        fetchUserNotes(userId);</span>
+<span class="fc" id="L164">    }</span>
 
 
 }

@@ -56,6 +56,12 @@ public class ApiConstants {
 <span class="nc" id="L56">        return APPOINTMENTS + &quot;/counsellor/&quot; + counsellorId + &quot;/accepted&quot;;</span>
     }
 
+    // ─── PRESCRIPTIONS ────────────────────────────────────────
+
+    public static String userPrescriptions(long userId) {
+<span class="fc" id="L62">        return BASE_URL + &quot;/prescriptions/users/&quot; + userId;</span>
+    }
+
     // ─── MOCKOON LOCAL SERVER ──────────────────────────────────
 //    public static final String BASE_URL     = &quot;http://REDACTED&quot;;
 //    public static final String WS_BASE_URL  = &quot;ws://REDACTED&quot;;

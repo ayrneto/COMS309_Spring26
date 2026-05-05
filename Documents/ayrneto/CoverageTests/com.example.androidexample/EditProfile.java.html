@@ -18,37 +18,37 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-<span class="nc" id="L21">public class EditProfile extends AppCompatActivity {</span>
+<span class="fc" id="L21">public class EditProfile extends AppCompatActivity {</span>
 
-<span class="nc" id="L23">    private String userId = &quot;&quot;;</span>
+<span class="fc" id="L23">    private String userId = &quot;&quot;;</span>
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-<span class="nc" id="L27">        super.onCreate(savedInstanceState);</span>
-<span class="nc" id="L28">        setContentView(R.layout.activity_editprofile);</span>
+<span class="fc" id="L27">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L28">        setContentView(R.layout.activity_editprofile);</span>
 
         // ── Views ─────────────────────────────────────────────────────────────
-<span class="nc" id="L31">        EditText nameField            = findViewById(R.id.editName);</span>
-<span class="nc" id="L32">        EditText emailField           = findViewById(R.id.editEmail);</span>
-<span class="nc" id="L33">        EditText passwordField        = findViewById(R.id.editPassword);</span>
-<span class="nc" id="L34">        EditText confirmPasswordField = findViewById(R.id.editConfirmPassword);</span>
-<span class="nc" id="L35">        Button   btnSave              = findViewById(R.id.btnSave);</span>
-<span class="nc" id="L36">        Button   btnDelete            = findViewById(R.id.btnDeleteAccount);</span>
+<span class="fc" id="L31">        EditText nameField            = findViewById(R.id.editName);</span>
+<span class="fc" id="L32">        EditText emailField           = findViewById(R.id.editEmail);</span>
+<span class="fc" id="L33">        EditText passwordField        = findViewById(R.id.editPassword);</span>
+<span class="fc" id="L34">        EditText confirmPasswordField = findViewById(R.id.editConfirmPassword);</span>
+<span class="fc" id="L35">        Button   btnSave              = findViewById(R.id.btnSave);</span>
+<span class="fc" id="L36">        Button   btnDelete            = findViewById(R.id.btnDeleteAccount);</span>
 
         // Back button in top bar
-<span class="nc" id="L39">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+<span class="pc" id="L39">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
 
         // ── Pre-fill from Intent extras ───────────────────────────────────────
-<span class="nc" id="L42">        Bundle extras = getIntent().getExtras();</span>
-<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (extras != null) {</span>
-<span class="nc" id="L44">            userId = extras.getString(&quot;userId&quot;, &quot;&quot;);</span>
-<span class="nc" id="L45">            nameField.setText(extras.getString(&quot;name&quot;,     &quot;&quot;));</span>
-<span class="nc" id="L46">            emailField.setText(extras.getString(&quot;email&quot;,   &quot;&quot;));</span>
-<span class="nc" id="L47">            passwordField.setText(extras.getString(&quot;password&quot;, &quot;&quot;));</span>
+<span class="fc" id="L42">        Bundle extras = getIntent().getExtras();</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if (extras != null) {</span>
+<span class="fc" id="L44">            userId = extras.getString(&quot;userId&quot;, &quot;&quot;);</span>
+<span class="fc" id="L45">            nameField.setText(extras.getString(&quot;name&quot;,     &quot;&quot;));</span>
+<span class="fc" id="L46">            emailField.setText(extras.getString(&quot;email&quot;,   &quot;&quot;));</span>
+<span class="fc" id="L47">            passwordField.setText(extras.getString(&quot;password&quot;, &quot;&quot;));</span>
         }
 
         // ── Save ──────────────────────────────────────────────────────────────
-<span class="nc" id="L51">        btnSave.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L51">        btnSave.setOnClickListener(v -&gt; {</span>
 <span class="nc" id="L52">            String newName     = nameField.getText().toString().trim();</span>
 <span class="nc" id="L53">            String newEmail    = emailField.getText().toString().trim();</span>
 <span class="nc" id="L54">            String newPassword = passwordField.getText().toString().trim();</span>
@@ -72,7 +72,7 @@ import org.json.JSONObject;
 <span class="nc" id="L72">        });</span>
 
         // ── Delete account ────────────────────────────────────────────────────
-<span class="nc" id="L75">        btnDelete.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L75">        btnDelete.setOnClickListener(v -&gt; {</span>
 <span class="nc bnc" id="L76" title="All 2 branches missed.">            if (userId.isEmpty()) {</span>
 <span class="nc" id="L77">                Toast.makeText(this, &quot;User ID missing&quot;, Toast.LENGTH_SHORT).show();</span>
 <span class="nc" id="L78">                return;</span>
@@ -84,7 +84,7 @@ import org.json.JSONObject;
 <span class="nc" id="L84">                    .setNegativeButton(&quot;Cancel&quot;, null)</span>
 <span class="nc" id="L85">                    .show();</span>
 <span class="nc" id="L86">        });</span>
-<span class="nc" id="L87">    }</span>
+<span class="fc" id="L87">    }</span>
 
     // ─────────────────────────────────────────────────────────────────────────
     // Update profile

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssignPrescriptionActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">AssignPrescriptionActivity.java</span></div><h1>AssignPrescriptionActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+
+<span class="nc" id="L20">public class AssignPrescriptionActivity extends AppCompatActivity {</span>
+
+    private EditText etMedName, etDosage, etInstructions, etStartDate, etEndDate, etDurationDays;
+    private Button   btnSubmit;
+    private RequestQueue requestQueue;
+    private long targetUserId;
+    private String counsellorId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L30">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L31">        setContentView(R.layout.activity_assign_prescription);</span>
+
+<span class="nc" id="L33">        etMedName      = findViewById(R.id.etMedName);</span>
+<span class="nc" id="L34">        etDosage       = findViewById(R.id.etDosage);</span>
+<span class="nc" id="L35">        etInstructions = findViewById(R.id.etInstructions);</span>
+<span class="nc" id="L36">        etStartDate    = findViewById(R.id.etStartDate);</span>
+<span class="nc" id="L37">        etEndDate      = findViewById(R.id.etEndDate);</span>
+<span class="nc" id="L38">        etDurationDays = findViewById(R.id.etDurationDays);</span>
+<span class="nc" id="L39">        btnSubmit      = findViewById(R.id.btnSubmit);</span>
+
+<span class="nc" id="L41">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L42">        counsellorId = prefs.getString(&quot;USER_ID&quot;, &quot;1&quot;);</span>
+
+        // Target user ID passed via Intent (from counsellor tapping a user)
+<span class="nc" id="L45">        targetUserId = getIntent().getLongExtra(&quot;TARGET_USER_ID&quot;, -1);</span>
+<span class="nc" id="L46">        String targetName = getIntent().getStringExtra(&quot;TARGET_USER_NAME&quot;);</span>
+
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (targetUserId == -1) {</span>
+<span class="nc" id="L49">            Toast.makeText(this, &quot;No user selected&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L50">            finish();</span>
+<span class="nc" id="L51">            return;</span>
+        }
+
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (targetName != null &amp;&amp; !targetName.isEmpty()) {</span>
+<span class="nc" id="L55">            ((android.widget.TextView) findViewById(R.id.tvPatientName))</span>
+<span class="nc" id="L56">                    .setText(&quot;Prescribing for: &quot; + targetName);</span>
+        }
+
+<span class="nc" id="L59">        requestQueue = Volley.newRequestQueue(this);</span>
+
+<span class="nc" id="L61">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+<span class="nc" id="L62">        btnSubmit.setOnClickListener(v -&gt; submitPrescription());</span>
+<span class="nc" id="L63">    }</span>
+
+    // ── Submit prescription to backend ────────────────────────────────────────
+
+    private void submitPrescription() {
+<span class="nc" id="L68">        String medName      = etMedName.getText().toString().trim();</span>
+<span class="nc" id="L69">        String dosage       = etDosage.getText().toString().trim();</span>
+<span class="nc" id="L70">        String instructions = etInstructions.getText().toString().trim();</span>
+<span class="nc" id="L71">        String startDate    = etStartDate.getText().toString().trim();</span>
+<span class="nc" id="L72">        String endDate      = etEndDate.getText().toString().trim();</span>
+<span class="nc" id="L73">        String daysStr      = etDurationDays.getText().toString().trim();</span>
+
+<span class="nc bnc" id="L75" title="All 8 branches missed.">        if (medName.isEmpty() || dosage.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {</span>
+<span class="nc" id="L76">            Toast.makeText(this, &quot;Please fill in medication name, dosage, start and end dates&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L77">            return;</span>
+        }
+
+<span class="nc" id="L80">        int durationDays = 0;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (!daysStr.isEmpty()) {</span>
+            try {
+<span class="nc" id="L83">                durationDays = Integer.parseInt(daysStr);</span>
+<span class="nc" id="L84">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L85">                Toast.makeText(this, &quot;Duration must be a number&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L86">                return;</span>
+<span class="nc" id="L87">            }</span>
+        }
+
+        try {
+<span class="nc" id="L91">            JSONObject body = new JSONObject();</span>
+<span class="nc" id="L92">            body.put(&quot;medicationName&quot;, medName);</span>
+<span class="nc" id="L93">            body.put(&quot;dosage&quot;, dosage);</span>
+<span class="nc" id="L94">            body.put(&quot;instructions&quot;, instructions);</span>
+<span class="nc" id="L95">            body.put(&quot;startDate&quot;, startDate);</span>
+<span class="nc" id="L96">            body.put(&quot;endDate&quot;, endDate);</span>
+<span class="nc" id="L97">            body.put(&quot;durationDays&quot;, durationDays);</span>
+<span class="nc" id="L98">            body.put(&quot;active&quot;, true);</span>
+
+<span class="nc" id="L100">            String url = ApiConstants.userPrescriptions(targetUserId);</span>
+<span class="nc" id="L101">            final String requestBody = body.toString();</span>
+<span class="nc" id="L102">            final int finalDuration  = durationDays;</span>
+
+<span class="nc" id="L104">            btnSubmit.setEnabled(false);</span>
+
+<span class="nc" id="L106">            StringRequest req = new StringRequest(</span>
+                    Request.Method.POST,
+                    url,
+                    response -&gt; {
+<span class="nc" id="L110">                        Toast.makeText(this, &quot;Prescription assigned successfully&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L111">                        finish();</span>
+<span class="nc" id="L112">                    },</span>
+                    error -&gt; {
+<span class="nc" id="L114">                        btnSubmit.setEnabled(true);</span>
+<span class="nc" id="L115">                        Toast.makeText(this, &quot;Failed to assign prescription&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L116">                    }</span>
+<span class="nc" id="L117">            ) {</span>
+                @Override
+                public byte[] getBody() {
+<span class="nc" id="L120">                    return requestBody.getBytes(StandardCharsets.UTF_8);</span>
+                }
+
+                @Override
+                public String getBodyContentType() {
+<span class="nc" id="L125">                    return &quot;application/json; charset=utf-8&quot;;</span>
+                }
+            };
+
+<span class="nc" id="L129">            requestQueue.add(req);</span>
+
+<span class="nc" id="L131">        } catch (Exception e) {</span>
+<span class="nc" id="L132">            Toast.makeText(this, &quot;Error building request&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L133">            btnSubmit.setEnabled(true);</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
