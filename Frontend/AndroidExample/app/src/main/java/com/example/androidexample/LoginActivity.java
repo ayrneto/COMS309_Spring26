@@ -109,17 +109,17 @@ public class LoginActivity extends AppCompatActivity {
 
                         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
 
-                        // Get name from response (backend returns it), fallback to previously saved name
+                        // Read preserved values BEFORE clearing
                         String nameFromServer = response.optString("name", "");
                         String savedName      = prefs.getString("USER_NAME", "");
                         String finalName      = nameFromServer.isEmpty() ? savedName : nameFromServer;
 
+                        String picFromServer  = response.optString("profilePicture", "");
+                        String savedPic       = prefs.getString("USER_PIC_URL", "");
+                        String finalPic       = picFromServer.isEmpty() ? savedPic : picFromServer;
+
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.clear();
-
-                        String picFromServer = response.optString("profilePictureUrl", "");
-                        String savedPic      = prefs.getString("USER_PIC_URL", "");
-                        String finalPic      = picFromServer.isEmpty() ? savedPic : picFromServer;
 
                         editor.putString("USER_ID",      userId);
                         editor.putString("USER_EMAIL",   emailReturned);
@@ -127,6 +127,14 @@ public class LoginActivity extends AppCompatActivity {
                         editor.putString("USER_NAME",    finalName);
                         editor.putString("USER_PIC_URL", finalPic);
                         editor.apply();
+
+                        // For COUNSELLOR — fetch profile first, THEN navigate
+                        // so all SharedPrefs are populated before home screen loads
+                        if (!"COUNSELLOR".equals(returnedRole)) {
+                            navigateAfterLogin(returnedRole);
+                        } else {
+                            fetchCounsellorProfileThenNavigate(userId);
+                        }
 
                         // Start WebSocket service
                         Intent serviceIntent = new Intent(LoginActivity.this, WebSocketService.class);
@@ -140,11 +148,10 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         }
 
+                        if ("COUNSELLOR".equals(returnedRole)) return; // handled above
+
                         // Route based on role
                         switch (returnedRole) {
-                            case "COUNSELLOR":
-                                startActivity(new Intent(this, CounselorHomeActivity.class));
-                                break;
                             case "ADMIN":
                                 startActivity(new Intent(this, AdminDashboardActivity.class));
                                 break;
@@ -180,4 +187,50 @@ public class LoginActivity extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
     }
+    // Navigate to correct home screen based on role
+    private void navigateAfterLogin(String role) {
+        switch (role) {
+            case "COUNSELLOR":
+                startActivity(new android.content.Intent(this, CounselorHomeActivity.class));
+                break;
+            case "ADMIN":
+                startActivity(new android.content.Intent(this, AdminDashboardActivity.class));
+                break;
+            default:
+                startActivity(new android.content.Intent(this, HomeActivity.class));
+                break;
+        }
+        finish();
+    }
+
+    // Fetch counsellor profile THEN navigate — ensures all prefs are set before home loads
+    private void fetchCounsellorProfileThenNavigate(String userId) {
+        String url = ApiConstants.BASE_URL + "/api/counsellors/" + userId + "/profile";
+
+        com.android.volley.toolbox.JsonObjectRequest req =
+                new com.android.volley.toolbox.JsonObjectRequest(
+                        com.android.volley.Request.Method.GET, url, null,
+                        response -> {
+                            getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit()
+                                    .putString("COUNSELOR_DISPLAY_NAME",   response.optString("displayName",       ""))
+                                    .putString("COUNSELOR_SPECIALIZATION", response.optString("specialization",    ""))
+                                    .putString("COUNSELOR_BIO",            response.optString("bio",               ""))
+                                    .putString("COUNSELOR_PROFILE_PIC",    response.optString("profilePictureUrl", ""))
+                                    .putString("COUNSELOR_STATUS",         response.optString("status",            "AVAILABLE"))
+                                    .apply();
+                            // Navigate only after profile is saved
+                            startActivity(new android.content.Intent(this, CounselorHomeActivity.class));
+                            finish();
+                        },
+                        error -> {
+                            // Profile fetch failed — navigate anyway, fields will be empty
+                            startActivity(new android.content.Intent(this, CounselorHomeActivity.class));
+                            finish();
+                        }
+                );
+
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(req);
+    }
+
+
 }

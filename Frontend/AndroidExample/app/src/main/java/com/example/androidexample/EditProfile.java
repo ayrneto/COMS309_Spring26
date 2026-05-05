@@ -110,7 +110,7 @@ public class EditProfile extends AppCompatActivity {
             updateData.put("name",              name);
             updateData.put("email",             email);
             updateData.put("active",            true);
-            updateData.put("profilePictureUrl", profilePicUrl);
+            updateData.put("profilePicture", profilePicUrl);
             // Only send password fields if the user actually entered one
             if (!password.isEmpty()) {
                 updateData.put("password",        password);
