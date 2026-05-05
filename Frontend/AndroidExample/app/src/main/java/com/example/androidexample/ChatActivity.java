@@ -105,6 +105,7 @@ public class ChatActivity extends AppCompatActivity {
     private final SimpleDateFormat timeFmt =
             new SimpleDateFormat("h:mm a", Locale.getDefault());
 
+
     // ─────────────────────────────────────────────────────────────────────────
     @Override
     protected void onCreate(Bundle savedInstanceState) {
