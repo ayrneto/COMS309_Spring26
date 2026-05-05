@@ -24,6 +24,10 @@ public class SharedNotesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shared_notes);
 
+        // Back button
+        if (findViewById(R.id.btnBack) != null)
+            findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         fetchSharedNotes();
     }
 

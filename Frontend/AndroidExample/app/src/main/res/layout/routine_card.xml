@@ -1,61 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:layout_marginStart="10dp"
-    android:layout_marginEnd="10dp"
-    android:layout_marginTop="5dp"
-    android:layout_marginBottom="5dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:id="@+id/cardBackground"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center"
-        android:background="@color/white">
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/routineTitle"
-            android:layout_width="wrap_content"
+        <!-- Title + Label row -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Morning Routine"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textAlignment="center"
-            android:maxLines="2"
-            android:ellipsize="end"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
 
+            <TextView
+                android:id="@+id/routineTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Morning Routine"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/aa_text"
+                android:fontFamily="@font/alata"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/routineLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Personal"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:background="@drawable/dark_green_background" />
+
+        </LinearLayout>
+
+        <!-- Progress label -->
         <TextView
             android:id="@+id/routineProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Day 15/60"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
+            android:text="Day 15 / 60"
+            android:textSize="13sp"
+            android:textColor="@color/aa_primary"
+            android:fontFamily="@font/alata"
+            android:layout_marginBottom="8dp" />
 
+        <!-- Progress bar -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="180dp"
+            android:layout_width="match_parent"
             android:layout_height="8dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginBottom="0dp"
             android:max="60"
-            android:progress="15"/>
-
-        <TextView
-            android:id="@+id/routineLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Personal"
-            android:textSize="18sp"
-            android:layout_marginTop="12dp"
-            android:textColor="#666666"/>
+            android:progress="15"
+            android:progressTint="@color/aa_primary"
+            android:progressBackgroundTint="@color/aa_input_bg" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

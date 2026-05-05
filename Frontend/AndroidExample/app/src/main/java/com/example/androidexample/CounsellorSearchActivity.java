@@ -258,15 +258,16 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         c.specialization = obj.optString("specialization", "");
         c.bio            = obj.optString("bio",          "");
         c.status         = obj.optString("status",       "OFFLINE");
-        c.ratingAverage  = obj.optDouble("ratingAverage", 0.0);
-        c.ratingCount    = obj.optInt("ratingCount",     0);
+        c.ratingAverage      = obj.optDouble("ratingAverage", 0.0);
+        c.ratingCount        = obj.optInt("ratingCount",     0);
+        c.profilePictureUrl  = obj.optString("profilePictureUrl", "");
         return c;
     }
 
     // ── Model ─────────────────────────────────────────────────────────────────
     static class CounsellorItem {
         long   id, userId;
-        String displayName, specialization, bio, status;
+        String displayName, specialization, bio, status, profilePictureUrl;
         double ratingAverage;
         int    ratingCount;
     }
@@ -298,6 +299,8 @@ public class CounsellorSearchActivity extends AppCompatActivity {
 
             h.tvName.setText(c.displayName);
             h.tvSpecialization.setText(c.specialization);
+            AvatarHelper.load(h.itemView.getContext(), c.displayName,
+                    c.profilePictureUrl, h.tvAvatar, h.ivAvatar);
             h.tvBio.setText(c.bio);
             h.tvRating.setText(String.format(Locale.getDefault(),
                     "★ %.1f (%d reviews)", c.ratingAverage, c.ratingCount));
@@ -319,7 +322,8 @@ public class CounsellorSearchActivity extends AppCompatActivity {
         @Override public int getItemCount() { return list.size(); }
 
         static class VH extends RecyclerView.ViewHolder {
-            TextView tvName, tvSpecialization, tvBio, tvRating, tvStatus;
+            TextView tvName, tvSpecialization, tvBio, tvRating, tvStatus, tvAvatar;
+            android.widget.ImageView ivAvatar;
             com.google.android.material.button.MaterialButton btnBook;
 
             VH(View v) {
@@ -329,6 +333,8 @@ public class CounsellorSearchActivity extends AppCompatActivity {
                 tvBio            = v.findViewById(R.id.tvBio);
                 tvRating         = v.findViewById(R.id.tvRating);
                 tvStatus         = v.findViewById(R.id.tvStatus);
+                tvAvatar         = v.findViewById(R.id.tvAvatar);
+                ivAvatar         = v.findViewById(R.id.ivAvatar);
                 btnBook          = v.findViewById(R.id.btnBook);
             }
         }

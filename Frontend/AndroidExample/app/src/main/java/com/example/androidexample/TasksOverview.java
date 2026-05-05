@@ -26,6 +26,9 @@ public class TasksOverview extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks_overview);
 
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         // Get userId from SharedPreferences
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String userId = prefs.getString("USER_ID", "-1");
