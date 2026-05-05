@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppointmentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.Appointments</a> &gt; <span class="el_source">AppointmentController.java</span></div><h1>AppointmentController.java</h1><pre class="source lang-java linenums">package onetoone.Appointments;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import onetoone.Appointments.dto.AppointmentRequest;
+import onetoone.Appointments.dto.AppointmentResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/appointments&quot;)
+@Tag(name = &quot;Appointments&quot;, description = &quot;APIs for booking and managing appointments&quot;)
+<span class="fc" id="L16">public class AppointmentController {</span>
+
+    @Autowired
+    private AppointmentService appointmentService;
+
+    // POST /api/appointments — book an appointment
+    @Operation(summary = &quot;Book an appointment&quot;)
+    @PostMapping
+    public ResponseEntity&lt;AppointmentResponse&gt; book(@RequestBody AppointmentRequest req) {
+<span class="fc" id="L25">        AppointmentResponse response = appointmentService.bookAppointment(req);</span>
+<span class="fc" id="L26">        return ResponseEntity.status(201).body(response);</span>
+    }
+
+    // GET /api/appointments/counsellor/{id} — all appointments for a counsellor
+    @Operation(summary = &quot;Get all appointments for a counsellor&quot;)
+    @GetMapping(&quot;/counsellor/{id}&quot;)
+    public ResponseEntity&lt;List&lt;AppointmentResponse&gt;&gt; getByCounsellor(@PathVariable Long id) {
+<span class="fc" id="L33">        return ResponseEntity.ok(appointmentService.getAppointmentsByCounsellor(id));</span>
+    }
+
+    // GET /api/appointments/counsellor/{id}/accepted — confirmed only (for chat list)
+    @Operation(summary = &quot;Get confirmed appointments for a counsellor&quot;)
+    @GetMapping(&quot;/counsellor/{id}/accepted&quot;)
+    public ResponseEntity&lt;List&lt;AppointmentResponse&gt;&gt; getAcceptedByCounsellor(@PathVariable Long id) {
+<span class="fc" id="L40">        return ResponseEntity.ok(appointmentService.getAcceptedByCounsellor(id));</span>
+    }
+
+    // GET /api/appointments/user/{id}/accepted — confirmed only (for chat list)
+    @Operation(summary = &quot;Get confirmed appointments for a user&quot;)
+    @GetMapping(&quot;/user/{id}/accepted&quot;)
+    public ResponseEntity&lt;List&lt;AppointmentResponse&gt;&gt; getAcceptedByUser(@PathVariable Long id) {
+<span class="fc" id="L47">        return ResponseEntity.ok(appointmentService.getAcceptedByUser(id));</span>
+    }
+
+    // PATCH /api/appointments/{id}/accept
+    @Operation(summary = &quot;Accept an appointment&quot;)
+    @PatchMapping(&quot;/{id}/accept&quot;)
+    public ResponseEntity&lt;?&gt; accept(@PathVariable Long id) {
+        try {
+<span class="fc" id="L55">            return ResponseEntity.ok(appointmentService.updateStatus(id, &quot;CONFIRMED&quot;));</span>
+<span class="fc" id="L56">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L57">            return ResponseEntity.status(404).body(&quot;{\&quot;message\&quot;:\&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;);</span>
+        }
+    }
+
+    // PATCH /api/appointments/{id}/decline
+    @Operation(summary = &quot;Decline an appointment&quot;)
+    @PatchMapping(&quot;/{id}/decline&quot;)
+    public ResponseEntity&lt;?&gt; decline(@PathVariable Long id) {
+        try {
+<span class="fc" id="L66">            return ResponseEntity.ok(appointmentService.updateStatus(id, &quot;CANCELLED&quot;));</span>
+<span class="fc" id="L67">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L68">            return ResponseEntity.status(404).body(&quot;{\&quot;message\&quot;:\&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

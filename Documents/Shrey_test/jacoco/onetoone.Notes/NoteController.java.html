@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NoteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.Notes</a> &gt; <span class="el_source">NoteController.java</span></div><h1>NoteController.java</h1><pre class="source lang-java linenums">package onetoone.Notes;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import onetoone.Notes.dto.NoteCreateRequest;
+import onetoone.Notes.dto.NoteUpdateRequest;
+import onetoone.Notes.dto.NoteResponse;
+import java.util.List;
+import java.util.stream.Collectors;
+
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+@RestController
+@RequestMapping(&quot;/api&quot;)
+@Tag(name = &quot;Note Controller&quot;, description = &quot;APIs for managing user notes&quot;)
+<span class="fc" id="L22">public class NoteController {</span>
+
+    @Autowired
+    NoteService noteService;
+
+
+    @Operation(
+            summary = &quot;Create a note&quot;,
+            description = &quot;Creates a new note for a specific user&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Note created successfully&quot;),
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input&quot;)
+    })
+    // POST - create a note for a user
+    @PostMapping(&quot;/users/{userId}/notes&quot;)
+    public ResponseEntity&lt;NoteResponse&gt; createNote(
+            @PathVariable Long userId,
+            @RequestBody NoteCreateRequest req) {       // ← NoteCreateRequest not Note
+<span class="pc" id="L41">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L42">                .body(NoteResponse.from(noteService.createNote(userId, req)));</span>
+    }
+
+
+    @Operation(
+            summary = &quot;Get all notes for a user&quot;,
+            description = &quot;Retrieves all notes associated with a given user ID&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Notes retrieved successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;)
+    })
+    // GET - all notes for a user
+    @GetMapping(&quot;/users/{userId}/notes&quot;)
+    public ResponseEntity&lt;List&lt;NoteResponse&gt;&gt; getUserNotes(@PathVariable Long userId) {
+<span class="fc" id="L57">        List&lt;NoteResponse&gt; notes = noteService.getUserNotes(userId)</span>
+<span class="fc" id="L58">                .stream()</span>
+<span class="fc" id="L59">                .map(NoteResponse::from)</span>
+<span class="fc" id="L60">                .collect(Collectors.toList());</span>
+<span class="fc" id="L61">        return ResponseEntity.ok(notes);</span>
+    }
+
+
+
+    @Operation(
+            summary = &quot;Get a single note&quot;,
+            description = &quot;Retrieves a note by its ID&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Note retrieved successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Note not found&quot;)
+    })
+    // GET - single note
+    @GetMapping(&quot;/notes/{noteId}&quot;)
+    public ResponseEntity&lt;NoteResponse&gt; getNote(@PathVariable Long noteId) {
+<span class="nc" id="L77">        return ResponseEntity.ok(NoteResponse.from(noteService.getNote(noteId)));</span>
+    }
+
+
+    @Operation(
+            summary = &quot;Update a note&quot;,
+            description = &quot;Updates the title and content of an existing note&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Note updated successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Note not found&quot;)
+    })
+    // PUT - update a note
+    @PutMapping(&quot;/notes/{noteId}&quot;)
+    public ResponseEntity&lt;NoteResponse&gt; updateNote(
+            @PathVariable Long noteId,
+            @RequestBody NoteUpdateRequest req) {       // ← NoteUpdateRequest not Note
+<span class="nc" id="L94">        return ResponseEntity.ok(NoteResponse.from(noteService.updateNote(noteId, req)));</span>
+    }
+
+
+    @Operation(
+            summary = &quot;Delete a note&quot;,
+            description = &quot;Deletes a note by its ID&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;204&quot;, description = &quot;Note deleted successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Note not found&quot;)
+    })
+    // DELETE - delete a note
+    @DeleteMapping(&quot;/notes/{noteId}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteNote(@PathVariable Long noteId) {
+<span class="nc" id="L109">        noteService.deleteNote(noteId);</span>
+<span class="nc" id="L110">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
