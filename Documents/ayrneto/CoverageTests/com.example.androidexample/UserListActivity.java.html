@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserListActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">UserListActivity.java</span></div><h1>UserListActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L25">public class UserListActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recyclerUsers;
+    private TextView tvEmpty;
+<span class="nc" id="L29">    private final List&lt;UserRow&gt; userList = new ArrayList&lt;&gt;();</span>
+    private UserRowAdapter adapter;
+    private long myUserId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L35">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L36">        setContentView(R.layout.activity_user_list);</span>
+
+<span class="nc" id="L38">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L39">        myUserId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+
+<span class="nc" id="L41">        recyclerUsers = findViewById(R.id.recyclerUsers);</span>
+<span class="nc" id="L42">        tvEmpty       = findViewById(R.id.tvEmpty);</span>
+
+<span class="nc" id="L44">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+<span class="nc" id="L46">        adapter = new UserRowAdapter(userList, user -&gt; {</span>
+<span class="nc" id="L47">            Intent intent = new Intent(this, UserProfileActivity.class);</span>
+<span class="nc" id="L48">            intent.putExtra(&quot;TARGET_USER_ID&quot;,    user.userId);</span>
+<span class="nc" id="L49">            intent.putExtra(&quot;TARGET_USER_NAME&quot;,  user.name);</span>
+<span class="nc" id="L50">            intent.putExtra(&quot;TARGET_USER_EMAIL&quot;, user.email);</span>
+<span class="nc" id="L51">            intent.putExtra(&quot;APPOINTMENT_DATE&quot;,  user.appointmentDate);</span>
+<span class="nc" id="L52">            startActivity(intent);</span>
+<span class="nc" id="L53">        });</span>
+
+<span class="nc" id="L55">        recyclerUsers.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L56">        recyclerUsers.setAdapter(adapter);</span>
+
+<span class="nc" id="L58">        fetchUsers();</span>
+<span class="nc" id="L59">    }</span>
+
+    // ── Fetch accepted users via appointments endpoint ────────────────────────
+
+    private void fetchUsers() {
+<span class="nc" id="L64">        String url = ApiConstants.BASE_URL +</span>
+                &quot;/api/appointments/counsellor/&quot; + myUserId + &quot;/accepted&quot;;
+
+<span class="nc" id="L67">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET, url, null,
+                response -&gt; {
+<span class="nc" id="L70">                    userList.clear();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L73">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="nc" id="L74">                            UserRow row = new UserRow();</span>
+<span class="nc" id="L75">                            row.userId          = obj.optLong(&quot;userId&quot;, -1);</span>
+<span class="nc" id="L76">                            row.name            = obj.optString(&quot;userName&quot;, &quot;Unknown User&quot;);</span>
+<span class="nc" id="L77">                            row.email           = obj.optString(&quot;userEmail&quot;, &quot;&quot;);</span>
+<span class="nc" id="L78">                            row.appointmentDate = obj.optString(&quot;date&quot;, &quot;&quot;) + &quot; &quot; +</span>
+<span class="nc" id="L79">                                    obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                            if (row.userId != -1) userList.add(row);</span>
+<span class="nc" id="L81">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+                    }
+                    // Deduplicate by userId (multiple appointments → same user once)
+<span class="nc" id="L84">                    List&lt;UserRow&gt; deduped = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L85">                    List&lt;Long&gt; seen = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                    for (UserRow r : userList) {</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                        if (!seen.contains(r.userId)) {</span>
+<span class="nc" id="L88">                            seen.add(r.userId);</span>
+<span class="nc" id="L89">                            deduped.add(r);</span>
+                        }
+<span class="nc" id="L91">                    }</span>
+<span class="nc" id="L92">                    userList.clear();</span>
+<span class="nc" id="L93">                    userList.addAll(deduped);</span>
+
+<span class="nc" id="L95">                    adapter.notifyDataSetChanged();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                    tvEmpty.setVisibility(userList.isEmpty() ? View.VISIBLE : View.GONE);</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                    recyclerUsers.setVisibility(userList.isEmpty() ? View.GONE : View.VISIBLE);</span>
+<span class="nc" id="L98">                },</span>
+                error -&gt; {
+<span class="nc" id="L100">                    Toast.makeText(this, &quot;Failed to load users&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L101">                    tvEmpty.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L102">                }</span>
+        );
+
+<span class="nc" id="L105">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L106">    }</span>
+
+    // ── Model ─────────────────────────────────────────────────────────────────
+<span class="nc" id="L109">    static class UserRow {</span>
+        long   userId;
+        String name, email, appointmentDate;
+    }
+
+    // ── Adapter ───────────────────────────────────────────────────────────────
+    interface OnUserClick { void onClick(UserRow u); }
+
+    static class UserRowAdapter extends RecyclerView.Adapter&lt;UserRowAdapter.VH&gt; {
+        private final List&lt;UserRow&gt; list;
+        private final OnUserClick cb;
+
+<span class="nc" id="L121">        UserRowAdapter(List&lt;UserRow&gt; list, OnUserClick cb) {</span>
+<span class="nc" id="L122">            this.list = list;</span>
+<span class="nc" id="L123">            this.cb   = cb;</span>
+<span class="nc" id="L124">        }</span>
+
+        @Override
+        public VH onCreateViewHolder(ViewGroup parent, int viewType) {
+<span class="nc" id="L128">            View v = LayoutInflater.from(parent.getContext())</span>
+<span class="nc" id="L129">                    .inflate(R.layout.item_user_row, parent, false);</span>
+<span class="nc" id="L130">            return new VH(v);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(VH h, int pos) {
+<span class="nc" id="L135">            UserRow u = list.get(pos);</span>
+<span class="nc" id="L136">            h.tvName.setText(u.name);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            h.tvSubtitle.setText(u.email.isEmpty() ? &quot;Tap to view profile&quot; : u.email);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            String initial = u.name.isEmpty() ? &quot;?&quot; :</span>
+<span class="nc" id="L139">                    String.valueOf(u.name.charAt(0)).toUpperCase();</span>
+<span class="nc" id="L140">            h.tvAvatar.setText(initial);</span>
+<span class="nc" id="L141">            h.itemView.setOnClickListener(v -&gt; cb.onClick(u));</span>
+<span class="nc" id="L142">        }</span>
+
+<span class="nc" id="L144">        @Override public int getItemCount() { return list.size(); }</span>
+
+        static class VH extends RecyclerView.ViewHolder {
+            TextView tvAvatar, tvName, tvSubtitle;
+            VH(View v) {
+<span class="nc" id="L149">                super(v);</span>
+<span class="nc" id="L150">                tvAvatar   = v.findViewById(R.id.tvAvatar);</span>
+<span class="nc" id="L151">                tvName     = v.findViewById(R.id.tvPersonName);</span>
+<span class="nc" id="L152">                tvSubtitle = v.findViewById(R.id.tvPersonSubtitle);</span>
+<span class="nc" id="L153">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
