@@ -18,11 +18,15 @@ public class LoginResponse {
     @Schema
     private String name; // ← add
 
-    public LoginResponse(Long id, String email, String role, String name) {  // ← add role
+    @Schema
+    private String profilePicture;
+
+    public LoginResponse(Long id, String email, String role, String name, String profilePicture) {  // ← add role
         this.id = id;
         this.email = email;
         this.role = role;
         this.name = name;
+        this.profilePicture = profilePicture;
     }
 
     public Long getId() { return id; }
@@ -31,4 +35,8 @@ public class LoginResponse {
     public String getName(){
         return name;
     }// ← add
+
+    public String getProfilePicture(){
+        return profilePicture;
+    }
 }

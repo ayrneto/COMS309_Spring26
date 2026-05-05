@@ -213,6 +213,16 @@ public class CounsellorProfileController {
         counsellor.setBio(req.getBio());
         counsellor.setProfilePictureUrl(req.getProfilePictureUrl());
         counsellor.setStatus(req.getStatus());
+
+        User user = counsellor.getUser();
+
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            user.setEmail(req.getEmail());
+        }
+        if (req.getPassword() != null && !req.getPassword().isBlank()) {
+            user.setPassword(req.getPassword());
+        }
+
         counsellorProfileRepository.save(counsellor);
         return msg("success");
     }

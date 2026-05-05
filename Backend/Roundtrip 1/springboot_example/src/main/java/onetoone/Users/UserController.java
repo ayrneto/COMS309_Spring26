@@ -357,7 +357,7 @@ public class UserController {
         }
 
         return ResponseEntity.ok(
-                new LoginResponse(user.getId(), user.getEmail(), user.getRole().name(), user.getName())
+                new LoginResponse(user.getId(), user.getEmail(), user.getRole().name(), user.getName(), user.getProfilePicture())
         );
     }
 }

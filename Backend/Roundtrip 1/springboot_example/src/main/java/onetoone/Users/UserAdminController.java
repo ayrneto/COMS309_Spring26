@@ -1,5 +1,6 @@
 package onetoone.Users;
 
+import onetoone.Counsellors.CounsellorProfile;
 import onetoone.Users.dto.CreateCounsellorRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,7 @@ public class UserAdminController {
             existing.setName(incoming.getName());
             existing.setEmail(incoming.getEmail());
             existing.setActive(incoming.isActive());
+            existing.setProfilePicture(incoming.getProfilePicture());
 
             // only update password if provided (optional)
             if (incoming.getPassword() != null && !incoming.getPassword().isBlank()) {
