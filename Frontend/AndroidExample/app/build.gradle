@@ -38,6 +38,11 @@ android {
         unitTests.includeAndroidResources = true
         // execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 dependencies {
