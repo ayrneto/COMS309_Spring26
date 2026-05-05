@@ -17,7 +17,7 @@ import onetoone.Users.UserRepository;
  */ 
 
 @SpringBootApplication
-@EnableJpaRepositories
+@EnableJpaRepositories  //pipeline trigger
 @ComponentScan(basePackages = {"onetoone"})
 class Main {
 
