@@ -62,6 +62,13 @@
 
     </LinearLayout>
 
+    <Spinner
+        android:id="@+id/filterSpinner"
+        android:background="@drawable/light_green_background_flat"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginBottom="16dp" />
+
     <!-- Notes grid -->
     <ScrollView
         android:layout_width="match_parent"

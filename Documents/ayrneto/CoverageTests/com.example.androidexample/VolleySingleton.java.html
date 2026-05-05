@@ -16,13 +16,13 @@ public class VolleySingleton {
     private ImageLoader imageLoader;
     private static Context ctx;
 
-<span class="nc" id="L19">    private VolleySingleton(Context context) {</span>
-<span class="nc" id="L20">        ctx = context;</span>
-<span class="nc" id="L21">        requestQueue = getRequestQueue();</span>
+<span class="fc" id="L19">    private VolleySingleton(Context context) {</span>
+<span class="fc" id="L20">        ctx = context;</span>
+<span class="fc" id="L21">        requestQueue = getRequestQueue();</span>
 
-<span class="nc" id="L23">        imageLoader = new ImageLoader(requestQueue,</span>
-<span class="nc" id="L24">                new ImageLoader.ImageCache() {</span>
-<span class="nc" id="L25">                    private final LruCache&lt;String, Bitmap&gt;</span>
+<span class="fc" id="L23">        imageLoader = new ImageLoader(requestQueue,</span>
+<span class="fc" id="L24">                new ImageLoader.ImageCache() {</span>
+<span class="fc" id="L25">                    private final LruCache&lt;String, Bitmap&gt;</span>
                             cache = new LruCache&lt;String, Bitmap&gt;(20);
 
                     @Override
@@ -35,27 +35,27 @@ public class VolleySingleton {
 <span class="nc" id="L35">                        cache.put(url, bitmap);</span>
 <span class="nc" id="L36">                    }</span>
                 });
-<span class="nc" id="L38">    }</span>
+<span class="fc" id="L38">    }</span>
 
     public static synchronized VolleySingleton getInstance(Context context) {
-<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (instance == null) {</span>
-<span class="nc" id="L42">            instance = new VolleySingleton(context);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (instance == null) {</span>
+<span class="fc" id="L42">            instance = new VolleySingleton(context);</span>
         }
-<span class="nc" id="L44">        return instance;</span>
+<span class="fc" id="L44">        return instance;</span>
     }
 
     public RequestQueue getRequestQueue() {
-<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (requestQueue == null) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (requestQueue == null) {</span>
             // getApplicationContext() is key, it keeps you from leaking the
             // Activity or BroadcastReceiver if someone passes one in.
-<span class="nc" id="L51">            requestQueue = Volley.newRequestQueue(ctx.getApplicationContext());</span>
+<span class="fc" id="L51">            requestQueue = Volley.newRequestQueue(ctx.getApplicationContext());</span>
         }
-<span class="nc" id="L53">        return requestQueue;</span>
+<span class="fc" id="L53">        return requestQueue;</span>
     }
 
     public &lt;T&gt; void addToRequestQueue(Request&lt;T&gt; req) {
-<span class="nc" id="L57">        getRequestQueue().add(req);</span>
-<span class="nc" id="L58">    }</span>
+<span class="fc" id="L57">        getRequestQueue().add(req);</span>
+<span class="fc" id="L58">    }</span>
 
     public ImageLoader getImageLoader() {
 <span class="nc" id="L61">        return imageLoader;</span>

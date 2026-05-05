@@ -27,6 +27,7 @@ import java.util.Calendar;
 public class HomeActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private boolean isFirstLoad = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,12 +174,21 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         // Load the summaries
+        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        dashboardContainer.removeAllViews();
         loadDashboard();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Skip reload on first launch (onCreate already loaded it)
+        if (isFirstLoad) {
+            isFirstLoad = false;
+            return;
+        }
+
         // Re-read name from SharedPreferences in case user just updated it in EditProfile
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         String name      = prefs.getString("USER_NAME",  "");
@@ -199,6 +209,10 @@ public class HomeActivity extends AppCompatActivity {
         AvatarHelper.load(this, name, picUrl,
                 findViewById(R.id.tvDrawerAvatar),
                 findViewById(R.id.ivDrawerAvatar));
+
+        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
+        dashboardContainer.removeAllViews();
+        loadDashboard();
     }
 
     private void loadDashboard() {
@@ -233,7 +247,7 @@ public class HomeActivity extends AppCompatActivity {
                     }
 
                     try {
-                        // Find routine with highest progress (not completed)
+                        // Find routine with the highest progress (but uncompleted)
                         JSONObject topRoutine = null;
                         int maxProgress = -1;
 

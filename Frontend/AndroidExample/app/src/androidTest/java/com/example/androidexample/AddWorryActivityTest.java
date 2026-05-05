@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.anything;
 import android.content.Intent;
 
 @RunWith(AndroidJUnit4.class)
-public class AyrSystemTest {
+public class AddWorryActivityTest {
 
     @Rule
     public ActivityScenarioRule<AddWorryActivity> activityRule =
