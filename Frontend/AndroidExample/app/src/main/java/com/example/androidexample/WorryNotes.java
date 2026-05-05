@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,16 +22,26 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class WorryNotes extends AppCompatActivity {
+
+    private List<JSONObject> allNotes = new ArrayList<>();
+    private Spinner filterSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worry_notes);
+
+        filterSpinner = findViewById(R.id.filterSpinner);
+        setupFilter();
 
         //Getting global values:
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
@@ -53,7 +64,17 @@ public class WorryNotes extends AppCompatActivity {
 
         JsonArrayRequest request = new JsonArrayRequest(
                 Request.Method.GET, url, null,
-                response -> displayNotes(response),
+                response -> {
+                    allNotes.clear();
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            allNotes.add(response.getJSONObject(i));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    sortAndDisplay(filterSpinner.getSelectedItemPosition());
+                },
                 error -> Toast.makeText(this, "Failed to load", Toast.LENGTH_SHORT).show()
         );
 
@@ -61,25 +82,22 @@ public class WorryNotes extends AppCompatActivity {
         queue.add(request);
     }
 
-    private void displayNotes(JSONArray notes) {
+    private void displayNotes(List<JSONObject> notes) {
         GridLayout container = findViewById(R.id.worriesContainer);
-        container.removeAllViews(); // This resets all the worries in view
+        container.removeAllViews();
 
-        try {
-            for (int i = notes.length() - 1; i >= 0; i--) {
-                JSONObject note = notes.getJSONObject(i);
-
+        for (JSONObject note : notes) {
+            try {
                 long noteId = note.getLong("id");
                 String title = note.getString("title");
                 String content = note.getString("content");
                 String dueDate = note.getString("dueDate");
                 String label = note.getString("label");
 
-
                 addNoteCard(container, title, content, dueDate, label, noteId);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
     }
 
@@ -161,6 +179,63 @@ public class WorryNotes extends AppCompatActivity {
         String userIdString = prefs.getString("USER_ID", "-1");
         Long userId = Long.parseLong(userIdString);
         fetchUserNotes(userId);
+    }
+
+    private void setupFilter() {
+        String[] filterOptions = {"By Date (Newest)", "By Label (A-Z)", "By Due Date"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_dropdown_item, filterOptions);
+        filterSpinner.setAdapter(adapter);
+
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                sortAndDisplay(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void sortAndDisplay(int filterType) {
+        List<JSONObject> sorted = new ArrayList<>(allNotes);
+
+        switch (filterType) {
+            case 0: // By Date (Newest first)
+                Collections.reverse(sorted);
+                break;
+
+            case 1: // By Label (A-Z), then by date
+                Collections.sort(sorted, (a, b) -> {
+                    try {
+                        String labelA = a.getString("label");
+                        String labelB = b.getString("label");
+                        int labelCompare = labelA.compareTo(labelB);
+                        if (labelCompare != 0) {
+                            return labelCompare;
+                        }
+                        return b.getInt("id") - a.getInt("id");
+                    } catch (JSONException e) {
+                        return 0;
+                    }
+                });
+                break;
+
+            case 2: // By Due Date (earliest first)
+                Collections.sort(sorted, (a, b) -> {
+                    try {
+                        String dateA = a.optString("dueDate", "9999-12-31");
+                        String dateB = b.optString("dueDate", "9999-12-31");
+                        return dateA.compareTo(dateB);
+                    } catch (Exception e) {
+                        return 0;
+                    }
+                });
+                break;
+        }
+
+        displayNotes(sorted);
     }
 
 

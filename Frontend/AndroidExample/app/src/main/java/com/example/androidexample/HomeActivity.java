@@ -26,6 +26,7 @@ import java.util.Locale;
 public class HomeActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
+    private boolean isFirstLoad = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +162,12 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Skip reload on first launch (onCreate already loaded it)
+        if (isFirstLoad) {
+            isFirstLoad = false;
+            return;
+        }
 
         LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);
         dashboardContainer.removeAllViews();
