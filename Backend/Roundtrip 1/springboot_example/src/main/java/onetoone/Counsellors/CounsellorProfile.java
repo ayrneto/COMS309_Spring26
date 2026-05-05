@@ -48,6 +48,13 @@ public class CounsellorProfile {
     @Schema(description = "Availability status of the counsellor")
     private CounsellorStatus status;
 
+    @Transient
+    private String email;
+
+    @Transient
+    private String password;
+
+
     public CounsellorProfile() {}
 
     // ---------- getters/setters ----------
@@ -55,6 +62,16 @@ public class CounsellorProfile {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public String getEmail() { return user != null ? user.getEmail() : null; }
+    public void setEmail(String email) {
+        if (user != null) user.setEmail(email);
+    }
+
+    public String getPassword() { return user != null ? user.getPassword() : null; }
+    public void setPassword(String password) {
+        if (user != null) user.setPassword(password);
+    }
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
@@ -76,8 +93,4 @@ public class CounsellorProfile {
 
     public CounsellorStatus getStatus() { return status; }
     public void setStatus(CounsellorStatus status) { this.status = status; }
-
-    public void setPassword(String password) {
-        this.user.setPassword(password);
-    }
 }

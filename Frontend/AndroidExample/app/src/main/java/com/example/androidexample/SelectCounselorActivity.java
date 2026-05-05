@@ -88,6 +88,12 @@ public class SelectCounselorActivity extends AppCompatActivity {
         nameView.setText(counselorName);
         emailView.setText(counselorEmail);
 
+        // Set avatar initial
+        android.widget.TextView tvAvatar = cardView.findViewById(R.id.tvAvatar);
+        if (tvAvatar != null && !counselorName.isEmpty()) {
+            tvAvatar.setText(String.valueOf(counselorName.charAt(0)).toUpperCase());
+        }
+
         // Click to share note with this counselor
         cardView.setOnClickListener(v -> {
             shareNoteWithCounselor(counselorId, counselorName);

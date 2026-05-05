@@ -51,6 +51,10 @@ public class User {
     @Schema(description = "Indicates if the user account is active", example = "true")
     private boolean active = true;
 
+    @Schema
+    @Column
+    private String profilePicture;
+
     @JsonIgnore
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Schema(description = "Associated counsellor profile if the user is a counsellor")
@@ -74,6 +78,18 @@ public class User {
 
     public Long getId() {
         return id;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

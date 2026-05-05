@@ -24,9 +24,9 @@ public class PrescriptionController {
     @Autowired
     private UserRepository userRepo;
 
-    @PostMapping("/users/{userId}/{counsellorId}")
+    @PostMapping("/users/{userId}")
     public String createPrescription(
-            @PathVariable Long userId,@PathVariable Long counsellorId,
+            @PathVariable Long userId,@RequestParam Long counsellorId,
             @RequestBody Prescription prescription) {
 
         prescription.setUser(userRepo.findById(userId).orElse(null));

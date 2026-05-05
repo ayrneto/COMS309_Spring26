@@ -1,155 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/offwhite_background">
+    android:orientation="vertical"
+    android:background="@color/aa_input_bg"
+    tools:context=".CheckInActivity">
 
+    <!-- Top bar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:context=".CheckInActivity">
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="16dp"
+        android:background="@color/aa_primary"
+        android:elevation="4dp">
 
-        <!-- Header -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="@drawable/light_green_background_flat"
-            android:gravity="center"
-            android:text="Daily Check-In"
-            android:textSize="48sp" />
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:tint="#FFFFFF"
+            android:contentDescription="Back" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="@drawable/light_green_background_flat"
-            android:gravity="center"
-            android:text="How was your day today?"
-            android:textSize="20sp" />
-
-        <!-- Rating Section -->
-        <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="30dp"
-            android:text="Rate Your Day (1-5)"
-            android:textSize="20sp" />
+            android:layout_weight="1"
+            android:text="Daily Check-In"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/alata"
+            android:gravity="center"
+            android:layout_marginEnd="48dp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="20dp">
 
-            <View
-                android:id="@+id/circle1"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_rating_1"
-                android:clickable="true"
-                android:focusable="true" />
+            <!-- Header card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/aa_primary">
 
-            <View
-                android:id="@+id/circle2"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_rating_2"
-                android:clickable="true"
-                android:focusable="true" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-            <View
-                android:id="@+id/circle3"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_rating_3"
-                android:clickable="true"
-                android:focusable="true" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="How was your day?"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="@font/alata" />
 
-            <View
-                android:id="@+id/circle4"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_rating_4"
-                android:clickable="true"
-                android:focusable="true" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Take a moment to reflect"
+                        android:textSize="13sp"
+                        android:textColor="#C2E8DA"
+                        android:layout_marginTop="4dp" />
 
-            <View
-                android:id="@+id/circle5"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_rating_5"
-                android:clickable="true"
-                android:focusable="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Rating section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rate Your Day"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/aa_text"
+                android:fontFamily="@font/alata"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="24dp">
+
+                <View android:id="@+id/circle1" android:layout_width="56dp" android:layout_height="56dp" android:layout_margin="6dp" android:background="@drawable/circle_rating_1" android:clickable="true" android:focusable="true" />
+                <View android:id="@+id/circle2" android:layout_width="56dp" android:layout_height="56dp" android:layout_margin="6dp" android:background="@drawable/circle_rating_2" android:clickable="true" android:focusable="true" />
+                <View android:id="@+id/circle3" android:layout_width="56dp" android:layout_height="56dp" android:layout_margin="6dp" android:background="@drawable/circle_rating_3" android:clickable="true" android:focusable="true" />
+                <View android:id="@+id/circle4" android:layout_width="56dp" android:layout_height="56dp" android:layout_margin="6dp" android:background="@drawable/circle_rating_4" android:clickable="true" android:focusable="true" />
+                <View android:id="@+id/circle5" android:layout_width="56dp" android:layout_height="56dp" android:layout_margin="6dp" android:background="@drawable/circle_rating_5" android:clickable="true" android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Reminder Time -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Daily Reminder Time"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/aa_text"
+                android:fontFamily="@font/alata"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#FFFFFF"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintTextColor="@color/aa_primary">
+
+                <EditText
+                    android:id="@+id/inputReminderTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="8:00 PM"
+                    android:padding="16dp"
+                    android:textColor="@color/aa_text"
+                    android:background="@android:color/transparent" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Description -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Describe your day"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/aa_text"
+                android:fontFamily="@font/alata"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#FFFFFF"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintTextColor="@color/aa_primary">
+
+                <EditText
+                    android:id="@+id/inputDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:hint="Write about your day..."
+                    android:inputType="textMultiLine"
+                    android:minLines="4"
+                    android:padding="16dp"
+                    android:textColor="@color/aa_text"
+                    android:background="@android:color/transparent" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Buttons -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSummary"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="View Summary"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:textColor="@color/aa_primary"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="26dp"
+                app:backgroundTint="#FFFFFF"
+                app:strokeColor="@color/aa_primary"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Save Check-In"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="8dp"
+                app:cornerRadius="26dp"
+                app:backgroundTint="@color/aa_primary" />
 
         </LinearLayout>
+    </ScrollView>
 
-        <!-- Reminder Time -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="30dp"
-            android:text="Daily Reminder Time"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/inputReminderTime"
-            android:layout_width="380dp"
-            android:layout_height="52dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:clickable="true"
-            android:focusable="false"
-            android:hint="8:00 PM" />
-
-        <!-- Description -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="30dp"
-            android:text="How was your day?"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/inputDescription"
-            android:layout_width="380dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:gravity="top"
-            android:hint="Describe your day..."
-            android:inputType="textMultiLine"
-            android:minLines="4" />
-
-        <!-- Buttons -->
-        <Button
-            android:id="@+id/btnSummary"
-            android:layout_width="360dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="30dp"
-            android:text="Summary"
-            android:textSize="24sp" />
-
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="360dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="30dp"
-            android:text="Save"
-            android:textSize="32sp" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

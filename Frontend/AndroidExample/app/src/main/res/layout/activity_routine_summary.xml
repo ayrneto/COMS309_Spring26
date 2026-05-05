@@ -1,106 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_green_background"
-    tools:context=".RoutineSummaryActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/aa_input_bg"
+    tools:context=".RoutineSummaryActivity">
 
+    <!-- Top bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:background="@color/aa_primary"
+        android:elevation="4dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:tint="#FFFFFF"
+            android:contentDescription="Back" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="My Routines"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/alata"
+            android:gravity="center" />
+
+        <!-- Add Routine button -->
+        <FrameLayout
+            android:id="@+id/btnAddRoutine"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/light_green_background">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="+"
+                android:textSize="24sp"
+                android:textColor="#FFFFFF"
+                android:includeFontPadding="false" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- Filter bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="40dp"
-        android:layout_marginBottom="20dp">
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
 
         <androidx.cardview.widget.CardView
-            android:layout_width="300dp"
-            android:layout_height="80dp"
-            android:elevation="0dp"
-            app:cardCornerRadius="20dp">
-            <TextView
-                android:layout_gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="My Routines"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/aa_input_bg">
+            <Spinner
+                android:id="@+id/filterSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 
-    <!-- Filter Spinner -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_gravity="start"
-            android:layout_marginBottom="20dp"
-            android:layout_marginStart="10dp">
-                <Spinner
-                    android:id="@+id/filterSpinner"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/chat_input_bg"
-                    android:padding="10dp"
-                    android:layout_marginEnd="20dp" />
-
-            <FrameLayout
-                android:id="@+id/btnAddRoutine"
-                android:layout_width="90dp"
-                android:layout_height="44dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="20dp">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/chat_input_bg" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:includeFontPadding="false"
-                    android:text="Add"
-                    android:textColor="#000000"
-                    android:textSize="20dp" />
-
-            </FrameLayout>
-        </LinearLayout>
-
-
-    </LinearLayout>
-
-
+    <!-- Routine list -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:clipToPadding="false">
 
         <GridLayout
             android:id="@+id/routinesContainer"
             android:columnCount="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:alignmentMode="alignMargins">
+            android:alignmentMode="alignMargins" />
 
-            <!-- Routine cards will be added here dynamically -->
-
-        </GridLayout>
     </ScrollView>
 
 </LinearLayout>

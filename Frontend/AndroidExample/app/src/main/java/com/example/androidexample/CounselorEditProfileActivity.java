@@ -32,6 +32,8 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
 
         // ── Views ─────────────────────────────────────────────────────────────
         EditText etDisplayName       = findViewById(R.id.etDisplayName);
+        EditText etEmail             = findViewById(R.id.etEmail);
+        EditText etPassword          = findViewById(R.id.etPassword);
         EditText etSpecialization    = findViewById(R.id.etSpecialization);
         EditText etBio               = findViewById(R.id.etBio);
         EditText etProfilePictureUrl = findViewById(R.id.etProfilePictureUrl);
@@ -47,26 +49,32 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
                 this, android.R.layout.simple_spinner_dropdown_item, STATUSES);
         spStatus.setAdapter(adapter);
 
-        // ── Pre-fill from Intent extras ───────────────────────────────────────
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            userId = String.valueOf(extras.getLong("userId", -1));
+        // ── Pre-fill from SharedPreferences (always up to date) ──────────────
+        SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
+        userId = prefs.getString("USER_ID", "");
 
-            etDisplayName.setText(extras.getString("displayName",     ""));
-            etSpecialization.setText(extras.getString("specialization", ""));
-            etBio.setText(extras.getString("bio",                     ""));
-            etProfilePictureUrl.setText(extras.getString("profilePictureUrl", ""));
+        etDisplayName.setText(prefs.getString("COUNSELOR_DISPLAY_NAME",   ""));
+        etEmail.setText(prefs.getString("USER_EMAIL",                      ""));
+        etSpecialization.setText(prefs.getString("COUNSELOR_SPECIALIZATION",""));
+        etBio.setText(prefs.getString("COUNSELOR_BIO",                     ""));
+        etProfilePictureUrl.setText(prefs.getString("COUNSELOR_PROFILE_PIC",""));
 
-            String status = extras.getString("status", "AVAILABLE");
-            for (int i = 0; i < STATUSES.length; i++) {
-                if (STATUSES[i].equalsIgnoreCase(status)) {
-                    spStatus.setSelection(i);
-                    break;
-                }
+        String savedStatus = prefs.getString("COUNSELOR_STATUS", "AVAILABLE");
+        for (int i = 0; i < STATUSES.length; i++) {
+            if (STATUSES[i].equalsIgnoreCase(savedStatus)) {
+                spStatus.setSelection(i);
+                break;
             }
         }
 
-        if (userId.equals("-1") || userId.isEmpty()) {
+        // Also accept overrides from intent extras if provided
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String intentUserId = String.valueOf(extras.getLong("userId", -1));
+            if (!intentUserId.equals("-1")) userId = intentUserId;
+        }
+
+        if (userId.isEmpty() || userId.equals("-1")) {
             Toast.makeText(this, "User ID missing", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -75,6 +83,8 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
         // ── Save ──────────────────────────────────────────────────────────────
         btnSave.setOnClickListener(v -> {
             String displayName    = etDisplayName.getText().toString().trim();
+            String email          = etEmail.getText().toString().trim();
+            String password       = etPassword.getText().toString().trim();
             String specialization = etSpecialization.getText().toString().trim();
             String bio            = etBio.getText().toString().trim();
             String picUrl         = etProfilePictureUrl.getText().toString().trim();
@@ -85,7 +95,7 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
                 return;
             }
 
-            saveProfile(displayName, specialization, bio, picUrl, status);
+            saveProfile(displayName, email, password, specialization, bio, picUrl, status);
         });
 
         // ── Delete account ────────────────────────────────────────────────────
@@ -99,37 +109,45 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
         );
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Save counselor profile
-    // ─────────────────────────────────────────────────────────────────────────
-    private void saveProfile(String displayName, String specialization,
-                             String bio, String profilePictureUrl, String status) {
-        String url = ApiConstants.counselorProfile(Long.parseLong(userId));
+    // ── Save counselor profile ────────────────────────────────────────────────
+    private void saveProfile(String displayName, String email, String password,
+                             String specialization, String bio,
+                             String profilePictureUrl, String status) {
+
+        // Endpoint: PUT /api/counsellors/{userId}/update
+        String url = ApiConstants.BASE_URL + "/api/counsellors/" + userId + "/update";
 
         JSONObject body = new JSONObject();
         try {
-            body.put("displayName",      displayName);
-            body.put("specialization",   specialization);
-            body.put("bio",              bio);
+            body.put("displayName",       displayName);
+            body.put("specialization",    specialization);
+            body.put("bio",               bio);
             body.put("profilePictureUrl", profilePictureUrl);
-            body.put("status",           status);
+            body.put("status",            status);
+            // Only include email/password if provided
+            if (!email.isEmpty())    body.put("email",    email);
+            if (!password.isEmpty()) body.put("password", password);
         } catch (JSONException e) {
             Toast.makeText(this, "JSON error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
         }
 
+        final String bodyStr = body.toString();
+
         StringRequest request = new StringRequest(
                 Request.Method.PUT,
                 url,
                 response -> {
-                    // Cache updated values
-                    getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit()
-                            .putString("COUNSELOR_DISPLAY_NAME",   displayName)
-                            .putString("COUNSELOR_SPECIALIZATION", specialization)
-                            .putString("COUNSELOR_BIO",            bio)
-                            .putString("COUNSELOR_PROFILE_PIC",    profilePictureUrl)
-                            .putString("COUNSELOR_STATUS",         status)
-                            .apply();
+                    // Cache all updated values in SharedPreferences
+                    SharedPreferences.Editor editor =
+                            getSharedPreferences("AA_PREFS", MODE_PRIVATE).edit();
+                    editor.putString("COUNSELOR_DISPLAY_NAME",   displayName);
+                    editor.putString("COUNSELOR_SPECIALIZATION", specialization);
+                    editor.putString("COUNSELOR_BIO",            bio);
+                    editor.putString("COUNSELOR_PROFILE_PIC",    profilePictureUrl);
+                    editor.putString("COUNSELOR_STATUS",         status);
+                    if (!email.isEmpty()) editor.putString("USER_EMAIL", email);
+                    editor.apply();
 
                     Toast.makeText(this, "Profile saved!", Toast.LENGTH_SHORT).show();
                     finish();
@@ -142,7 +160,7 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
                 }
         ) {
             @Override
-            public byte[] getBody() { return body.toString().getBytes(); }
+            public byte[] getBody() { return bodyStr.getBytes(); }
 
             @Override
             public String getBodyContentType() {
@@ -154,9 +172,7 @@ public class CounselorEditProfileActivity extends AppCompatActivity {
         queue.add(request);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Delete user
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Delete user ───────────────────────────────────────────────────────────
     private void deleteUser() {
         String url = ApiConstants.DELETE + userId;
 

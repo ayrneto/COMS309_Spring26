@@ -13,15 +13,30 @@ public class LoginResponse {
     private String email;
 
     @Schema(description = "User role", example = "USER")
-    private String role;  // ← add
+    private String role;
 
-    public LoginResponse(Long id, String email, String role) {  // ← add role
+    @Schema
+    private String name; // ← add
+
+    @Schema
+    private String profilePicture;
+
+    public LoginResponse(Long id, String email, String role, String name, String profilePicture) {  // ← add role
         this.id = id;
         this.email = email;
         this.role = role;
+        this.name = name;
+        this.profilePicture = profilePicture;
     }
 
     public Long getId() { return id; }
     public String getEmail() { return email; }
-    public String getRole() { return role; }  // ← add
+    public String getRole() { return role; }
+    public String getName(){
+        return name;
+    }// ← add
+
+    public String getProfilePicture(){
+        return profilePicture;
+    }
 }

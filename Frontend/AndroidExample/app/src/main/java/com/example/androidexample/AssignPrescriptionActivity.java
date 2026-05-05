@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 public class AssignPrescriptionActivity extends AppCompatActivity {
 
-    private EditText etMedName, etDosage, etInstructions, etStartDate, etEndDate, etDurationDays;
+    private EditText etMedName, etDosage, etInstructions, etStartDate, etDurationDays;
     private Button   btnSubmit;
     private RequestQueue requestQueue;
     private long targetUserId;
@@ -34,14 +34,14 @@ public class AssignPrescriptionActivity extends AppCompatActivity {
         etDosage       = findViewById(R.id.etDosage);
         etInstructions = findViewById(R.id.etInstructions);
         etStartDate    = findViewById(R.id.etStartDate);
-        etEndDate      = findViewById(R.id.etEndDate);
         etDurationDays = findViewById(R.id.etDurationDays);
         btnSubmit      = findViewById(R.id.btnSubmit);
 
+        // Logged-in counsellor's user ID
         SharedPreferences prefs = getSharedPreferences("AA_PREFS", MODE_PRIVATE);
         counsellorId = prefs.getString("USER_ID", "1");
 
-        // Target user ID passed via Intent (from counsellor tapping a user)
+        // Target patient's user ID passed from UserProfileActivity
         targetUserId = getIntent().getLongExtra("TARGET_USER_ID", -1);
         String targetName = getIntent().getStringExtra("TARGET_USER_NAME");
 
@@ -57,49 +57,43 @@ public class AssignPrescriptionActivity extends AppCompatActivity {
         }
 
         requestQueue = Volley.newRequestQueue(this);
-
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         btnSubmit.setOnClickListener(v -> submitPrescription());
     }
-
-    // ── Submit prescription to backend ────────────────────────────────────────
 
     private void submitPrescription() {
         String medName      = etMedName.getText().toString().trim();
         String dosage       = etDosage.getText().toString().trim();
         String instructions = etInstructions.getText().toString().trim();
         String startDate    = etStartDate.getText().toString().trim();
-        String endDate      = etEndDate.getText().toString().trim();
         String daysStr      = etDurationDays.getText().toString().trim();
 
-        if (medName.isEmpty() || dosage.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
-            Toast.makeText(this, "Please fill in medication name, dosage, start and end dates", Toast.LENGTH_SHORT).show();
+        if (medName.isEmpty() || dosage.isEmpty() || startDate.isEmpty() || daysStr.isEmpty()) {
+            Toast.makeText(this, "Please fill in medication name, dosage, start date and duration", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int durationDays = 0;
-        if (!daysStr.isEmpty()) {
-            try {
-                durationDays = Integer.parseInt(daysStr);
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "Duration must be a number", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        int durationDays;
+        try {
+            durationDays = Integer.parseInt(daysStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Duration must be a number", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         try {
             JSONObject body = new JSONObject();
             body.put("medicationName", medName);
-            body.put("dosage", dosage);
-            body.put("instructions", instructions);
-            body.put("startDate", startDate);
-            body.put("endDate", endDate);
-            body.put("durationDays", durationDays);
-            body.put("active", true);
+            body.put("dosage",         dosage);
+            body.put("instructions",   instructions);
+            body.put("startDate",      startDate);
+            body.put("durationDays",   durationDays);
 
-            String url = ApiConstants.userPrescriptions(targetUserId);
+            // URL: /prescriptions/users/{patientUserId}?counsellorId={counsellorUserId}
+            String url = ApiConstants.userPrescriptions(targetUserId)
+                    + "?counsellorId=" + counsellorId;
+
             final String requestBody = body.toString();
-            final int finalDuration  = durationDays;
 
             btnSubmit.setEnabled(false);
 
