@@ -105,7 +105,6 @@ public class ChatActivity extends AppCompatActivity {
     private final SimpleDateFormat timeFmt =
             new SimpleDateFormat("h:mm a", Locale.getDefault());
 
-
     // ─────────────────────────────────────────────────────────────────────────
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,7 +203,14 @@ public class ChatActivity extends AppCompatActivity {
                 return;
             }
 
-            byte[] fileBytes = inputStream.readAllBytes();
+            // Read all bytes (compatible with API 24+)
+            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+            byte[] chunk = new byte[4096];
+            int read;
+            while ((read = inputStream.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            byte[] fileBytes = buffer.toByteArray();
             inputStream.close();
 
             String uploadUrl      = ApiConstants.BASE_URL + "/api/chat/upload";
