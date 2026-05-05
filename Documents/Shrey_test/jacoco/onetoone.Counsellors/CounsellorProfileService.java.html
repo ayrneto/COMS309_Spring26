@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounsellorProfileService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.Counsellors</a> &gt; <span class="el_source">CounsellorProfileService.java</span></div><h1>CounsellorProfileService.java</h1><pre class="source lang-java linenums">package onetoone.Counsellors;
+
+import onetoone.Counsellors.dto.CounsellorProfileRequest;
+import onetoone.Counsellors.dto.CounsellorProfileResponse;
+import onetoone.Users.Role;
+import onetoone.Users.User;
+import onetoone.Users.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class CounsellorProfileService {
+
+    private final CounsellorProfileRepository profileRepo;
+    @Autowired
+    private final UserRepository userRepository;
+
+<span class="fc" id="L21">    public CounsellorProfileService(CounsellorProfileRepository profileRepo, UserRepository userRepo) {</span>
+<span class="fc" id="L22">        this.profileRepo = profileRepo;</span>
+<span class="fc" id="L23">        this.userRepository = userRepo;</span>
+<span class="fc" id="L24">    }</span>
+
+    public CounsellorProfileResponse upsertProfile(long counsellorUserId, CounsellorProfileRequest req) {
+<span class="nc" id="L27">        User user = userRepository.findById(counsellorUserId)</span>
+<span class="nc" id="L28">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found with id: &quot; +counsellorUserId));</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">        if (req == null) throw new IllegalArgumentException(&quot;Counsellor user not found&quot;);</span>
+
+
+<span class="nc" id="L32">        CounsellorProfile profile = profileRepo.findByUser_Id(counsellorUserId)</span>
+<span class="nc" id="L33">                .orElseGet(CounsellorProfile::new);</span>
+
+<span class="nc" id="L35">        profile.setUser(req.getUser);</span>
+<span class="nc" id="L36">        profile.setDisplayName(nonEmptyOrThrow(req.displayName, &quot;displayName&quot;));</span>
+<span class="nc" id="L37">        profile.setSpecialization(nonEmptyOrThrow(req.specialization, &quot;specialization&quot;));</span>
+<span class="nc" id="L38">        profile.setBio(req.bio);</span>
+<span class="nc" id="L39">        profile.setProfilePictureUrl(req.profilePictureUrl);</span>
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (req.status != null) profile.setStatus(req.status);</span>
+
+        // defaults if first time
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (profile.getRatingAverage() == null) profile.setRatingAverage(0.0);</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (profile.getRatingCount() == null) profile.setRatingCount(0);</span>
+
+<span class="nc" id="L47">        CounsellorProfile saved = profileRepo.save(profile);</span>
+<span class="nc" id="L48">        return toResponse(saved);</span>
+    }
+
+    public CounsellorProfileResponse getProfile(Long userId) {
+<span class="nc" id="L52">        CounsellorProfile profile = profileRepo.findByUser_Id(userId)</span>
+<span class="nc" id="L53">                .orElseThrow(() -&gt; new RuntimeException(&quot;Profile not found&quot;));</span>
+<span class="nc" id="L54">        return toResponse(profile);</span>
+    }
+
+    public List&lt;CounsellorProfileResponse&gt; listAllCounsellors() {
+<span class="fc" id="L58">        return profileRepo.findAll().stream().map(this::toResponse).toList();</span>
+    }
+
+    private CounsellorProfileResponse toResponse(CounsellorProfile p) {
+
+<span class="fc" id="L63">        CounsellorProfileResponse r = new CounsellorProfileResponse();</span>
+
+<span class="fc" id="L65">        r.id = p.getId();</span>
+<span class="fc" id="L66">        r.userId = Math.toIntExact(p.getUser().getId());</span>
+<span class="fc" id="L67">        r.displayName = p.getDisplayName();</span>
+<span class="fc" id="L68">        r.specialization = p.getSpecialization();</span>
+<span class="fc" id="L69">        r.bio = p.getBio();</span>
+<span class="fc" id="L70">        r.profilePictureUrl = p.getProfilePictureUrl();</span>
+<span class="fc" id="L71">        r.ratingAverage = p.getRatingAverage();</span>
+<span class="fc" id="L72">        r.ratingCount = p.getRatingCount();</span>
+<span class="fc" id="L73">        r.status = p.getStatus();</span>
+
+<span class="fc" id="L75">        return r;</span>
+    }
+
+    private String nonEmptyOrThrow(String v, String field) {
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if (v == null || v.trim().isEmpty()) throw new IllegalArgumentException(field + &quot; is required&quot;);</span>
+<span class="nc" id="L80">        return v.trim();</span>
+    }
+
+    public CounsellorProfileResponse getProfileByUserId(Long userId) {
+
+<span class="fc" id="L85">        CounsellorProfile profile = profileRepo.findByUser_Id(userId)</span>
+<span class="fc" id="L86">                .orElseThrow(() -&gt; new RuntimeException(&quot;Counsellor profile not found&quot;));</span>
+
+<span class="fc" id="L88">        return toResponse(profile);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

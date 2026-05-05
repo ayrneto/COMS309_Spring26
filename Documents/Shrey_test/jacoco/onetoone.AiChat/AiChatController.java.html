@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AiChatController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.AiChat</a> &gt; <span class="el_source">AiChatController.java</span></div><h1>AiChatController.java</h1><pre class="source lang-java linenums">package onetoone.AiChat;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import onetoone.AiChat.dto.AiChatRequest;
+import onetoone.AiChat.dto.AiChatResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST endpoints for the Calmify AI Chat feature.
+ *
+ * Base path: /api/ai-chat
+ *
+ * Endpoints:
+ *   POST   /api/ai-chat/{userId}          — send a message, get AI reply
+ *   GET    /api/ai-chat/{userId}/history  — fetch full chat history for user
+ *   DELETE /api/ai-chat/{userId}/history  — clear all AI chat history for user
+ */
+@RestController
+@RequestMapping(&quot;/api/ai-chat&quot;)
+@Tag(name = &quot;AI Chat&quot;, description = &quot;Mental health AI assistant powered by Gemini&quot;)
+<span class="fc" id="L26">public class AiChatController {</span>
+
+    @Autowired
+    private AiChatService aiChatService;
+
+    // ── POST /api/ai-chat/{userId} ────────────────────────────────────────────
+
+    /**
+     * Send a message to the AI assistant.
+     *
+     * Request body:  { &quot;message&quot;: &quot;I feel really stressed today&quot; }
+     * Response body: { &quot;id&quot;: 1, &quot;userMessage&quot;: &quot;...&quot;, &quot;aiReply&quot;: &quot;...&quot;, &quot;sentAt&quot;: &quot;...&quot; }
+     *
+     * Example curl:
+     *   curl -X POST http://localhost:8080/api/ai-chat/1 \
+     *        -H &quot;Content-Type: application/json&quot; \
+     *        -d '{&quot;message&quot;: &quot;I feel really stressed today&quot;}'
+     */
+    @PostMapping(&quot;/{userId}&quot;)
+    @Operation(
+            summary = &quot;Send a message to the AI assistant&quot;,
+            description = &quot;Sends the user's message to Gemini and returns the AI reply. &quot; +
+                    &quot;Crisis keywords are intercepted and return a safe fixed response without calling Gemini.&quot;
+    )
+    public ResponseEntity&lt;AiChatResponse&gt; chat(
+            @PathVariable Long userId,
+            @RequestBody AiChatRequest request) {
+
+<span class="fc" id="L54">        AiChatResponse response = aiChatService.chat(userId, request.getMessage());</span>
+<span class="fc" id="L55">        return ResponseEntity.ok(response);</span>
+    }
+
+    // ── GET /api/ai-chat/{userId}/history ─────────────────────────────────────
+
+    /**
+     * Retrieve the full AI chat history for a user (oldest first).
+     *
+     * Example curl:
+     *   curl http://localhost:8080/api/ai-chat/1/history
+     */
+    @GetMapping(&quot;/{userId}/history&quot;)
+    @Operation(
+            summary = &quot;Get AI chat history&quot;,
+            description = &quot;Returns all AI chat exchanges for the given user, ordered oldest-first.&quot;
+    )
+    public ResponseEntity&lt;List&lt;AiChatResponse&gt;&gt; getHistory(@PathVariable Long userId) {
+<span class="fc" id="L72">        return ResponseEntity.ok(aiChatService.getHistory(userId));</span>
+    }
+
+    // ── DELETE /api/ai-chat/{userId}/history ──────────────────────────────────
+
+    /**
+     * Clear all AI chat history for a user.
+     *
+     * Example curl:
+     *   curl -X DELETE http://localhost:8080/api/ai-chat/1/history
+     */
+    @DeleteMapping(&quot;/{userId}/history&quot;)
+    @Operation(
+            summary = &quot;Clear AI chat history&quot;,
+            description = &quot;Deletes all stored AI chat messages for the given user.&quot;
+    )
+    public ResponseEntity&lt;String&gt; clearHistory(@PathVariable Long userId) {
+<span class="fc" id="L89">        aiChatService.clearHistory(userId);</span>
+<span class="fc" id="L90">        return ResponseEntity.ok(&quot;AI chat history cleared for user &quot; + userId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatMessageResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.realtime_chat.dto</a> &gt; <span class="el_source">ChatMessageResponse.java</span></div><h1>ChatMessageResponse.java</h1><pre class="source lang-java linenums">package onetoone.realtime_chat.dto;
+
+import onetoone.realtime_chat.ChatMessage;
+import java.time.LocalDateTime;
+
+public class ChatMessageResponse {
+    private Long id;
+    private Long senderId;
+    private Long receiverId;
+    private String content;
+    private LocalDateTime sentAt;
+
+    // File attachment fields — null for regular text messages
+    private String fileUrl;
+    private String fileName;
+    private String fileType;
+
+<span class="fc" id="L18">    public ChatMessageResponse(ChatMessage msg) {</span>
+<span class="fc" id="L19">        this.id         = msg.getId();</span>
+<span class="fc" id="L20">        this.senderId   = msg.getSender().getId();</span>
+<span class="fc" id="L21">        this.receiverId = msg.getReceiver().getId();</span>
+<span class="fc" id="L22">        this.content    = msg.getContent();</span>
+<span class="fc" id="L23">        this.sentAt     = msg.getSentAt();</span>
+<span class="fc" id="L24">        this.fileUrl    = msg.getFileUrl();</span>
+<span class="fc" id="L25">        this.fileName   = msg.getFileName();</span>
+<span class="fc" id="L26">        this.fileType   = msg.getFileType();</span>
+<span class="fc" id="L27">    }</span>
+
+<span class="fc" id="L29">    public Long getId()           { return id; }</span>
+<span class="fc" id="L30">    public Long getSenderId()     { return senderId; }</span>
+<span class="fc" id="L31">    public Long getReceiverId()   { return receiverId; }</span>
+<span class="fc" id="L32">    public String getContent()    { return content; }</span>
+<span class="fc" id="L33">    public LocalDateTime getSentAt() { return sentAt; }</span>
+<span class="fc" id="L34">    public String getFileUrl()    { return fileUrl; }</span>
+<span class="fc" id="L35">    public String getFileName()   { return fileName; }</span>
+<span class="fc" id="L36">    public String getFileType()   { return fileType; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">one-to-one</a> &gt; <a href="index.source.html" class="el_package">onetoone.Notification</a> &gt; <span class="el_source">NotificationService.java</span></div><h1>NotificationService.java</h1><pre class="source lang-java linenums">package onetoone.Notification;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+@RequestMapping(&quot;/notification&quot;)
+@Service
+public class NotificationService {
+
+    private final NotificationRepository repo;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public NotificationService(NotificationRepository repo,
+<span class="fc" id="L20">                               SimpMessagingTemplate messagingTemplate) {</span>
+<span class="fc" id="L21">        this.repo = repo;</span>
+<span class="fc" id="L22">        this.messagingTemplate = messagingTemplate;</span>
+<span class="fc" id="L23">    }</span>
+
+    public Notification createNotification(@PathVariable Long userId, @PathVariable String message) {
+<span class="fc" id="L26">        Notification notif = new Notification(userId, message, NotificationType.GENERAL);</span>
+<span class="fc" id="L27">        repo.save(notif);</span>
+
+<span class="fc" id="L29">        sendRealtimeNotification(userId, notif);</span>
+
+<span class="fc" id="L31">        return notif;</span>
+    }
+
+    private void sendRealtimeNotification(Long userId, Notification notif) {
+<span class="fc" id="L35">        NotificationMessage msg = new NotificationMessage(</span>
+                userId,
+<span class="fc" id="L37">                notif.getMessage(),</span>
+<span class="fc" id="L38">                notif.getType().name()</span>
+        );
+
+<span class="fc" id="L41">        messagingTemplate.convertAndSend(</span>
+                &quot;/topic/notifications/&quot; + userId,
+                msg
+        );
+<span class="fc" id="L45">    }</span>
+
+    public List&lt;Notification&gt; getUserNotifications(Long userId) {
+<span class="nc" id="L48">        return repo.findByUserIdOrderByCreatedAtDesc(userId);</span>
+    }
+
+    public void markNotificationAsRead(Long notificationId) {
+<span class="fc" id="L52">        Notification notif = repo.findById(notificationId)</span>
+<span class="fc" id="L53">                .orElseThrow(() -&gt; new RuntimeException(&quot;Notification not found with id &quot; + notificationId));</span>
+<span class="fc" id="L54">        notif.setRead(true);</span>
+<span class="fc" id="L55">        repo.save(notif);</span>
+<span class="fc" id="L56">    }</span>
+    public void deleteNotification(Long id) {
+<span class="nc" id="L58">        repo.deleteById(id);</span>
+<span class="nc" id="L59">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
