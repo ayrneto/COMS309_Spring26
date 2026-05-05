@@ -21,56 +21,56 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-<span class="nc" id="L24">public class TaskDetailsActivity extends AppCompatActivity {</span>
+<span class="fc" id="L24">public class TaskDetailsActivity extends AppCompatActivity {</span>
 
     private long taskId;
     private String currentStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-<span class="nc" id="L31">        super.onCreate(savedInstanceState);</span>
-<span class="nc" id="L32">        setContentView(R.layout.activity_task_details);</span>
+<span class="fc" id="L31">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L32">        setContentView(R.layout.activity_task_details);</span>
 
         // Force light mode for colors to show correctly
-<span class="nc" id="L35">        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);</span>
+<span class="fc" id="L35">        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);</span>
 
         // Get data from intent
-<span class="nc" id="L38">        taskId = getIntent().getLongExtra(&quot;taskId&quot;, -1);</span>
-<span class="nc" id="L39">        String title = getIntent().getStringExtra(&quot;title&quot;);</span>
-<span class="nc" id="L40">        String description = getIntent().getStringExtra(&quot;description&quot;);</span>
-<span class="nc" id="L41">        String dueDate = getIntent().getStringExtra(&quot;dueDate&quot;);</span>
-<span class="nc" id="L42">        currentStatus = getIntent().getStringExtra(&quot;status&quot;);</span>
+<span class="fc" id="L38">        taskId = getIntent().getLongExtra(&quot;taskId&quot;, -1);</span>
+<span class="fc" id="L39">        String title = getIntent().getStringExtra(&quot;title&quot;);</span>
+<span class="fc" id="L40">        String description = getIntent().getStringExtra(&quot;description&quot;);</span>
+<span class="fc" id="L41">        String dueDate = getIntent().getStringExtra(&quot;dueDate&quot;);</span>
+<span class="fc" id="L42">        currentStatus = getIntent().getStringExtra(&quot;status&quot;);</span>
 
         // Find views
-<span class="nc" id="L45">        TextView titleView = findViewById(R.id.taskTitle);</span>
-<span class="nc" id="L46">        TextView descriptionView = findViewById(R.id.taskDescription);</span>
-<span class="nc" id="L47">        TextView dueDateView = findViewById(R.id.taskDueDate);</span>
-<span class="nc" id="L48">        Spinner statusSpinner = findViewById(R.id.spinnerStatus);</span>
+<span class="fc" id="L45">        TextView titleView = findViewById(R.id.taskTitle);</span>
+<span class="fc" id="L46">        TextView descriptionView = findViewById(R.id.taskDescription);</span>
+<span class="fc" id="L47">        TextView dueDateView = findViewById(R.id.taskDueDate);</span>
+<span class="fc" id="L48">        Spinner statusSpinner = findViewById(R.id.spinnerStatus);</span>
 
         // Display data
-<span class="nc" id="L51">        titleView.setText(title);</span>
-<span class="nc" id="L52">        descriptionView.setText(description);</span>
-<span class="nc" id="L53">        dueDateView.setText(&quot;Due: &quot; + dueDate);</span>
+<span class="fc" id="L51">        titleView.setText(title);</span>
+<span class="fc" id="L52">        descriptionView.setText(description);</span>
+<span class="fc" id="L53">        dueDateView.setText(&quot;Due: &quot; + dueDate);</span>
 
         // Setup status spinner
-<span class="nc" id="L56">        String[] statuses = {&quot;Not Started&quot;, &quot;Ongoing&quot;, &quot;Completed&quot;};</span>
-<span class="nc" id="L57">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this, android.R.layout.simple_spinner_dropdown_item, statuses);</span>
-<span class="nc" id="L58">        statusSpinner.setAdapter(adapter);</span>
+<span class="fc" id="L56">        String[] statuses = {&quot;Not Started&quot;, &quot;Ongoing&quot;, &quot;Completed&quot;};</span>
+<span class="fc" id="L57">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this, android.R.layout.simple_spinner_dropdown_item, statuses);</span>
+<span class="fc" id="L58">        statusSpinner.setAdapter(adapter);</span>
 
         // Set current status
-<span class="nc" id="L61">        int statusPosition = adapter.getPosition(currentStatus);</span>
-<span class="nc" id="L62">        statusSpinner.setSelection(statusPosition);</span>
+<span class="fc" id="L61">        int statusPosition = adapter.getPosition(currentStatus);</span>
+<span class="fc" id="L62">        statusSpinner.setSelection(statusPosition);</span>
 
         // Handle status change
-<span class="nc" id="L65">        statusSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+<span class="fc" id="L65">        statusSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
             @Override
             public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
-<span class="nc" id="L68">                String newStatus = parent.getItemAtPosition(position).toString();</span>
-<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (!newStatus.equals(currentStatus)) {</span>
-<span class="nc" id="L70">                    updateTaskStatus(newStatus);</span>
-<span class="nc" id="L71">                    currentStatus = newStatus;</span>
+<span class="fc" id="L68">                String newStatus = parent.getItemAtPosition(position).toString();</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (!newStatus.equals(currentStatus)) {</span>
+<span class="fc" id="L70">                    updateTaskStatus(newStatus);</span>
+<span class="fc" id="L71">                    currentStatus = newStatus;</span>
                 }
-<span class="nc" id="L73">            }</span>
+<span class="fc" id="L73">            }</span>
 
             @Override
             public void onNothingSelected(AdapterView&lt;?&gt; parent) {
@@ -78,36 +78,36 @@ import org.json.JSONObject;
 <span class="nc" id="L78">            }</span>
         });
 
-<span class="nc" id="L81">        Button backBtn = findViewById(R.id.btnBack);</span>
-<span class="nc" id="L82">        backBtn.setOnClickListener(v -&gt; {</span>
-<span class="nc" id="L83">            finish();  // Goes back to previous activity</span>
-<span class="nc" id="L84">        });</span>
-<span class="nc" id="L85">    }</span>
+<span class="fc" id="L81">        Button backBtn = findViewById(R.id.btnBack);</span>
+<span class="fc" id="L82">        backBtn.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L83">            finish();  // Goes back to previous activity</span>
+<span class="fc" id="L84">        });</span>
+<span class="fc" id="L85">    }</span>
 
     private void updateTaskStatus(String newStatus) {
-<span class="nc" id="L88">        String url = ApiConstants.BASE_URL + &quot;/api/tasks/&quot; + taskId + &quot;/status&quot;;  // TODO: Check endpoint with backend</span>
+<span class="fc" id="L88">        String url = ApiConstants.BASE_URL + &quot;/api/tasks/&quot; + taskId + &quot;/status&quot;;  // TODO: Check endpoint with backend</span>
 
-<span class="nc" id="L90">        JSONObject statusData = new JSONObject();</span>
+<span class="fc" id="L90">        JSONObject statusData = new JSONObject();</span>
         try {
-<span class="nc" id="L92">            statusData.put(&quot;status&quot;, newStatus);</span>
+<span class="fc" id="L92">            statusData.put(&quot;status&quot;, newStatus);</span>
 <span class="nc" id="L93">        } catch (JSONException e) {</span>
 <span class="nc" id="L94">            e.printStackTrace();</span>
-<span class="nc" id="L95">        }</span>
+<span class="fc" id="L95">        }</span>
 
-<span class="nc" id="L97">        JsonObjectRequest request = new JsonObjectRequest(</span>
+<span class="fc" id="L97">        JsonObjectRequest request = new JsonObjectRequest(</span>
                 Request.Method.PUT,
                 url,
                 statusData,
                 response -&gt; {
-<span class="nc" id="L102">                    Toast.makeText(this, &quot;Status updated&quot;, Toast.LENGTH_SHORT).show();</span>
-<span class="nc" id="L103">                },</span>
+<span class="fc" id="L102">                    Toast.makeText(this, &quot;Status updated&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L103">                },</span>
                 error -&gt; {
 <span class="nc" id="L105">                    Toast.makeText(this, &quot;Failed to update status&quot;, Toast.LENGTH_SHORT).show();</span>
 <span class="nc" id="L106">                }</span>
         );
 
-<span class="nc" id="L109">        RequestQueue queue = Volley.newRequestQueue(this);</span>
-<span class="nc" id="L110">        queue.add(request);</span>
-<span class="nc" id="L111">    }</span>
+<span class="fc" id="L109">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L110">        queue.add(request);</span>
+<span class="fc" id="L111">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

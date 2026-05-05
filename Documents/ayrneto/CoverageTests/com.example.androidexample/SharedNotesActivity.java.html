@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SharedNotesActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">SharedNotesActivity.java</span></div><h1>SharedNotesActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.GridLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="nc" id="L20">public class SharedNotesActivity extends AppCompatActivity {</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L24">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L25">        setContentView(R.layout.activity_shared_notes);</span>
+
+<span class="nc" id="L27">        fetchSharedNotes();</span>
+<span class="nc" id="L28">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L32">        super.onResume();</span>
+<span class="nc" id="L33">        fetchSharedNotes();</span>
+<span class="nc" id="L34">    }</span>
+
+    private void fetchSharedNotes() {
+<span class="nc" id="L37">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L38">        String counsellorId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+
+<span class="nc" id="L40">        String url = ApiConstants.BASE_URL + &quot;/api/counsellors/&quot; + counsellorId + &quot;/shared-notes&quot;;</span>
+
+<span class="nc" id="L42">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc" id="L47">                    displaySharedNotes(response);</span>
+<span class="nc" id="L48">                },</span>
+                error -&gt; {
+<span class="nc" id="L50">                    Toast.makeText(this, &quot;Failed to load shared notes&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L51">                }</span>
+        );
+
+<span class="nc" id="L54">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L55">    }</span>
+
+    private void displaySharedNotes(org.json.JSONArray notes) {
+<span class="nc" id="L58">        GridLayout container = findViewById(R.id.sharedNotesContainer);</span>
+<span class="nc" id="L59">        container.removeAllViews();</span>
+
+        try {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            for (int i = notes.length() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L63">                JSONObject note = notes.getJSONObject(i);</span>
+
+<span class="nc" id="L65">                String noteId = note.getString(&quot;id&quot;);</span>
+<span class="nc" id="L66">                String title = note.getString(&quot;title&quot;);</span>
+<span class="nc" id="L67">                String content = note.getString(&quot;content&quot;);</span>
+<span class="nc" id="L68">                String dueDate = note.optString(&quot;dueDate&quot;, &quot;No due date&quot;);</span>
+<span class="nc" id="L69">                String label = note.optString(&quot;label&quot;, &quot;&quot;);</span>
+<span class="nc" id="L70">                String userId = note.getString(&quot;userId&quot;);</span>
+<span class="nc" id="L71">                String userName = note.optString(&quot;userName&quot;, &quot;Patient #&quot; + userId);</span>
+
+<span class="nc" id="L73">                addSharedNoteCard(container, noteId, title, content, dueDate, label, userName);</span>
+            }
+<span class="nc" id="L75">        } catch (JSONException e) {</span>
+<span class="nc" id="L76">            e.printStackTrace();</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">    }</span>
+
+    private void addSharedNoteCard(GridLayout container, String noteId, String title,
+                                   String content, String dueDate, String label, String userName) {
+<span class="nc" id="L82">        View cardView = getLayoutInflater().inflate(R.layout.shared_note_card, container, false);</span>
+
+<span class="nc" id="L84">        TextView sharedByText = cardView.findViewById(R.id.sharedByText);</span>
+<span class="nc" id="L85">        TextView titleView = cardView.findViewById(R.id.noteTitle);</span>
+<span class="nc" id="L86">        TextView contentView = cardView.findViewById(R.id.noteContent);</span>
+<span class="nc" id="L87">        TextView dueDateView = cardView.findViewById(R.id.noteDueDate);</span>
+<span class="nc" id="L88">        TextView labelView = cardView.findViewById(R.id.noteLabel);</span>
+
+<span class="nc" id="L90">        sharedByText.setText(&quot;Shared by: &quot; + userName);</span>
+<span class="nc" id="L91">        titleView.setText(title);</span>
+<span class="nc" id="L92">        contentView.setText(content);</span>
+<span class="nc" id="L93">        dueDateView.setText(&quot;Due: &quot; + dueDate);</span>
+<span class="nc" id="L94">        labelView.setText(label);</span>
+
+<span class="nc" id="L96">        cardView.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L97">            showNoteDetails(title, content, dueDate, label, userName);</span>
+<span class="nc" id="L98">        });</span>
+
+<span class="nc" id="L100">        container.addView(cardView);</span>
+<span class="nc" id="L101">    }</span>
+
+    private void showNoteDetails(String title, String content, String dueDate, String label, String userName) {
+<span class="nc" id="L104">        AlertDialog.Builder builder = new AlertDialog.Builder(this);</span>
+<span class="nc" id="L105">        builder.setTitle(title);</span>
+<span class="nc" id="L106">        builder.setMessage(</span>
+                &quot;Shared by: &quot; + userName + &quot;\n\n&quot; +  // Changed
+                        content + &quot;\n\n&quot; +
+                        &quot;Due: &quot; + dueDate + &quot;\n&quot; +
+                        &quot;Label: &quot; + label
+        );
+<span class="nc" id="L112">        builder.setPositiveButton(&quot;Close&quot;, null);</span>
+<span class="nc" id="L113">        builder.show();</span>
+<span class="nc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

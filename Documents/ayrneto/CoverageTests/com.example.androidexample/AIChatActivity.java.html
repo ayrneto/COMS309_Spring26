@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AIChatActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">AIChatActivity.java</span></div><h1>AIChatActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="fc" id="L28">public class AIChatActivity extends AppCompatActivity {</span>
+
+    private LinearLayout chatContainer;
+    private ScrollView scrollView;
+    private EditText etMessage;
+    private ImageButton btnSend;
+    private RequestQueue requestQueue;
+    private String userId;
+
+    private static final String CRISIS_MARKER = &quot;988 Suicide &amp; Crisis Lifeline&quot;;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L41">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L42">        setContentView(R.layout.activity_ai_chat);</span>
+
+<span class="fc" id="L44">        chatContainer = findViewById(R.id.chatContainer);</span>
+<span class="fc" id="L45">        scrollView    = findViewById(R.id.scrollView);</span>
+<span class="fc" id="L46">        etMessage     = findViewById(R.id.etMessage);</span>
+<span class="fc" id="L47">        btnSend       = findViewById(R.id.btnSend);</span>
+
+<span class="fc" id="L49">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L50">        userId = prefs.getString(&quot;USER_ID&quot;, &quot;1&quot;);</span>
+
+<span class="fc" id="L52">        requestQueue = Volley.newRequestQueue(this);</span>
+
+<span class="pc" id="L54">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // Clear history button
+<span class="pc" id="L57">        findViewById(R.id.btnClearHistory).setOnClickListener(v -&gt; confirmClearHistory());</span>
+
+        // Load past chat history from backend
+<span class="fc" id="L60">        loadHistory();</span>
+
+<span class="fc" id="L62">        btnSend.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L63">            String message = etMessage.getText().toString().trim();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (message.isEmpty()) return;</span>
+<span class="nc" id="L65">            etMessage.setText(&quot;&quot;);</span>
+<span class="nc" id="L66">            addUserMessage(message);</span>
+<span class="nc" id="L67">            sendToAI(message);</span>
+<span class="nc" id="L68">        });</span>
+<span class="fc" id="L69">    }</span>
+
+    // ── Load history ──────────────────────────────────────────────────────────
+
+    private void loadHistory() {
+<span class="fc" id="L74">        String url = ApiConstants.BASE_URL + &quot;/api/ai-chat/&quot; + userId + &quot;/history&quot;;</span>
+
+<span class="fc" id="L76">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                    if (response.length() == 0) {</span>
+                        // No history — show greeting
+<span class="nc" id="L83">                        addBotMessage(&quot;Hi! I'm your Calmify AI assistant. I'm here to help with general wellness questions. How are you feeling today?&quot;, false);</span>
+<span class="nc" id="L84">                        return;</span>
+                    }
+                    // Render each past exchange
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L89">                            JSONObject item = response.getJSONObject(i);</span>
+<span class="fc" id="L90">                            String userMsg = item.getString(&quot;userMessage&quot;);</span>
+<span class="fc" id="L91">                            String aiReply = item.getString(&quot;aiReply&quot;);</span>
+<span class="fc" id="L92">                            addUserMessage(userMsg);</span>
+<span class="fc" id="L93">                            boolean isCrisis = aiReply.contains(CRISIS_MARKER);</span>
+<span class="fc" id="L94">                            addBotMessage(aiReply, isCrisis);</span>
+<span class="nc" id="L95">                        } catch (JSONException e) {</span>
+<span class="nc" id="L96">                            e.printStackTrace();</span>
+<span class="fc" id="L97">                        }</span>
+                    }
+<span class="fc" id="L99">                },</span>
+                error -&gt; {
+                    // If history fails just show greeting
+<span class="nc" id="L102">                    addBotMessage(&quot;Hi! I'm your Calmify AI assistant. How are you feeling today?&quot;, false);</span>
+<span class="nc" id="L103">                }</span>
+        );
+
+<span class="fc" id="L106">        requestQueue.add(request);</span>
+<span class="fc" id="L107">    }</span>
+
+    // ── Send message ──────────────────────────────────────────────────────────
+
+    private void sendToAI(String userMessage) {
+<span class="nc" id="L112">        TextView typingIndicator = addBotMessage(&quot;...&quot;, false);</span>
+
+<span class="nc" id="L114">        String url = ApiConstants.BASE_URL + &quot;/api/ai-chat/&quot; + userId;</span>
+
+<span class="nc" id="L116">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L118">            body.put(&quot;message&quot;, userMessage);</span>
+<span class="nc" id="L119">        } catch (JSONException e) {</span>
+<span class="nc" id="L120">            e.printStackTrace();</span>
+<span class="nc" id="L121">        }</span>
+
+<span class="nc" id="L123">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                body,
+                response -&gt; {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                    chatContainer.removeView(typingIndicator.getParent() != null</span>
+<span class="nc" id="L129">                            ? (View) typingIndicator.getParent() : typingIndicator);</span>
+                    try {
+<span class="nc" id="L131">                        String reply = response.getString(&quot;aiReply&quot;);</span>
+<span class="nc" id="L132">                        boolean isCrisis = reply.contains(CRISIS_MARKER);</span>
+<span class="nc" id="L133">                        addBotMessage(reply, isCrisis);</span>
+<span class="nc" id="L134">                    } catch (JSONException e) {</span>
+<span class="nc" id="L135">                        addBotMessage(&quot;Sorry, I couldn't understand the response.&quot;, false);</span>
+<span class="nc" id="L136">                    }</span>
+<span class="nc" id="L137">                },</span>
+                error -&gt; {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">                    chatContainer.removeView(typingIndicator.getParent() != null</span>
+<span class="nc" id="L140">                            ? (View) typingIndicator.getParent() : typingIndicator);</span>
+<span class="nc" id="L141">                    addBotMessage(&quot;I'm not available right now. Please try again shortly.&quot;, false);</span>
+<span class="nc" id="L142">                }</span>
+        );
+
+<span class="nc" id="L145">        requestQueue.add(request);</span>
+<span class="nc" id="L146">    }</span>
+
+    // ── Clear history ─────────────────────────────────────────────────────────
+
+    private void confirmClearHistory() {
+<span class="nc" id="L151">        new AlertDialog.Builder(this)</span>
+<span class="nc" id="L152">                .setTitle(&quot;Clear Chat History&quot;)</span>
+<span class="nc" id="L153">                .setMessage(&quot;Are you sure you want to delete all AI chat history? This cannot be undone.&quot;)</span>
+<span class="nc" id="L154">                .setPositiveButton(&quot;Clear&quot;, (dialog, which) -&gt; clearHistory())</span>
+<span class="nc" id="L155">                .setNegativeButton(&quot;Cancel&quot;, null)</span>
+<span class="nc" id="L156">                .show();</span>
+<span class="nc" id="L157">    }</span>
+
+    private void clearHistory() {
+<span class="nc" id="L160">        String url = ApiConstants.BASE_URL + &quot;/api/ai-chat/&quot; + userId + &quot;/history&quot;;</span>
+
+<span class="nc" id="L162">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L166">                    chatContainer.removeAllViews();</span>
+<span class="nc" id="L167">                    addBotMessage(&quot;Chat history cleared. Hi again! How are you feeling today?&quot;, false);</span>
+<span class="nc" id="L168">                    Toast.makeText(this, &quot;History cleared&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L169">                },</span>
+<span class="nc" id="L170">                error -&gt; Toast.makeText(this, &quot;Failed to clear history&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="nc" id="L173">        requestQueue.add(request);</span>
+<span class="nc" id="L174">    }</span>
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+
+    private TextView addUserMessage(String text) {
+<span class="fc" id="L179">        View bubble = getLayoutInflater().inflate(R.layout.item_chat_user, chatContainer, false);</span>
+<span class="fc" id="L180">        TextView tv = bubble.findViewById(R.id.tvMessage);</span>
+<span class="fc" id="L181">        tv.setText(text);</span>
+<span class="fc" id="L182">        chatContainer.addView(bubble);</span>
+<span class="fc" id="L183">        scrollToBottom();</span>
+<span class="fc" id="L184">        return tv;</span>
+    }
+
+    private TextView addBotMessage(String text, boolean isCrisis) {
+<span class="fc" id="L188">        View bubble = getLayoutInflater().inflate(R.layout.item_chat_bot, chatContainer, false);</span>
+<span class="fc" id="L189">        TextView tv = bubble.findViewById(R.id.tvMessage);</span>
+<span class="fc" id="L190">        tv.setText(text);</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (isCrisis) {</span>
+            // Orange background and dark text for crisis messages
+<span class="nc" id="L193">            tv.setBackgroundResource(R.drawable.bubble_crisis);</span>
+<span class="nc" id="L194">            tv.setTextColor(Color.parseColor(&quot;#7A2000&quot;));</span>
+        }
+<span class="fc" id="L196">        chatContainer.addView(bubble);</span>
+<span class="fc" id="L197">        scrollToBottom();</span>
+<span class="fc" id="L198">        return tv;</span>
+    }
+
+    private void scrollToBottom() {
+<span class="fc" id="L202">        scrollView.post(() -&gt; scrollView.fullScroll(View.FOCUS_DOWN));</span>
+<span class="fc" id="L203">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

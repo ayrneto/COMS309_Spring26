@@ -22,12 +22,12 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-<span class="nc" id="L25">public class ChatListActivity extends AppCompatActivity {</span>
+<span class="fc" id="L25">public class ChatListActivity extends AppCompatActivity {</span>
 
     private RecyclerView recyclerChatList;
     private TextView tvEmpty, tvTitle;
 
-<span class="nc" id="L30">    private final List&lt;ChatPerson&gt; personList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L30">    private final List&lt;ChatPerson&gt; personList = new ArrayList&lt;&gt;();</span>
     private ChatPersonAdapter adapter;
 
     private long   myUserId;
@@ -35,89 +35,110 @@ import java.util.List;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-<span class="nc" id="L38">        super.onCreate(savedInstanceState);</span>
-<span class="nc" id="L39">        setContentView(R.layout.activity_chat_list);</span>
+<span class="fc" id="L38">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L39">        setContentView(R.layout.activity_chat_list);</span>
 
-<span class="nc" id="L41">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
-<span class="nc" id="L42">        myUserId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
-<span class="nc" id="L43">        myRole   = prefs.getString(&quot;USER_ROLE&quot;, &quot;USER&quot;);</span>
+<span class="fc" id="L41">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L42">        myUserId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+<span class="fc" id="L43">        myRole   = prefs.getString(&quot;USER_ROLE&quot;, &quot;USER&quot;);</span>
 
-<span class="nc" id="L45">        recyclerChatList = findViewById(R.id.recyclerChatList);</span>
-<span class="nc" id="L46">        tvEmpty          = findViewById(R.id.tvChatListEmpty);</span>
-<span class="nc" id="L47">        tvTitle          = findViewById(R.id.tvChatListTitle);</span>
+<span class="fc" id="L45">        recyclerChatList = findViewById(R.id.recyclerChatList);</span>
+<span class="fc" id="L46">        tvEmpty          = findViewById(R.id.tvChatListEmpty);</span>
+<span class="fc" id="L47">        tvTitle          = findViewById(R.id.tvChatListTitle);</span>
 
-<span class="nc bnc" id="L49" title="All 2 branches missed.">        tvTitle.setText(&quot;COUNSELLOR&quot;.equals(myRole) ? &quot;Chats with Users&quot; : &quot;Chats with Counselors&quot;);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        tvTitle.setText(&quot;COUNSELLOR&quot;.equals(myRole) ? &quot;Chats with Users&quot; : &quot;My Counsellors&quot;);</span>
 
-<span class="nc" id="L51">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+<span class="pc" id="L51">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
 
-<span class="nc" id="L53">        adapter = new ChatPersonAdapter(personList, person -&gt; {</span>
-<span class="nc" id="L54">            Intent intent = new Intent(this, ChatActivity.class);</span>
-<span class="nc" id="L55">            intent.putExtra(&quot;partnerUserId&quot;, person.partnerId);</span>
-<span class="nc" id="L56">            intent.putExtra(&quot;partnerName&quot;,   person.partnerName);</span>
-<span class="nc" id="L57">            startActivity(intent);</span>
-<span class="nc" id="L58">        });</span>
-<span class="nc" id="L59">        recyclerChatList.setLayoutManager(new LinearLayoutManager(this));</span>
-<span class="nc" id="L60">        recyclerChatList.setAdapter(adapter);</span>
+<span class="fc" id="L53">        adapter = new ChatPersonAdapter(personList, person -&gt; {</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">            if (&quot;COUNSELLOR&quot;.equals(myRole)) {</span>
+                // Counsellor taps a user → go directly to chat
+<span class="nc" id="L56">                Intent intent = new Intent(this, ChatActivity.class);</span>
+<span class="nc" id="L57">                intent.putExtra(&quot;partnerUserId&quot;, person.partnerId);</span>
+<span class="nc" id="L58">                intent.putExtra(&quot;partnerName&quot;,   person.partnerName);</span>
+<span class="nc" id="L59">                startActivity(intent);</span>
+<span class="nc" id="L60">            } else {</span>
+                // User taps a counsellor → go to counsellor profile first
+<span class="nc" id="L62">                Intent intent = new Intent(this, CounsellorViewActivity.class);</span>
+<span class="nc" id="L63">                intent.putExtra(&quot;counsellorId&quot;,   person.partnerId);</span>
+<span class="nc" id="L64">                intent.putExtra(&quot;counsellorName&quot;, person.partnerName);</span>
+<span class="nc" id="L65">                startActivity(intent);</span>
+            }
+<span class="nc" id="L67">        });</span>
 
-<span class="nc" id="L62">        fetchChatPartners();</span>
-<span class="nc" id="L63">    }</span>
+<span class="fc" id="L69">        recyclerChatList.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="fc" id="L70">        recyclerChatList.setAdapter(adapter);</span>
+
+<span class="fc" id="L72">        fetchChatPartners();</span>
+<span class="fc" id="L73">    }</span>
 
     private void fetchChatPartners() {
         String url;
-<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (&quot;COUNSELLOR&quot;.equals(myRole)) {</span>
-<span class="nc" id="L68">            url = ApiConstants.BASE_URL +</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (&quot;COUNSELLOR&quot;.equals(myRole)) {</span>
+<span class="nc" id="L78">            url = ApiConstants.BASE_URL +</span>
                     &quot;/api/appointments/counsellor/&quot; + myUserId + &quot;/accepted&quot;;
         } else {
-<span class="nc" id="L71">            url = ApiConstants.BASE_URL +</span>
+<span class="fc" id="L81">            url = ApiConstants.BASE_URL +</span>
                     &quot;/api/appointments/user/&quot; + myUserId + &quot;/accepted&quot;;
         }
 
-<span class="nc" id="L75">        JsonArrayRequest req = new JsonArrayRequest(</span>
+<span class="fc" id="L85">        JsonArrayRequest req = new JsonArrayRequest(</span>
                 Request.Method.GET, url, null,
                 response -&gt; {
-<span class="nc" id="L78">                    personList.clear();</span>
-<span class="nc bnc" id="L79" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L88">                    personList.clear();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
                         try {
-<span class="nc" id="L81">                            JSONObject obj = response.getJSONObject(i);</span>
-<span class="nc" id="L82">                            ChatPerson p = new ChatPerson();</span>
+<span class="fc" id="L91">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="fc" id="L92">                            ChatPerson p = new ChatPerson();</span>
 
-<span class="nc bnc" id="L84" title="All 2 branches missed.">                            if (&quot;COUNSELLOR&quot;.equals(myRole)) {</span>
-                                // Counsellor sees users — partner is the user
-<span class="nc" id="L86">                                p.partnerId   = obj.optLong(&quot;userId&quot;, -1);</span>
-<span class="nc" id="L87">                                p.partnerName = obj.optString(&quot;userName&quot;, &quot;Unknown User&quot;);</span>
-<span class="nc" id="L88">                                p.subtitle    = obj.optString(&quot;date&quot;, &quot;&quot;) + &quot;  ·  &quot; +</span>
-<span class="nc" id="L89">                                        obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                            if (&quot;COUNSELLOR&quot;.equals(myRole)) {</span>
+<span class="nc" id="L95">                                p.partnerId   = obj.optLong(&quot;userId&quot;, -1);</span>
+<span class="nc" id="L96">                                p.partnerName = obj.optString(&quot;userName&quot;, &quot;Unknown User&quot;);</span>
+<span class="nc" id="L97">                                p.subtitle    = obj.optString(&quot;date&quot;, &quot;&quot;) + &quot;  ·  &quot; +</span>
+<span class="nc" id="L98">                                        obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
                             } else {
-                                // User sees counsellors — partner is the counsellor
-<span class="nc" id="L92">                                p.partnerId   = obj.optLong(&quot;counsellorId&quot;, -1);</span>
-<span class="nc" id="L93">                                p.partnerName = obj.optString(&quot;counsellorName&quot;, &quot;Unknown Counsellor&quot;);</span>
-<span class="nc" id="L94">                                p.subtitle    = obj.optString(&quot;date&quot;, &quot;&quot;) + &quot;  ·  &quot; +</span>
-<span class="nc" id="L95">                                        obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
+<span class="fc" id="L100">                                p.partnerId   = obj.optLong(&quot;counsellorId&quot;, -1);</span>
+<span class="fc" id="L101">                                p.partnerName = obj.optString(&quot;counsellorName&quot;, &quot;Unknown Counsellor&quot;);</span>
+<span class="fc" id="L102">                                p.subtitle    = obj.optString(&quot;date&quot;, &quot;&quot;) + &quot;  ·  &quot; +</span>
+<span class="fc" id="L103">                                        obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
                             }
 
-<span class="nc bnc" id="L98" title="All 2 branches missed.">                            if (p.partnerId != -1) personList.add(p);</span>
-<span class="nc" id="L99">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">                            if (p.partnerId != -1) personList.add(p);</span>
+<span class="pc" id="L107">                        } catch (JSONException e) { e.printStackTrace(); }</span>
                     }
-<span class="nc" id="L101">                    adapter.notifyDataSetChanged();</span>
-<span class="nc" id="L102">                    updateEmptyState();</span>
-<span class="nc" id="L103">                },</span>
+
+                    // Deduplicate by partnerId
+<span class="fc" id="L111">                    List&lt;ChatPerson&gt; deduped = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L112">                    List&lt;Long&gt; seen = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                    for (ChatPerson p : personList) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                        if (!seen.contains(p.partnerId)) {</span>
+<span class="fc" id="L115">                            seen.add(p.partnerId);</span>
+<span class="fc" id="L116">                            deduped.add(p);</span>
+                        }
+<span class="fc" id="L118">                    }</span>
+<span class="fc" id="L119">                    personList.clear();</span>
+<span class="fc" id="L120">                    personList.addAll(deduped);</span>
+
+<span class="fc" id="L122">                    adapter.notifyDataSetChanged();</span>
+<span class="fc" id="L123">                    updateEmptyState();</span>
+<span class="fc" id="L124">                },</span>
                 error -&gt; {
-<span class="nc" id="L105">                    Toast.makeText(this, &quot;Failed to load chats&quot;, Toast.LENGTH_SHORT).show();</span>
-<span class="nc" id="L106">                    updateEmptyState();</span>
-<span class="nc" id="L107">                }</span>
+<span class="nc" id="L126">                    Toast.makeText(this, &quot;Failed to load&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L127">                    updateEmptyState();</span>
+<span class="nc" id="L128">                }</span>
         );
 
-<span class="nc" id="L110">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
-<span class="nc" id="L111">    }</span>
+<span class="fc" id="L131">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="fc" id="L132">    }</span>
 
     private void updateEmptyState() {
-<span class="nc" id="L114">        boolean empty = personList.isEmpty();</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">        tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);</span>
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        recyclerChatList.setVisibility(empty ? View.GONE : View.VISIBLE);</span>
-<span class="nc" id="L117">    }</span>
+<span class="fc" id="L135">        boolean empty = personList.isEmpty();</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        tvEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        recyclerChatList.setVisibility(empty ? View.GONE : View.VISIBLE);</span>
+<span class="fc" id="L138">    }</span>
 
     // ── Model ─────────────────────────────────────────────────────────────────
-<span class="nc" id="L120">    static class ChatPerson {</span>
+<span class="fc" id="L141">    static class ChatPerson {</span>
         long   partnerId;
         String partnerName, subtitle;
     }
@@ -131,39 +152,39 @@ import java.util.List;
         private final List&lt;ChatPerson&gt; list;
         private final OnPersonClick cb;
 
-<span class="nc" id="L134">        ChatPersonAdapter(List&lt;ChatPerson&gt; list, OnPersonClick cb) {</span>
-<span class="nc" id="L135">            this.list = list;</span>
-<span class="nc" id="L136">            this.cb   = cb;</span>
-<span class="nc" id="L137">        }</span>
+<span class="fc" id="L155">        ChatPersonAdapter(List&lt;ChatPerson&gt; list, OnPersonClick cb) {</span>
+<span class="fc" id="L156">            this.list = list;</span>
+<span class="fc" id="L157">            this.cb   = cb;</span>
+<span class="fc" id="L158">        }</span>
 
         @Override
         public VH onCreateViewHolder(ViewGroup parent, int viewType) {
-<span class="nc" id="L141">            View v = LayoutInflater.from(parent.getContext())</span>
-<span class="nc" id="L142">                    .inflate(R.layout.item_chat_person_row, parent, false);</span>
-<span class="nc" id="L143">            return new VH(v);</span>
+<span class="fc" id="L162">            View v = LayoutInflater.from(parent.getContext())</span>
+<span class="fc" id="L163">                    .inflate(R.layout.item_chat_person_row, parent, false);</span>
+<span class="fc" id="L164">            return new VH(v);</span>
         }
 
         @Override
         public void onBindViewHolder(VH h, int pos) {
-<span class="nc" id="L148">            ChatPerson p = list.get(pos);</span>
-<span class="nc" id="L149">            h.tvName.setText(p.partnerName);</span>
-<span class="nc" id="L150">            h.tvSubtitle.setText(p.subtitle);</span>
-<span class="nc bnc" id="L151" title="All 2 branches missed.">            String initial = p.partnerName.isEmpty() ? &quot;?&quot; :</span>
-<span class="nc" id="L152">                    String.valueOf(p.partnerName.charAt(0)).toUpperCase();</span>
-<span class="nc" id="L153">            h.tvAvatar.setText(initial);</span>
-<span class="nc" id="L154">            h.itemView.setOnClickListener(v -&gt; cb.onClick(p));</span>
-<span class="nc" id="L155">        }</span>
+<span class="fc" id="L169">            ChatPerson p = list.get(pos);</span>
+<span class="fc" id="L170">            h.tvName.setText(p.partnerName);</span>
+<span class="fc" id="L171">            h.tvSubtitle.setText(p.subtitle);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            String initial = p.partnerName.isEmpty() ? &quot;?&quot; :</span>
+<span class="fc" id="L173">                    String.valueOf(p.partnerName.charAt(0)).toUpperCase();</span>
+<span class="fc" id="L174">            h.tvAvatar.setText(initial);</span>
+<span class="pc" id="L175">            h.itemView.setOnClickListener(v -&gt; cb.onClick(p));</span>
+<span class="fc" id="L176">        }</span>
 
-<span class="nc" id="L157">        @Override public int getItemCount() { return list.size(); }</span>
+<span class="fc" id="L178">        @Override public int getItemCount() { return list.size(); }</span>
 
         static class VH extends RecyclerView.ViewHolder {
             TextView tvAvatar, tvName, tvSubtitle;
             VH(View v) {
-<span class="nc" id="L162">                super(v);</span>
-<span class="nc" id="L163">                tvAvatar   = v.findViewById(R.id.tvAvatar);</span>
-<span class="nc" id="L164">                tvName     = v.findViewById(R.id.tvPersonName);</span>
-<span class="nc" id="L165">                tvSubtitle = v.findViewById(R.id.tvPersonSubtitle);</span>
-<span class="nc" id="L166">            }</span>
+<span class="fc" id="L183">                super(v);</span>
+<span class="fc" id="L184">                tvAvatar   = v.findViewById(R.id.tvAvatar);</span>
+<span class="fc" id="L185">                tvName     = v.findViewById(R.id.tvPersonName);</span>
+<span class="fc" id="L186">                tvSubtitle = v.findViewById(R.id.tvPersonSubtitle);</span>
+<span class="fc" id="L187">            }</span>
         }
     }
 }
