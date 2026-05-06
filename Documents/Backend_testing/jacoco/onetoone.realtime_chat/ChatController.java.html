@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.realtime_chat</a> &gt; <span class="el_source">ChatController.java</span></div><h1>ChatController.java</h1><pre class="source lang-java linenums">package onetoone.realtime_chat;
+
+import onetoone.realtime_chat.dto.ChatMessageResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping(&quot;/api/chat&quot;)
+<span class="fc" id="L20">public class ChatController {</span>
+
+    // Change this to match your actual server host/port if needed
+    private static final String BASE_URL = &quot;http://REDACTED:8080&quot;;
+
+    @Autowired
+    private ChatService chatService;
+
+    // ── Existing endpoints ────────────────────────────────────────────────────
+
+    @GetMapping(&quot;/history&quot;)
+    public List&lt;ChatMessageResponse&gt; getHistory(
+            @RequestParam Long userA,
+            @RequestParam Long userB) {
+<span class="fc" id="L34">        return chatService.getChatHistory(userA, userB)</span>
+<span class="fc" id="L35">                .stream()</span>
+<span class="fc" id="L36">                .map(ChatMessageResponse::new)</span>
+<span class="fc" id="L37">                .collect(Collectors.toList());</span>
+    }
+
+    @GetMapping(&quot;/online-users&quot;)
+    public Map&lt;String, Object&gt; getOnlineUsers() {
+<span class="fc" id="L42">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L43">        result.put(&quot;connectedUserIds&quot;, ChatServer.userSessionMap.keySet());</span>
+<span class="fc" id="L44">        return result;</span>
+    }
+
+    // ── NEW: File upload endpoint ─────────────────────────────────────────────
+
+    /**
+     * POST /api/chat/upload
+     *
+     * Multipart form params:
+     *   file       — the actual file (any type)
+     *   senderId   — Long  (who is uploading)
+     *   receiverId — Long  (who will receive it)
+     *
+     * Response JSON:
+     * {
+     *   &quot;fileUrl&quot;:  &quot;http://&lt;host&gt;/uploads/1712345678000_resume.pdf&quot;,
+     *   &quot;fileName&quot;: &quot;resume.pdf&quot;,
+     *   &quot;fileType&quot;: &quot;PDF&quot;
+     * }
+     *
+     * NOTE: This endpoint only stores the file on disk and returns the URL.
+     * The frontend is responsible for then sending a WebSocket message that
+     * includes this fileUrl (plus fileName/fileType) so it gets persisted
+     * in the chat_message table and forwarded to the receiver in real time.
+     */
+    @PostMapping(&quot;/upload&quot;)
+    public ResponseEntity&lt;?&gt; uploadFile(
+            @RequestParam(&quot;file&quot;) MultipartFile file,
+            @RequestParam(&quot;senderId&quot;) Long senderId,
+            @RequestParam(&quot;receiverId&quot;) Long receiverId) throws IOException {
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (file.isEmpty()) {</span>
+<span class="nc" id="L76">            Map&lt;String, String&gt; err = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L77">            err.put(&quot;error&quot;, &quot;File is empty&quot;);</span>
+<span class="nc" id="L78">            return ResponseEntity.badRequest().body(err);</span>
+        }
+
+        // Build a unique filename to avoid collisions: timestamp_originalName
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        String originalName = file.getOriginalFilename() != null</span>
+<span class="fc" id="L83">                ? file.getOriginalFilename()</span>
+<span class="pc" id="L84">                : &quot;file&quot;;</span>
+<span class="fc" id="L85">        String fileName = System.currentTimeMillis() + &quot;_&quot; + originalName;</span>
+
+        // Ensure the uploads directory exists, then write the file
+<span class="fc" id="L88">        Path uploadDir = Paths.get(&quot;uploads&quot;);</span>
+<span class="fc" id="L89">        Files.createDirectories(uploadDir);</span>
+<span class="fc" id="L90">        Files.copy(file.getInputStream(), uploadDir.resolve(fileName));</span>
+
+        // Build the public URL the frontend will use to download/preview the file
+<span class="fc" id="L93">        String fileUrl = BASE_URL + &quot;/uploads/&quot; + fileName;</span>
+
+<span class="fc" id="L95">        Map&lt;String, String&gt; response = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L96">        response.put(&quot;fileUrl&quot;,  fileUrl);</span>
+<span class="fc" id="L97">        response.put(&quot;fileName&quot;, originalName);</span>
+<span class="fc" id="L98">        response.put(&quot;fileType&quot;, getExtension(originalName));</span>
+
+<span class="fc" id="L100">        return ResponseEntity.ok(response);</span>
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    private String getExtension(String name) {
+<span class="fc" id="L106">        int dot = name.lastIndexOf('.');</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        return dot &gt;= 0 ? name.substring(dot + 1).toUpperCase() : &quot;FILE&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

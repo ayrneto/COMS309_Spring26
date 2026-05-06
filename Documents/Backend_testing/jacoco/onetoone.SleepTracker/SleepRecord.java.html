@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SleepRecord.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.SleepTracker</a> &gt; <span class="el_source">SleepRecord.java</span></div><h1>SleepRecord.java</h1><pre class="source lang-java linenums">package onetoone.SleepTracker;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = &quot;sleep_records&quot;)
+public class SleepRecord {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long userId;
+
+    private LocalDate date;
+
+    // hours slept (e.g., 7.5)
+    private double hours;
+
+<span class="fc" id="L21">    public SleepRecord() {}</span>
+
+<span class="fc" id="L23">    public SleepRecord(Long userId, LocalDate date, double hours) {</span>
+<span class="fc" id="L24">        this.userId = userId;</span>
+<span class="fc" id="L25">        this.date = date;</span>
+<span class="fc" id="L26">        this.hours = hours;</span>
+<span class="fc" id="L27">    }</span>
+
+<span class="fc" id="L29">    public Long getId() { return id; }</span>
+<span class="fc" id="L30">    public Long getUserId() { return userId; }</span>
+<span class="fc" id="L31">    public LocalDate getDate() { return date; }</span>
+<span class="fc" id="L32">    public double getHours() { return hours; }</span>
+
+<span class="nc" id="L34">    public void setUserId(Long userId) { this.userId = userId; }</span>
+<span class="nc" id="L35">    public void setDate(LocalDate date) { this.date = date; }</span>
+<span class="nc" id="L36">    public void setHours(double hours) { this.hours = hours; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

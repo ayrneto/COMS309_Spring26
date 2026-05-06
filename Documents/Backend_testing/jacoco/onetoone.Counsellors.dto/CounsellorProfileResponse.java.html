@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounsellorProfileResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Counsellors.dto</a> &gt; <span class="el_source">CounsellorProfileResponse.java</span></div><h1>CounsellorProfileResponse.java</h1><pre class="source lang-java linenums">package onetoone.Counsellors.dto;
+
+import onetoone.Counsellors.CounsellorStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+@Schema(description = &quot;Response object for counsellor profile&quot;)
+<span class="fc" id="L8">public class CounsellorProfileResponse {</span>
+
+    @Schema(description = &quot;Profile ID&quot;, example = &quot;1&quot;)
+    public Long id;
+    @Schema(description = &quot;User ID associated with this profile&quot;, example = &quot;2&quot;)
+    public Integer userId;
+
+    @Schema(description = &quot;Display name of the counsellor&quot;, example = &quot;Dr. John Doe&quot;)
+    public String displayName;
+    @Schema(description = &quot;Specialization of the counsellor&quot;, example = &quot;Cognitive Behavioral Therapy&quot;)
+    public String specialization;
+    @Schema(description = &quot;Bio of the counsellor&quot;, example = &quot;Experienced therapist specializing in CBT&quot;)
+    public String bio;
+    @Schema(description = &quot;URL to profile picture&quot;, example = &quot;https://example.com/profile.jpg&quot;)
+    public String profilePictureUrl;
+
+    @Schema(description = &quot;Average rating of the counsellor&quot;, example = &quot;4.8&quot;)
+    public Double ratingAverage;
+    @Schema(description = &quot;Total number of ratings received&quot;, example = &quot;25&quot;)
+    public Integer ratingCount;
+
+    @Schema(description = &quot;Availability status of the counsellor&quot;, example = &quot;AVAILABLE&quot;)
+    public CounsellorStatus status;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

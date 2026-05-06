@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AiChatService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.AiChat</a> &gt; <span class="el_source">AiChatService.java</span></div><h1>AiChatService.java</h1><pre class="source lang-java linenums">package onetoone.AiChat;
+
+import onetoone.AiChat.dto.AiChatResponse;
+import onetoone.Users.User;
+import onetoone.Users.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@Service
+<span class="fc" id="L18">public class AiChatService {</span>
+
+    @Value(&quot;${gemini.api.key}&quot;)
+    private String geminiApiKey;
+
+    @Autowired
+    private AiChatMessageRepository aiChatMessageRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private static final String GEMINI_URL =
+            &quot;https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=&quot;;
+
+    private static final String SYSTEM_PROMPT =
+            &quot;You are a supportive mental health assistant inside a student wellness app called Calmify. &quot; +
+                    &quot;Your role: provide emotional support and encouragement, and suggest simple healthy coping strategies &quot; +
+                    &quot;(breathing, journaling, walking, talking to someone). &quot; +
+                    &quot;Keep every response calm, warm, and easy to understand — 2 to 4 sentences maximum. &quot; +
+                    &quot;Rules: do NOT diagnose mental health conditions, do NOT provide medical or clinical advice, &quot; +
+                    &quot;do NOT act as a therapist. &quot; +
+                    &quot;Tone: warm, supportive, non-judgmental. Never dismiss feelings. Never sound robotic. &quot; +
+                    &quot;Goal: help the user feel heard and guide them toward small positive steps.&quot;;
+
+<span class="fc" id="L42">    private static final List&lt;String&gt; CRISIS_KEYWORDS = List.of(</span>
+            &quot;suicide&quot;, &quot;suicidal&quot;, &quot;kill myself&quot;, &quot;end my life&quot;, &quot;want to die&quot;,
+            &quot;self harm&quot;, &quot;self-harm&quot;, &quot;cutting myself&quot;, &quot;hurt myself&quot;,
+            &quot;giving up&quot;, &quot;want to hurt myself&quot;, &quot;no reason to live&quot;
+    );
+
+    // Appended to Gemini's reply when crisis keywords detected — frontend can style this differently
+    private static final String CRISIS_HOTLINE_APPEND =
+            &quot;\n\n If you're in crisis, please reach out: &quot; +
+                    &quot;988 Suicide &amp; Crisis Lifeline — call or text 988 (US). &quot; +
+                    &quot;You don't have to face this alone.&quot;;
+
+    // Number of past exchanges sent to Gemini for context (keep low for free tier)
+    private static final int HISTORY_WINDOW = 5;
+
+    // ── Public API ────────────────────────────────────────────────────────────
+
+    public AiChatResponse chat(Long userId, String userMessage) {
+
+        // 1. Load user
+<span class="fc" id="L62">        User user = userRepository.findById(userId)</span>
+<span class="fc" id="L63">                .orElseThrow(() -&gt; new ResponseStatusException(</span>
+                        HttpStatus.NOT_FOUND, &quot;User not found: &quot; + userId));
+
+        // 2. Validate
+<span class="pc bpc" id="L67" title="1 of 4 branches missed.">        if (userMessage == null || userMessage.isBlank()) {</span>
+<span class="fc" id="L68">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Message cannot be empty&quot;);</span>
+        }
+<span class="fc" id="L70">        userMessage = userMessage.trim();</span>
+
+        // 3. Check crisis keywords BEFORE calling Gemini
+<span class="fc" id="L73">        boolean isCrisis = containsCrisisKeyword(userMessage);</span>
+
+        // 4. Fetch last N exchanges from DB to give Gemini conversation context
+<span class="fc" id="L76">        List&lt;AiChatMessage&gt; recentHistory = getRecentHistory(userId);</span>
+
+        // 5. Call Gemini with full history so it understands references like &quot;it&quot; or &quot;that&quot;
+<span class="fc" id="L79">        String aiReply = callGemini(userMessage, recentHistory);</span>
+
+        // 6. Append crisis hotline to whatever Gemini replied (don't replace — let AI reply stand)
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (isCrisis) {</span>
+<span class="fc" id="L83">            aiReply = aiReply + CRISIS_HOTLINE_APPEND;</span>
+        }
+
+        // 7. Save and return
+<span class="fc" id="L87">        AiChatMessage saved = aiChatMessageRepository.save(</span>
+                new AiChatMessage(user, userMessage, aiReply));
+
+<span class="fc" id="L90">        return new AiChatResponse(saved);</span>
+    }
+
+    public List&lt;AiChatResponse&gt; getHistory(Long userId) {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (!userRepository.existsById(userId)) {</span>
+<span class="fc" id="L95">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;User not found: &quot; + userId);</span>
+        }
+<span class="fc" id="L97">        return aiChatMessageRepository</span>
+<span class="fc" id="L98">                .findByUserIdOrderBySentAtAsc(userId)</span>
+<span class="fc" id="L99">                .stream()</span>
+<span class="fc" id="L100">                .map(AiChatResponse::new)</span>
+<span class="fc" id="L101">                .toList();</span>
+    }
+
+    public void clearHistory(Long userId) {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (!userRepository.existsById(userId)) {</span>
+<span class="fc" id="L106">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;User not found: &quot; + userId);</span>
+        }
+<span class="fc" id="L108">        List&lt;AiChatMessage&gt; messages = aiChatMessageRepository.findByUserIdOrderBySentAtAsc(userId);</span>
+<span class="fc" id="L109">        aiChatMessageRepository.deleteAll(messages);</span>
+<span class="fc" id="L110">    }</span>
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private boolean containsCrisisKeyword(String message) {
+<span class="fc" id="L115">        String lower = message.toLowerCase();</span>
+<span class="fc" id="L116">        return CRISIS_KEYWORDS.stream().anyMatch(lower::contains);</span>
+    }
+
+    /**
+     * Returns the last HISTORY_WINDOW exchanges from the DB for this user.
+     */
+    private List&lt;AiChatMessage&gt; getRecentHistory(Long userId) {
+<span class="fc" id="L123">        List&lt;AiChatMessage&gt; all = aiChatMessageRepository.findByUserIdOrderBySentAtAsc(userId);</span>
+<span class="fc" id="L124">        int size = all.size();</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (size &lt;= HISTORY_WINDOW) return all;</span>
+<span class="fc" id="L126">        return all.subList(size - HISTORY_WINDOW, size);</span>
+    }
+
+    /**
+     * Calls Gemini with conversation history so it has full context.
+     *
+     * Contents array sent to Gemini:
+     *   [systemPrimer, systemAck, user: past msg 1, model: past reply 1, ..., user: current msg]
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private String callGemini(String userMessage, List&lt;AiChatMessage&gt; history) {
+
+<span class="fc" id="L138">        RestTemplate restTemplate = new RestTemplate();</span>
+
+<span class="fc" id="L140">        List&lt;Map&lt;String, Object&gt;&gt; contents = new ArrayList&lt;&gt;();</span>
+
+        // System prompt injected as fake user→model exchange (free tier workaround)
+<span class="fc" id="L143">        contents.add(Map.of(</span>
+                &quot;role&quot;, &quot;user&quot;,
+<span class="fc" id="L145">                &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, &quot;Instructions for this conversation: &quot; + SYSTEM_PROMPT))</span>
+        ));
+<span class="fc" id="L147">        contents.add(Map.of(</span>
+                &quot;role&quot;, &quot;model&quot;,
+<span class="fc" id="L149">                &quot;parts&quot;, List.of(Map.of(&quot;text&quot;,</span>
+                        &quot;Understood. I am Calmify's supportive assistant. I will keep responses warm, brief, and safe.&quot;))
+        ));
+
+        // Inject previous exchanges so Gemini understands context (&quot;it&quot;, &quot;that&quot;, &quot;my anxiety&quot; etc.)
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (AiChatMessage past : history) {</span>
+<span class="fc" id="L155">            contents.add(Map.of(</span>
+                    &quot;role&quot;, &quot;user&quot;,
+<span class="fc" id="L157">                    &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, past.getUserMessage()))</span>
+            ));
+<span class="fc" id="L159">            contents.add(Map.of(</span>
+                    &quot;role&quot;, &quot;model&quot;,
+<span class="fc" id="L161">                    &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, past.getAiReply()))</span>
+            ));
+<span class="fc" id="L163">        }</span>
+
+        // Current message goes last
+<span class="fc" id="L166">        contents.add(Map.of(</span>
+                &quot;role&quot;, &quot;user&quot;,
+<span class="fc" id="L168">                &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, userMessage))</span>
+        ));
+
+<span class="fc" id="L171">        Map&lt;String, Object&gt; generationConfig = Map.of(&quot;maxOutputTokens&quot;, 300);</span>
+<span class="fc" id="L172">        Map&lt;String, Object&gt; requestBody = Map.of(</span>
+                &quot;contents&quot;, contents,
+                &quot;generationConfig&quot;, generationConfig
+        );
+
+<span class="fc" id="L177">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L178">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L179">        HttpEntity&lt;Map&lt;String, Object&gt;&gt; entity = new HttpEntity&lt;&gt;(requestBody, headers);</span>
+
+        try {
+<span class="nc" id="L182">            ResponseEntity&lt;Map&gt; response = restTemplate.postForEntity(</span>
+                    GEMINI_URL + geminiApiKey, entity, Map.class);
+
+<span class="nc bnc" id="L185" title="All 4 branches missed.">            if (response.getStatusCode() == HttpStatus.OK &amp;&amp; response.getBody() != null) {</span>
+<span class="nc" id="L186">                List&lt;Map&lt;String, Object&gt;&gt; candidates =</span>
+<span class="nc" id="L187">                        (List&lt;Map&lt;String, Object&gt;&gt;) response.getBody().get(&quot;candidates&quot;);</span>
+
+<span class="nc bnc" id="L189" title="All 4 branches missed.">                if (candidates != null &amp;&amp; !candidates.isEmpty()) {</span>
+<span class="nc" id="L190">                    Map&lt;String, Object&gt; content = (Map&lt;String, Object&gt;) candidates.get(0).get(&quot;content&quot;);</span>
+<span class="nc" id="L191">                    List&lt;Map&lt;String, Object&gt;&gt; parts = (List&lt;Map&lt;String, Object&gt;&gt;) content.get(&quot;parts&quot;);</span>
+<span class="nc bnc" id="L192" title="All 4 branches missed.">                    if (parts != null &amp;&amp; !parts.isEmpty()) {</span>
+<span class="nc" id="L193">                        return (String) parts.get(0).get(&quot;text&quot;);</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L198">            return &quot;I'm here for you. It sounds like something is on your mind — &quot; +</span>
+                    &quot;try taking a few slow, deep breaths, and feel free to share more when you're ready.&quot;;
+
+<span class="fc" id="L201">        } catch (Exception e) {</span>
+<span class="fc" id="L202">            System.out.println(&quot;GEMINI ERROR TYPE: &quot; + e.getClass().getName());</span>
+<span class="fc" id="L203">            System.out.println(&quot;GEMINI ERROR MSG: &quot; + e.getMessage());</span>
+<span class="fc" id="L204">            return &quot;I'm here for you! Sometimes taking a short walk or writing down your thoughts can help. &quot; +</span>
+                    &quot;What's on your mind?&quot;;
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
