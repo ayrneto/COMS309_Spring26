@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminDashboardActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">AdminDashboardActivity.java</span></div><h1>AdminDashboardActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="fc" id="L28">public class AdminDashboardActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recyclerAdminList;
+    private TextView tvAdminCount, tabUsers, tabCounsellors;
+    private EditText etAdminSearch;
+
+<span class="fc" id="L34">    private final List&lt;AdminUserItem&gt; allItems = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L35">    private final List&lt;AdminUserItem&gt; filtered = new ArrayList&lt;&gt;();</span>
+    private AdminUserAdapter adapter;
+
+<span class="fc" id="L38">    private boolean showingUsers = true;</span>
+<span class="fc" id="L39">    private String searchQuery   = &quot;&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L43">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L44">        setContentView(R.layout.activity_admin_dashboard);</span>
+
+<span class="fc" id="L46">        recyclerAdminList = findViewById(R.id.recyclerAdminList);</span>
+<span class="fc" id="L47">        tvAdminCount      = findViewById(R.id.tvAdminCount);</span>
+<span class="fc" id="L48">        etAdminSearch     = findViewById(R.id.etAdminSearch);</span>
+<span class="fc" id="L49">        tabUsers          = findViewById(R.id.tabUsers);</span>
+<span class="fc" id="L50">        tabCounsellors    = findViewById(R.id.tabCounsellors);</span>
+
+        // Logout
+<span class="fc" id="L53">        findViewById(R.id.btnAdminLogout).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L54">            getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit().clear().apply();</span>
+<span class="nc" id="L55">            Intent i = new Intent(this, LoginActivity.class);</span>
+<span class="nc" id="L56">            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L57">            startActivity(i);</span>
+<span class="nc" id="L58">            finishAffinity();</span>
+<span class="nc" id="L59">        });</span>
+
+        // Adapter
+<span class="fc" id="L62">        adapter = new AdminUserAdapter(filtered, item -&gt; {</span>
+<span class="nc" id="L63">            Intent intent = new Intent(this, AdminEditUserActivity.class);</span>
+<span class="nc" id="L64">            intent.putExtra(&quot;userId&quot;,           item.id);</span>
+<span class="nc" id="L65">            intent.putExtra(&quot;userName&quot;,         item.name);</span>
+<span class="nc" id="L66">            intent.putExtra(&quot;userEmail&quot;,        item.email);</span>
+<span class="nc" id="L67">            intent.putExtra(&quot;userRole&quot;,         item.role);</span>
+<span class="nc" id="L68">            intent.putExtra(&quot;userActive&quot;,       item.active);</span>
+<span class="nc" id="L69">            intent.putExtra(&quot;userPassword&quot;,     item.password);</span>
+<span class="nc" id="L70">            intent.putExtra(&quot;userConfirmPassword&quot;, item.confirmPassword);</span>
+            // counsellor extras
+<span class="nc" id="L72">            intent.putExtra(&quot;cDisplayName&quot;,     item.displayName);</span>
+<span class="nc" id="L73">            intent.putExtra(&quot;cSpecialization&quot;,  item.specialization);</span>
+<span class="nc" id="L74">            intent.putExtra(&quot;cBio&quot;,             item.bio);</span>
+<span class="nc" id="L75">            intent.putExtra(&quot;cStatus&quot;,          item.status);</span>
+<span class="nc" id="L76">            startActivity(intent);</span>
+<span class="nc" id="L77">        });</span>
+<span class="fc" id="L78">        recyclerAdminList.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="fc" id="L79">        recyclerAdminList.setAdapter(adapter);</span>
+
+        // Tabs
+<span class="fc" id="L82">        tabUsers.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L83">            showingUsers = true;</span>
+<span class="fc" id="L84">            tabUsers.setTextColor(0xFF4A6E60);</span>
+<span class="fc" id="L85">            tabCounsellors.setTextColor(0xFF9B9B9B);</span>
+<span class="fc" id="L86">            etAdminSearch.setText(&quot;&quot;);</span>
+<span class="fc" id="L87">            fetchUsers();</span>
+<span class="fc" id="L88">        });</span>
+
+<span class="fc" id="L90">        tabCounsellors.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L91">            showingUsers = false;</span>
+<span class="fc" id="L92">            tabCounsellors.setTextColor(0xFF4A6E60);</span>
+<span class="fc" id="L93">            tabUsers.setTextColor(0xFF9B9B9B);</span>
+<span class="fc" id="L94">            etAdminSearch.setText(&quot;&quot;);</span>
+<span class="fc" id="L95">            fetchCounsellors();</span>
+<span class="fc" id="L96">        });</span>
+
+        // Search
+<span class="fc" id="L99">        etAdminSearch.addTextChangedListener(new TextWatcher() {</span>
+<span class="fc" id="L100">            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}</span>
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
+<span class="fc" id="L102">                searchQuery = s.toString().toLowerCase().trim();</span>
+<span class="fc" id="L103">                applyFilter();</span>
+<span class="fc" id="L104">            }</span>
+<span class="fc" id="L105">            @Override public void afterTextChanged(Editable s) {}</span>
+        });
+
+<span class="fc" id="L108">        fetchUsers();</span>
+<span class="fc" id="L109">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L113">        super.onResume();</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (showingUsers) fetchUsers(); else fetchCounsellors();</span>
+<span class="fc" id="L115">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /users
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchUsers() {
+<span class="fc" id="L121">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET, ApiConstants.USERS, null,
+                response -&gt; {
+<span class="fc" id="L124">                    allItems.clear();</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L127">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="fc" id="L128">                            AdminUserItem item = new AdminUserItem();</span>
+<span class="fc" id="L129">                            item.id              = obj.getLong(&quot;id&quot;);</span>
+<span class="fc" id="L130">                            item.name            = obj.optString(&quot;name&quot;,            &quot;&quot;);</span>
+<span class="fc" id="L131">                            item.email           = obj.optString(&quot;email&quot;,           &quot;&quot;);</span>
+<span class="fc" id="L132">                            item.password        = obj.optString(&quot;password&quot;,        &quot;&quot;);</span>
+<span class="fc" id="L133">                            item.confirmPassword = obj.optString(&quot;confirmPassword&quot;, &quot;&quot;);</span>
+<span class="fc" id="L134">                            item.role            = obj.optString(&quot;role&quot;,            &quot;USER&quot;);</span>
+<span class="fc" id="L135">                            item.active          = obj.optBoolean(&quot;active&quot;,         true);</span>
+                            // skip counsellors — they appear in the Counsellors tab
+<span class="fc bfc" id="L137" title="All 2 branches covered.">                            if (&quot;COUNSELLOR&quot;.equals(item.role)) continue;</span>
+<span class="fc" id="L138">                            allItems.add(item);</span>
+<span class="pc" id="L139">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+                    }
+<span class="fc" id="L141">                    applyFilter();</span>
+<span class="fc" id="L142">                },</span>
+<span class="nc" id="L143">                error -&gt; Toast.makeText(this, &quot;Failed to load users&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="fc" id="L145">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="fc" id="L146">    }</span>
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/counsellors
+    // ─────────────────────────────────────────────────────────────────────────
+    private void fetchCounsellors() {
+<span class="fc" id="L152">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET, ApiConstants.COUNSELLORS, null,
+                response -&gt; {
+<span class="fc" id="L155">                    allItems.clear();</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L158">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="fc" id="L159">                            AdminUserItem item = new AdminUserItem();</span>
+<span class="fc" id="L160">                            item.id              = obj.optLong(&quot;userId&quot;,            -1);</span>
+<span class="fc" id="L161">                            item.name            = obj.optString(&quot;displayName&quot;,     &quot;&quot;);</span>
+<span class="fc" id="L162">                            item.email           = obj.optString(&quot;email&quot;,           &quot;&quot;);</span>
+<span class="fc" id="L163">                            item.password        = obj.optString(&quot;password&quot;,        &quot;&quot;);</span>
+<span class="fc" id="L164">                            item.confirmPassword = obj.optString(&quot;confirmPassword&quot;, &quot;&quot;);</span>
+<span class="fc" id="L165">                            item.role            = &quot;COUNSELLOR&quot;;</span>
+<span class="fc" id="L166">                            item.active          = obj.optBoolean(&quot;active&quot;,         true);</span>
+<span class="fc" id="L167">                            item.displayName     = obj.optString(&quot;displayName&quot;,     &quot;&quot;);</span>
+<span class="fc" id="L168">                            item.specialization  = obj.optString(&quot;specialization&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L169">                            item.bio             = obj.optString(&quot;bio&quot;,             &quot;&quot;);</span>
+<span class="fc" id="L170">                            item.status          = obj.optString(&quot;status&quot;,          &quot;AVAILABLE&quot;);</span>
+<span class="fc" id="L171">                            allItems.add(item);</span>
+<span class="pc" id="L172">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+                    }
+<span class="fc" id="L174">                    applyFilter();</span>
+<span class="fc" id="L175">                },</span>
+<span class="nc" id="L176">                error -&gt; Toast.makeText(this, &quot;Failed to load counsellors&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+<span class="fc" id="L178">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="fc" id="L179">    }</span>
+
+    private void applyFilter() {
+<span class="fc" id="L182">        filtered.clear();</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        for (AdminUserItem item : allItems) {</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            if (!searchQuery.isEmpty()) {</span>
+<span class="fc" id="L185">                boolean nameMatch  = item.name.toLowerCase().contains(searchQuery);</span>
+<span class="fc" id="L186">                boolean emailMatch = item.email.toLowerCase().contains(searchQuery);</span>
+<span class="fc bfc" id="L187" title="All 4 branches covered.">                if (!nameMatch &amp;&amp; !emailMatch) continue;</span>
+            }
+<span class="fc" id="L189">            filtered.add(item);</span>
+<span class="fc" id="L190">        }</span>
+<span class="fc" id="L191">        adapter.notifyDataSetChanged();</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        String label = showingUsers ? &quot;user&quot; : &quot;counsellor&quot;;</span>
+<span class="fc" id="L193">        tvAdminCount.setText(filtered.size() + &quot; &quot; + label +</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                (filtered.size() == 1 ? &quot;&quot; : &quot;s&quot;) + &quot; found&quot;);</span>
+<span class="fc" id="L195">    }</span>
+
+    // ── Model ─────────────────────────────────────────────────────────────────
+<span class="fc" id="L198">    static class AdminUserItem {</span>
+        long    id;
+        String  name, email, password, confirmPassword, role, status;
+        boolean active;
+<span class="fc" id="L202">        String  displayName = &quot;&quot;, specialization = &quot;&quot;, bio = &quot;&quot;;</span>
+    }
+
+    // ── Adapter ───────────────────────────────────────────────────────────────
+    interface OnRowClick { void onClick(AdminUserItem item); }
+
+    static class AdminUserAdapter
+            extends RecyclerView.Adapter&lt;AdminUserAdapter.VH&gt; {
+
+        private final List&lt;AdminUserItem&gt; list;
+        private final OnRowClick cb;
+
+<span class="fc" id="L214">        AdminUserAdapter(List&lt;AdminUserItem&gt; list, OnRowClick cb) {</span>
+<span class="fc" id="L215">            this.list = list;</span>
+<span class="fc" id="L216">            this.cb   = cb;</span>
+<span class="fc" id="L217">        }</span>
+
+        @Override
+        public VH onCreateViewHolder(ViewGroup parent, int viewType) {
+<span class="fc" id="L221">            View v = LayoutInflater.from(parent.getContext())</span>
+<span class="fc" id="L222">                    .inflate(R.layout.item_admin_user_row, parent, false);</span>
+<span class="fc" id="L223">            return new VH(v);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(VH h, int pos) {
+<span class="fc" id="L228">            AdminUserItem item = list.get(pos);</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">            h.tvName.setText(item.name.isEmpty() ? &quot;(no name)&quot; : item.name);</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">            h.tvEmail.setText(item.email.isEmpty() ? item.role : item.email);</span>
+<span class="fc" id="L231">            h.tvRole.setText(item.role);</span>
+
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            if (item.active) {</span>
+<span class="fc" id="L234">                h.tvActive.setText(&quot;Active&quot;);</span>
+<span class="fc" id="L235">                h.tvActive.setBackgroundResource(R.drawable.dark_green_background);</span>
+            } else {
+<span class="nc" id="L237">                h.tvActive.setText(&quot;Inactive&quot;);</span>
+<span class="nc" id="L238">                h.tvActive.setBackgroundColor(0xFFB0B0B0);</span>
+            }
+
+<span class="pc" id="L241">            h.itemView.setOnClickListener(v -&gt; cb.onClick(item));</span>
+<span class="fc" id="L242">        }</span>
+
+<span class="fc" id="L244">        @Override public int getItemCount() { return list.size(); }</span>
+
+        static class VH extends RecyclerView.ViewHolder {
+            TextView tvName, tvEmail, tvRole, tvActive;
+            VH(View v) {
+<span class="fc" id="L249">                super(v);</span>
+<span class="fc" id="L250">                tvName   = v.findViewById(R.id.tvRowName);</span>
+<span class="fc" id="L251">                tvEmail  = v.findViewById(R.id.tvRowEmail);</span>
+<span class="fc" id="L252">                tvRole   = v.findViewById(R.id.tvRowRole);</span>
+<span class="fc" id="L253">                tvActive = v.findViewById(R.id.tvRowActive);</span>
+<span class="fc" id="L254">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

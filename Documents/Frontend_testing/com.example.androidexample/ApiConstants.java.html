@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiConstants.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">ApiConstants.java</span></div><h1>ApiConstants.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+public class ApiConstants {
+    private ApiConstants() {}
+
+    // ─── REAL SERVER ───────────────────────────────────────────
+    public static final String BASE_URL     = &quot;http://REDACTED:8080&quot;;
+    public static final String WS_BASE_URL  = &quot;ws://REDACTED:8080&quot;;
+
+    public static final String SIGNUP       = BASE_URL + &quot;/users/signup&quot;;
+    public static final String LOGIN        = BASE_URL + &quot;/users/login&quot;;
+    public static final String USERS        = BASE_URL + &quot;/api/admin/users&quot;;
+    public static final String DELETE       = BASE_URL + &quot;/users/&quot;;
+    public static final String EDIT         = BASE_URL + &quot;/api/admin/update/&quot;;
+    public static final String ADMIN_DELETE = BASE_URL + &quot;/api/admin/&quot;;
+    public static final String COUNSELLORS  = BASE_URL + &quot;/api/counsellors&quot;;
+    public static final String APPOINTMENTS = BASE_URL + &quot;/api/appointments&quot;;
+    public static final String CHAT_HISTORY = BASE_URL + &quot;/api/chat/history&quot;;
+    public static final String WS_CHAT_BASE = WS_BASE_URL + &quot;/ws/chat&quot;;
+
+    // ─── NOTES ────────────────────────────────────────────────
+    public static String userNotes(long userId) {
+<span class="nc" id="L23">        return BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
+    }
+    public static String note(long noteId) {
+<span class="nc" id="L26">        return BASE_URL + &quot;/api/notes/&quot; + noteId;</span>
+    }
+
+    // ─── COUNSELLOR ───────────────────────────────────────────
+    public static String counselorProfile(long userId) {
+<span class="nc" id="L31">        return COUNSELLORS + &quot;/&quot; + userId + &quot;/profile&quot;;</span>
+    }
+
+    // ─── CHAT ─────────────────────────────────────────────────
+    public static String wsChat(long senderId, long receiverId) {
+<span class="nc" id="L36">        return WS_CHAT_BASE + &quot;/&quot; + senderId + &quot;/&quot; + receiverId;</span>
+    }
+    public static String chatHistory(long userA, long userB) {
+<span class="nc" id="L39">        return CHAT_HISTORY + &quot;?userA=&quot; + userA + &quot;&amp;userB=&quot; + userB;</span>
+    }
+
+    // ─── APPOINTMENTS ─────────────────────────────────────────
+    public static String appointmentAccept(long appointmentId) {
+<span class="nc" id="L44">        return APPOINTMENTS + &quot;/&quot; + appointmentId + &quot;/accept&quot;;</span>
+    }
+    public static String appointmentDecline(long appointmentId) {
+<span class="nc" id="L47">        return APPOINTMENTS + &quot;/&quot; + appointmentId + &quot;/decline&quot;;</span>
+    }
+    public static String appointmentsByCounsellor(long counsellorId) {
+<span class="nc" id="L50">        return APPOINTMENTS + &quot;/counsellor/&quot; + counsellorId;</span>
+    }
+    public static String acceptedByUser(long userId) {
+<span class="nc" id="L53">        return APPOINTMENTS + &quot;/user/&quot; + userId + &quot;/accepted&quot;;</span>
+    }
+    public static String acceptedByCounsellor(long counsellorId) {
+<span class="nc" id="L56">        return APPOINTMENTS + &quot;/counsellor/&quot; + counsellorId + &quot;/accepted&quot;;</span>
+    }
+
+    // ─── PRESCRIPTIONS ────────────────────────────────────────
+
+    public static String userPrescriptions(long userId) {
+<span class="fc" id="L62">        return BASE_URL + &quot;/prescriptions/users/&quot; + userId;</span>
+    }
+
+    // ─── MOCKOON LOCAL SERVER ──────────────────────────────────
+//    public static final String BASE_URL     = &quot;http://REDACTED&quot;;
+//    public static final String WS_BASE_URL  = &quot;ws://REDACTED&quot;;
+//    public static final String SIGNUP       = BASE_URL + &quot;/users/signup&quot;;
+//    public static final String LOGIN        = BASE_URL + &quot;/users/login&quot;;
+//    public static final String USERS        = BASE_URL + &quot;/api/admin/users&quot;;
+//    public static final String DELETE       = BASE_URL + &quot;/users/&quot;;
+//    public static final String EDIT         = BASE_URL + &quot;/api/admin/update/&quot;;
+//    public static final String ADMIN_DELETE = BASE_URL + &quot;/api/admin/&quot;;
+//    public static final String COUNSELLORS  = BASE_URL + &quot;/api/counsellors&quot;;
+//    public static final String APPOINTMENTS = BASE_URL + &quot;/api/appointments&quot;;
+//    public static final String CHAT_HISTORY = BASE_URL + &quot;/api/chat/history&quot;;
+//    public static final String WS_CHAT_BASE = WS_BASE_URL + &quot;/ws/chat&quot;;
+//
+//    // ─── NOTES ────────────────────────────────────────────────
+//    public static String userNotes(long userId) {
+//        return BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;
+//    }
+//    public static String note(long noteId) {
+//        return BASE_URL + &quot;/api/notes/&quot; + noteId;
+//    }
+//
+//    // ─── COUNSELLOR ───────────────────────────────────────────
+//    public static String counselorProfile(long userId) {
+//        return COUNSELLORS + &quot;/&quot; + userId + &quot;/profile&quot;;
+//    }
+//
+//    // ─── CHAT ─────────────────────────────────────────────────
+//    public static String wsChat(long senderId, long receiverId) {
+//        return WS_CHAT_BASE + &quot;/&quot; + senderId + &quot;/&quot; + receiverId;
+//    }
+//    public static String chatHistory(long userA, long userB) {
+//        return CHAT_HISTORY + &quot;?userA=&quot; + userA + &quot;&amp;userB=&quot; + userB;
+//    }
+//
+//    // ─── APPOINTMENTS ─────────────────────────────────────────
+//    public static String appointmentAccept(long appointmentId) {
+//        return APPOINTMENTS + &quot;/&quot; + appointmentId + &quot;/accept&quot;;
+//    }
+//    public static String appointmentDecline(long appointmentId) {
+//        return APPOINTMENTS + &quot;/&quot; + appointmentId + &quot;/decline&quot;;
+//    }
+//    public static String appointmentsByCounsellor(long counsellorId) {
+//        return APPOINTMENTS + &quot;/counsellor/&quot; + counsellorId;
+//    }
+//    public static String acceptedByUser(long userId) {
+//        return APPOINTMENTS + &quot;/user/&quot; + userId + &quot;/accepted&quot;;
+//    }
+//    public static String acceptedByCounsellor(long counsellorId) {
+//        return APPOINTMENTS + &quot;/counsellor/&quot; + counsellorId + &quot;/accepted&quot;;
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

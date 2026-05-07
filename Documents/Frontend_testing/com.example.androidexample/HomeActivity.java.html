@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">HomeActivity.java</span></div><h1>HomeActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Calendar;
+
+<span class="fc" id="L27">public class HomeActivity extends AppCompatActivity {</span>
+
+    private DrawerLayout drawerLayout;
+<span class="fc" id="L30">    private boolean isFirstLoad = true;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L34">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L35">        setContentView(R.layout.activity_home);</span>
+
+<span class="fc" id="L37">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L38">        String userId = prefs.getString(&quot;USER_ID&quot;,    &quot;&quot;);</span>
+<span class="fc" id="L39">        String email  = prefs.getString(&quot;USER_EMAIL&quot;, &quot;&quot;);</span>
+<span class="fc" id="L40">        String name   = prefs.getString(&quot;USER_NAME&quot;,  &quot;&quot;);</span>
+<span class="fc" id="L41">        String role   = prefs.getString(&quot;USER_ROLE&quot;,  &quot;&quot;);</span>
+
+<span class="fc" id="L43">        drawerLayout = findViewById(R.id.drawerLayout);</span>
+
+        // Welcome text — show first name only
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        String firstName = name.isEmpty() ? &quot;&quot; : name.split(&quot; &quot;)[0];</span>
+<span class="fc" id="L47">        ((TextView) findViewById(R.id.tvWelcome))</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">                .setText(firstName.isEmpty() ? &quot;Welcome&quot; : firstName);</span>
+        // Update hint if we have a name
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (!firstName.isEmpty()) {</span>
+<span class="fc" id="L51">            ((TextView) findViewById(R.id.tvHint))</span>
+<span class="fc" id="L52">                    .setText(&quot;How are you feeling today, &quot; + firstName + &quot;?&quot;);</span>
+        }
+
+        // Load quote and stats
+<span class="fc" id="L56">        loadDailyQuote();</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (role.equals(&quot;USER&quot;)) {</span>
+<span class="fc" id="L58">            loadQuickStats(userId);</span>
+        }
+
+        // Drawer header
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        String displayName = name.isEmpty() ? &quot;Hello!&quot; : &quot;Hi, &quot; + name;</span>
+<span class="fc" id="L63">        ((TextView) findViewById(R.id.drawerName)).setText(displayName);</span>
+<span class="fc" id="L64">        ((TextView) findViewById(R.id.drawerEmail)).setText(email);</span>
+
+        // Drawer avatar — show profile pic or initial
+<span class="fc" id="L67">        String picUrl = prefs.getString(&quot;USER_PIC_URL&quot;, &quot;&quot;);</span>
+<span class="fc" id="L68">        AvatarHelper.load(this, name, picUrl,</span>
+<span class="fc" id="L69">                findViewById(R.id.tvDrawerAvatar),</span>
+<span class="fc" id="L70">                findViewById(R.id.ivDrawerAvatar));</span>
+
+        // Hamburger
+<span class="fc" id="L73">        ((ImageButton) findViewById(R.id.btnHamburger))</span>
+<span class="fc" id="L74">                .setOnClickListener(v -&gt; drawerLayout.open());</span>
+
+        // ── Find a Counselor ──────────────────────────────────────────────────
+<span class="fc" id="L77">        findViewById(R.id.drawerItemFindCounsellor).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L78">            drawerLayout.close();</span>
+<span class="fc" id="L79">            startActivity(new Intent(this, CounsellorSearchActivity.class));</span>
+<span class="fc" id="L80">        });</span>
+
+        // ── Worry Notes ───────────────────────────────────────────────────────
+<span class="fc" id="L83">        findViewById(R.id.drawerItemWorryNotes).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L84">            drawerLayout.close();</span>
+<span class="fc" id="L85">            startActivity(new Intent(this, WorryNotes.class));</span>
+<span class="fc" id="L86">        });</span>
+
+        // ── Chat with Counselor ───────────────────────────────────────────────
+<span class="fc" id="L89">        findViewById(R.id.drawerItemChat).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L90">            drawerLayout.close();</span>
+<span class="fc" id="L91">            startActivity(new Intent(this, ChatListActivity.class));</span>
+<span class="fc" id="L92">        });</span>
+
+        // ── Edit Profile ──────────────────────────────────────────────────────
+<span class="fc" id="L95">        findViewById(R.id.drawerItemEditProfile).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L96">            drawerLayout.close();</span>
+<span class="fc" id="L97">            Intent intent = new Intent(this, EditProfile.class);</span>
+<span class="fc" id="L98">            intent.putExtra(&quot;userId&quot;,   userId);</span>
+<span class="fc" id="L99">            intent.putExtra(&quot;email&quot;,    email);</span>
+<span class="fc" id="L100">            intent.putExtra(&quot;name&quot;,     name);</span>
+<span class="fc" id="L101">            intent.putExtra(&quot;password&quot;, &quot;&quot;);</span>
+<span class="fc" id="L102">            startActivity(intent);</span>
+<span class="fc" id="L103">        });</span>
+
+        // ── Prescriptions (USER only) ─────────────────────────────────────────
+<span class="fc" id="L106">        findViewById(R.id.drawerItemPrescriptions).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L107">            drawerLayout.close();</span>
+<span class="fc" id="L108">            startActivity(new Intent(this, PrescriptionsActivity.class));</span>
+<span class="fc" id="L109">        });</span>
+
+        // ── Show/hide menu items based on role ────────────────────────────────
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (role.equals(&quot;COUNSELLOR&quot;)) {</span>
+<span class="nc" id="L113">            findViewById(R.id.drawerItemAssignTask).setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L114">            findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);</span>
+<span class="nc" id="L115">            findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);</span>
+<span class="nc" id="L116">            findViewById(R.id.drawerRoutineTracker).setVisibility(View.GONE);</span>
+<span class="nc" id="L117">            findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);</span>
+<span class="nc" id="L118">            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        } else if (role.equals(&quot;ADMIN&quot;)) {</span>
+<span class="nc" id="L120">            findViewById(R.id.drawerItemMyTasks).setVisibility(View.GONE);</span>
+<span class="nc" id="L121">            findViewById(R.id.drawerItemCheckIn).setVisibility(View.GONE);</span>
+<span class="nc" id="L122">            findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);</span>
+<span class="nc" id="L123">            findViewById(R.id.drawerRoutineTracker).setVisibility(View.GONE);</span>
+<span class="nc" id="L124">            findViewById(R.id.drawerItemAiChat).setVisibility(View.GONE);</span>
+<span class="nc" id="L125">            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.GONE);</span>
+        } else {
+            // USER
+<span class="fc" id="L128">            findViewById(R.id.drawerItemMyTasks).setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L129">            findViewById(R.id.drawerItemCheckIn).setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L130">            findViewById(R.id.drawerItemAssignTask).setVisibility(View.GONE);</span>
+<span class="fc" id="L131">            findViewById(R.id.drawerRoutineTracker).setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L132">            findViewById(R.id.drawerItemAiChat).setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L133">            findViewById(R.id.drawerItemPrescriptions).setVisibility(View.VISIBLE);</span>
+        }
+
+        // ── My Tasks ──────────────────────────────────────────────────────────
+<span class="fc" id="L137">        findViewById(R.id.drawerItemMyTasks).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L138">            drawerLayout.close();</span>
+<span class="fc" id="L139">            startActivity(new Intent(this, TasksOverview.class));</span>
+<span class="fc" id="L140">        });</span>
+
+        // ── Assign Task ───────────────────────────────────────────────────────
+<span class="fc" id="L143">        findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L144">            drawerLayout.close();</span>
+<span class="nc" id="L145">            startActivity(new Intent(this, AssignTaskActivity.class));</span>
+<span class="nc" id="L146">        });</span>
+
+        // ── Check-In ──────────────────────────────────────────────────────────
+<span class="fc" id="L149">        findViewById(R.id.drawerItemCheckIn).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L150">            drawerLayout.close();</span>
+<span class="fc" id="L151">            startActivity(new Intent(this, CheckInActivity.class));</span>
+<span class="fc" id="L152">        });</span>
+
+        // Routine Summary listener
+<span class="fc" id="L155">        findViewById(R.id.drawerRoutineTracker).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L156">            drawerLayout.close();</span>
+<span class="fc" id="L157">            startActivity(new Intent(this, RoutineSummaryActivity.class));</span>
+<span class="fc" id="L158">        });</span>
+
+        // ── AI Assistant (USER only) ───────────────────────────────────────────
+<span class="fc" id="L161">        findViewById(R.id.drawerItemAiChat).setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L162">            drawerLayout.close();</span>
+<span class="fc" id="L163">            startActivity(new Intent(this, AIChatActivity.class));</span>
+<span class="fc" id="L164">        });</span>
+
+        // ── Log Out ───────────────────────────────────────────────────────────
+<span class="fc" id="L167">        findViewById(R.id.drawerItemLogout).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L168">            drawerLayout.close();</span>
+<span class="nc" id="L169">            prefs.edit().clear().apply();</span>
+<span class="nc" id="L170">            Intent intent = new Intent(this, LoginActivity.class);</span>
+<span class="nc" id="L171">            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L172">            startActivity(intent);</span>
+<span class="nc" id="L173">            finishAffinity();</span>
+<span class="nc" id="L174">        });</span>
+
+        // Load the summaries
+<span class="fc" id="L177">        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);</span>
+<span class="fc" id="L178">        dashboardContainer.removeAllViews();</span>
+<span class="fc" id="L179">        loadDashboard();</span>
+<span class="fc" id="L180">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="fc" id="L184">        super.onResume();</span>
+
+        // Skip reload on first launch (onCreate already loaded it)
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">        if (isFirstLoad) {</span>
+<span class="fc" id="L188">            isFirstLoad = false;</span>
+<span class="fc" id="L189">            return;</span>
+        }
+
+        // Re-read name from SharedPreferences in case user just updated it in EditProfile
+<span class="nc" id="L193">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L194">        String name      = prefs.getString(&quot;USER_NAME&quot;,  &quot;&quot;);</span>
+<span class="nc" id="L195">        String email     = prefs.getString(&quot;USER_EMAIL&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        String firstName = name.isEmpty() ? &quot;&quot; : name.split(&quot; &quot;)[0];</span>
+
+<span class="nc" id="L198">        ((TextView) findViewById(R.id.tvWelcome))</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                .setText(firstName.isEmpty() ? &quot;Welcome&quot; : firstName);</span>
+<span class="nc" id="L200">        ((TextView) findViewById(R.id.tvHint))</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                .setText(firstName.isEmpty()</span>
+<span class="nc" id="L202">                        ? &quot;How are you feeling today?&quot;</span>
+<span class="nc" id="L203">                        : &quot;How are you feeling today, &quot; + firstName + &quot;?&quot;);</span>
+<span class="nc" id="L204">        ((TextView) findViewById(R.id.drawerName))</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                .setText(name.isEmpty() ? &quot;Hello!&quot; : &quot;Hi, &quot; + name);</span>
+<span class="nc" id="L206">        ((TextView) findViewById(R.id.drawerEmail)).setText(email);</span>
+
+<span class="nc" id="L208">        String picUrl = prefs.getString(&quot;USER_PIC_URL&quot;, &quot;&quot;);</span>
+<span class="nc" id="L209">        AvatarHelper.load(this, name, picUrl,</span>
+<span class="nc" id="L210">                findViewById(R.id.tvDrawerAvatar),</span>
+<span class="nc" id="L211">                findViewById(R.id.ivDrawerAvatar));</span>
+
+<span class="nc" id="L213">        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);</span>
+<span class="nc" id="L214">        dashboardContainer.removeAllViews();</span>
+<span class="nc" id="L215">        loadDashboard();</span>
+<span class="nc" id="L216">    }</span>
+
+    private void loadDashboard() {
+<span class="fc" id="L219">        LinearLayout dashboardContainer = findViewById(R.id.dashboardContainer);</span>
+<span class="fc" id="L220">        dashboardContainer.setVisibility(android.view.View.VISIBLE);</span>
+<span class="fc" id="L221">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L222">        String role = prefs.getString(&quot;USER_ROLE&quot;, &quot;&quot;);</span>
+
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">        if (role.equals(&quot;USER&quot;)) {</span>
+<span class="fc" id="L225">            addRoutineSummaryCard(dashboardContainer);</span>
+<span class="fc" id="L226">            addWorryNoteCard(dashboardContainer);</span>
+<span class="fc" id="L227">            addTaskCard(dashboardContainer);</span>
+<span class="fc" id="L228">            addCheckInCard(dashboardContainer);</span>
+        } else {
+            // Counselor dashboard cards
+        }
+<span class="fc" id="L232">    }</span>
+
+    private void addRoutineSummaryCard(LinearLayout container) {
+<span class="fc" id="L235">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L236">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L237">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/routines&quot;;</span>
+
+<span class="fc" id="L239">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                    if (response.length() == 0) {</span>
+                        // No routines, show placeholder or hide card
+<span class="nc" id="L246">                        return;</span>
+                    }
+
+                    try {
+                        // Find routine with the highest progress (but uncompleted)
+<span class="nc" id="L251">                        JSONObject topRoutine = null;</span>
+<span class="nc" id="L252">                        int maxProgress = -1;</span>
+
+<span class="nc bnc" id="L254" title="All 2 branches missed.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L255">                            JSONObject routine = response.getJSONObject(i);</span>
+<span class="nc" id="L256">                            boolean completed = routine.getBoolean(&quot;completed&quot;);</span>
+<span class="nc" id="L257">                            int streakCount = routine.getInt(&quot;streakCount&quot;);</span>
+
+<span class="nc bnc" id="L259" title="All 4 branches missed.">                            if (!completed &amp;&amp; streakCount &gt; maxProgress) {</span>
+<span class="nc" id="L260">                                maxProgress = streakCount;</span>
+<span class="nc" id="L261">                                topRoutine = routine;</span>
+                            }
+                        }
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">                        if (topRoutine == null) {</span>
+                            // All routines completed
+<span class="nc" id="L267">                            return;</span>
+                        }
+
+                        // Inflate and populate card
+<span class="nc" id="L271">                        View card = getLayoutInflater().inflate(R.layout.routine_card, container, false);</span>
+
+<span class="nc" id="L273">                        TextView title = card.findViewById(R.id.routineTitle);</span>
+<span class="nc" id="L274">                        TextView progress = card.findViewById(R.id.routineProgress);</span>
+<span class="nc" id="L275">                        TextView label = card.findViewById(R.id.routineLabel);</span>
+<span class="nc" id="L276">                        ProgressBar progressBar = card.findViewById(R.id.progressBar);</span>
+
+<span class="nc" id="L278">                        title.setText(topRoutine.getString(&quot;title&quot;));</span>
+<span class="nc" id="L279">                        progress.setText(&quot;Day &quot; + maxProgress + &quot;/60&quot;);</span>
+<span class="nc" id="L280">                        label.setText(topRoutine.getString(&quot;label&quot;));</span>
+<span class="nc" id="L281">                        progressBar.setMax(60);</span>
+<span class="nc" id="L282">                        progressBar.setProgress(maxProgress);</span>
+
+                        // Click to open routines page
+<span class="nc" id="L285">                        card.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L286">                            startActivity(new Intent(this, RoutineSummaryActivity.class));</span>
+<span class="nc" id="L287">                        });</span>
+
+<span class="nc" id="L289">                        container.addView(card);</span>
+
+<span class="nc" id="L291">                    } catch (JSONException e) {</span>
+<span class="nc" id="L292">                        e.printStackTrace();</span>
+<span class="nc" id="L293">                    }</span>
+<span class="nc" id="L294">                },</span>
+                error -&gt; {
+                    // Failed to load routines, don't show card
+<span class="fc" id="L297">                }</span>
+        );
+
+<span class="fc" id="L300">        Volley.newRequestQueue(this).add(request);</span>
+<span class="fc" id="L301">    }</span>
+
+    private void addWorryNoteCard(LinearLayout container) {
+<span class="fc" id="L304">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L305">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L306">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
+
+<span class="fc" id="L308">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">                    if (response.length() == 0) {</span>
+                        // No worry notes, don't show card
+<span class="nc" id="L315">                        return;</span>
+                    }
+
+                    try {
+                        // Get most recent note (last in array)
+<span class="fc" id="L320">                        JSONObject latestNote = response.getJSONObject(response.length() - 1);</span>
+
+                        // Inflate and populate card
+<span class="fc" id="L323">                        View card = getLayoutInflater().inflate(R.layout.dashboard_worry_note_card, container, false);</span>
+
+<span class="fc" id="L325">                        TextView title = card.findViewById(R.id.worryTitle);</span>
+<span class="fc" id="L326">                        TextView content = card.findViewById(R.id.worryContent);</span>
+<span class="fc" id="L327">                        TextView dueDate = card.findViewById(R.id.worryDueDate);</span>
+<span class="fc" id="L328">                        TextView label = card.findViewById(R.id.worryLabel);</span>
+
+<span class="fc" id="L330">                        title.setText(latestNote.getString(&quot;title&quot;));</span>
+<span class="fc" id="L331">                        content.setText(latestNote.getString(&quot;content&quot;));</span>
+
+<span class="fc" id="L333">                        String dueDateStr = latestNote.optString(&quot;dueDate&quot;, &quot;No due date&quot;);</span>
+<span class="fc" id="L334">                        dueDate.setText(&quot;Due: &quot; + dueDateStr);</span>
+
+<span class="fc" id="L336">                        label.setText(latestNote.optString(&quot;label&quot;, &quot;&quot;));</span>
+
+                        // Click to open worry notes page
+<span class="fc" id="L339">                        card.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L340">                            startActivity(new Intent(this, WorryNotes.class));</span>
+<span class="nc" id="L341">                        });</span>
+
+<span class="fc" id="L343">                        container.addView(card);</span>
+
+<span class="nc" id="L345">                    } catch (JSONException e) {</span>
+<span class="nc" id="L346">                        e.printStackTrace();</span>
+<span class="fc" id="L347">                    }</span>
+<span class="fc" id="L348">                },</span>
+                error -&gt; {
+                    // Failed to load notes, don't show card
+<span class="nc" id="L351">                }</span>
+        );
+
+<span class="fc" id="L354">        Volley.newRequestQueue(this).add(request);</span>
+<span class="fc" id="L355">    }</span>
+
+    private void addTaskCard(LinearLayout container) {
+<span class="fc" id="L358">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L359">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L360">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/tasks&quot;;</span>
+
+<span class="fc" id="L362">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">                    if (response.length() == 0) {</span>
+                        // No tasks, don't show card
+<span class="nc" id="L369">                        return;</span>
+                    }
+
+                    try {
+                        // Find most urgent task (soonest due date, not completed)
+<span class="fc" id="L374">                        JSONObject urgentTask = null;</span>
+<span class="fc" id="L375">                        String earliestDueDate = null;</span>
+
+<span class="fc bfc" id="L377" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L378">                            JSONObject task = response.getJSONObject(i);</span>
+<span class="fc" id="L379">                            String status = task.getString(&quot;status&quot;);</span>
+
+<span class="fc bfc" id="L381" title="All 2 branches covered.">                            if (status.equals(&quot;Completed&quot;)) {</span>
+<span class="fc" id="L382">                                continue; // Skip completed tasks</span>
+                            }
+
+<span class="fc" id="L385">                            String dueDate = task.optString(&quot;dueDate&quot;, null);</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">                            if (dueDate != null) {</span>
+<span class="pc bpc" id="L387" title="1 of 4 branches missed.">                                if (earliestDueDate == null || dueDate.compareTo(earliestDueDate) &lt; 0) {</span>
+<span class="fc" id="L388">                                    earliestDueDate = dueDate;</span>
+<span class="fc" id="L389">                                    urgentTask = task;</span>
+                                }
+                            }
+                        }
+
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">                        if (urgentTask == null) {</span>
+                            // No active tasks
+<span class="nc" id="L396">                            return;</span>
+                        }
+
+                        // Inflate and populate card
+<span class="fc" id="L400">                        View card = getLayoutInflater().inflate(R.layout.dashboard_task_card, container, false);</span>
+
+<span class="fc" id="L402">                        TextView title = card.findViewById(R.id.taskTitle);</span>
+<span class="fc" id="L403">                        TextView description = card.findViewById(R.id.taskDescription);</span>
+<span class="fc" id="L404">                        TextView dueDate = card.findViewById(R.id.taskDueDate);</span>
+<span class="fc" id="L405">                        TextView status = card.findViewById(R.id.taskStatus);</span>
+
+<span class="fc" id="L407">                        title.setText(urgentTask.getString(&quot;title&quot;));</span>
+<span class="fc" id="L408">                        description.setText(urgentTask.getString(&quot;description&quot;));</span>
+<span class="fc" id="L409">                        dueDate.setText(&quot;Due: &quot; + urgentTask.optString(&quot;dueDate&quot;, &quot;No due date&quot;));</span>
+
+<span class="fc" id="L411">                        String taskStatus = urgentTask.getString(&quot;status&quot;);</span>
+<span class="fc" id="L412">                        status.setText(taskStatus);</span>
+
+                        // Set status background color
+<span class="pc bpc" id="L415" title="1 of 2 branches missed.">                        if (taskStatus.equals(&quot;Not Started&quot;)) {</span>
+<span class="nc" id="L416">                            status.setBackgroundResource(R.drawable.red_background);</span>
+<span class="pc bpc" id="L417" title="1 of 2 branches missed.">                        } else if (taskStatus.equals(&quot;Ongoing&quot;)) {</span>
+<span class="fc" id="L418">                            status.setBackgroundResource(R.drawable.yellow_background);</span>
+                        } else {
+<span class="nc" id="L420">                            status.setBackgroundResource(R.drawable.green_background);</span>
+                        }
+
+                        // Click to open tasks page
+<span class="fc" id="L424">                        card.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L425">                            startActivity(new Intent(this, TasksOverview.class));</span>
+<span class="nc" id="L426">                        });</span>
+
+<span class="fc" id="L428">                        container.addView(card);</span>
+
+<span class="nc" id="L430">                    } catch (JSONException e) {</span>
+<span class="nc" id="L431">                        e.printStackTrace();</span>
+<span class="fc" id="L432">                    }</span>
+<span class="fc" id="L433">                },</span>
+                error -&gt; {
+                    // Failed to load tasks, don't show card
+<span class="nc" id="L436">                }</span>
+        );
+
+<span class="fc" id="L439">        Volley.newRequestQueue(this).add(request);</span>
+<span class="fc" id="L440">    }</span>
+
+    private void addCheckInCard(LinearLayout container) {
+<span class="fc" id="L443">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L444">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L445">        String url = ApiConstants.BASE_URL + &quot;/users/&quot; + userId + &quot;/checkins&quot;;</span>
+
+<span class="fc" id="L447">        String today = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.getDefault()).format(new Date());</span>
+
+<span class="fc" id="L449">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+                    // Inflate card
+<span class="fc" id="L455">                    View card = getLayoutInflater().inflate(R.layout.dashboard_checkin_card, container, false);</span>
+
+<span class="fc" id="L457">                    View circle = card.findViewById(R.id.checkinCircle);</span>
+<span class="fc" id="L458">                    TextView status = card.findViewById(R.id.checkinStatus);</span>
+
+<span class="fc" id="L460">                    boolean checkedInToday = false;</span>
+<span class="fc" id="L461">                    int rating = 0;</span>
+
+                    // Check if checked in today
+                    try {
+<span class="fc bfc" id="L465" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L466">                            JSONObject checkIn = response.getJSONObject(i);</span>
+<span class="fc" id="L467">                            String date = checkIn.getString(&quot;date&quot;);</span>
+
+<span class="fc bfc" id="L469" title="All 2 branches covered.">                            if (date.equals(today)) {</span>
+<span class="fc" id="L470">                                checkedInToday = true;</span>
+<span class="fc" id="L471">                                rating = checkIn.getInt(&quot;rating&quot;);</span>
+<span class="fc" id="L472">                                break;</span>
+                            }
+                        }
+<span class="nc" id="L475">                    } catch (JSONException e) {</span>
+<span class="nc" id="L476">                        e.printStackTrace();</span>
+<span class="fc" id="L477">                    }</span>
+
+<span class="fc bfc" id="L479" title="All 2 branches covered.">                    if (checkedInToday) {</span>
+                        // Show rating circle
+<span class="fc" id="L481">                        circle.setBackgroundResource(getCircleDrawable(rating));</span>
+<span class="fc" id="L482">                        status.setText(&quot;You rated today: &quot; + rating + &quot;/5&quot;);</span>
+                    } else {
+                        // Show faded circle
+<span class="fc" id="L485">                        circle.setBackgroundResource(R.drawable.circle_rating_3_faded);</span>
+<span class="fc" id="L486">                        status.setText(&quot;Not checked in yet&quot;);</span>
+                    }
+
+                    // Click to open check-in
+<span class="fc" id="L490">                    card.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L491">                        startActivity(new Intent(this, CheckInActivity.class));</span>
+<span class="nc" id="L492">                    });</span>
+
+<span class="fc" id="L494">                    container.addView(card);</span>
+<span class="fc" id="L495">                },</span>
+                error -&gt; {
+                    // Failed to load, show &quot;not checked in&quot;
+<span class="nc" id="L498">                    View card = getLayoutInflater().inflate(R.layout.dashboard_checkin_card, container, false);</span>
+
+<span class="nc" id="L500">                    View circle = card.findViewById(R.id.checkinCircle);</span>
+<span class="nc" id="L501">                    TextView status = card.findViewById(R.id.checkinStatus);</span>
+
+<span class="nc" id="L503">                    circle.setBackgroundResource(R.drawable.circle_rating_3_faded);</span>
+<span class="nc" id="L504">                    status.setText(&quot;Not checked in yet&quot;);</span>
+
+<span class="nc" id="L506">                    card.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L507">                        startActivity(new Intent(this, CheckInActivity.class));</span>
+<span class="nc" id="L508">                    });</span>
+
+<span class="nc" id="L510">                    container.addView(card);</span>
+<span class="nc" id="L511">                }</span>
+        );
+
+<span class="fc" id="L514">        Volley.newRequestQueue(this).add(request);</span>
+<span class="fc" id="L515">    }</span>
+
+    private int getCircleDrawable(int rating) {
+<span class="pc bpc" id="L518" title="5 of 6 branches missed.">        switch (rating) {</span>
+<span class="nc" id="L519">            case 1: return R.drawable.circle_rating_1;</span>
+<span class="nc" id="L520">            case 2: return R.drawable.circle_rating_2;</span>
+<span class="nc" id="L521">            case 3: return R.drawable.circle_rating_3;</span>
+<span class="fc" id="L522">            case 4: return R.drawable.circle_rating_4;</span>
+<span class="nc" id="L523">            case 5: return R.drawable.circle_rating_5;</span>
+<span class="nc" id="L524">            default: return R.drawable.circle_rating_3;</span>
+        }
+    }
+    // ── Daily Quote ───────────────────────────────────────────────────────────
+    private void loadDailyQuote() {
+<span class="fc" id="L529">        String[] quotes = {</span>
+                &quot;You don't have to be positive all the time. It's perfectly okay to feel sad, angry, or stressed.|Let yourself feel it.&quot;,
+                &quot;Mental health is not a destination, but a process.|It's about how you drive, not where you're going.&quot;,
+                &quot;You are allowed to be both a masterpiece and a work in progress simultaneously.|— Sophia Bush&quot;,
+                &quot;Healing is not linear.|Be patient with yourself.&quot;,
+                &quot;Your present circumstances don't determine where you can go.|They merely determine where you start.&quot;,
+                &quot;Self-care is how you take your power back.|— Lalah Delia&quot;,
+                &quot;It's okay to ask for help.|Reaching out is a sign of courage, not weakness.&quot;,
+                &quot;Small steps still move you forward.|Every day counts.&quot;,
+                &quot;You survived 100% of your worst days.|You are stronger than you think.&quot;,
+                &quot;Rest is not a reward.|It is a necessity.&quot;,
+                &quot;Progress, not perfection.|That's the goal.&quot;,
+                &quot;Take care of your body. It's the only place you have to live.|— Jim Rohn&quot;,
+                &quot;What we think, we become.|— Buddha&quot;,
+                &quot;Be gentle with yourself.|You are a child of the universe.&quot;,
+                &quot;The greatest glory in living lies not in never falling,|but in rising every time we fall.&quot;
+        };
+
+        // Pick quote based on day of year so it changes daily
+<span class="fc" id="L548">        int dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);</span>
+<span class="fc" id="L549">        String[] parts = quotes[dayOfYear % quotes.length].split(java.util.regex.Pattern.quote(&quot;|&quot;));</span>
+
+<span class="fc" id="L551">        TextView tvQuote  = findViewById(R.id.tvDailyQuote);</span>
+<span class="fc" id="L552">        TextView tvAuthor = findViewById(R.id.tvQuoteAuthor);</span>
+
+<span class="pc bpc" id="L554" title="1 of 2 branches missed.">        if (tvQuote  != null) tvQuote.setText(parts[0].trim());</span>
+<span class="pc bpc" id="L555" title="2 of 4 branches missed.">        if (tvAuthor != null) tvAuthor.setText(parts.length &gt; 1 ? parts[1].trim() : &quot;&quot;);</span>
+<span class="fc" id="L556">    }</span>
+
+    // ── Quick Stats ───────────────────────────────────────────────────────────
+    private void loadQuickStats(String userId) {
+        // Tasks stat
+<span class="fc" id="L561">        String tasksUrl = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/tasks&quot;;</span>
+<span class="fc" id="L562">        JsonArrayRequest tasksReq = new JsonArrayRequest(Request.Method.GET, tasksUrl, null,</span>
+                response -&gt; {
+<span class="fc" id="L564">                    int pending = 0;</span>
+<span class="fc bfc" id="L565" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L567">                            String status = response.getJSONObject(i).optString(&quot;status&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">                            if (!status.equals(&quot;Completed&quot;)) pending++;</span>
+<span class="pc" id="L569">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+                    }
+<span class="fc" id="L571">                    TextView tv = findViewById(R.id.tvStatTasks);</span>
+<span class="pc bpc" id="L572" title="1 of 2 branches missed.">                    if (tv != null) tv.setText(String.valueOf(pending));</span>
+<span class="fc" id="L573">                },</span>
+                error -&gt; {
+<span class="nc" id="L575">                    TextView tv = findViewById(R.id.tvStatTasks);</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">                    if (tv != null) tv.setText(&quot;0&quot;);</span>
+<span class="nc" id="L577">                }</span>
+        );
+<span class="fc" id="L579">        Volley.newRequestQueue(this).add(tasksReq);</span>
+
+        // Routines stat
+<span class="fc" id="L582">        String routinesUrl = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/routines&quot;;</span>
+<span class="fc" id="L583">        JsonArrayRequest routinesReq = new JsonArrayRequest(Request.Method.GET, routinesUrl, null,</span>
+                response -&gt; {
+<span class="nc" id="L585">                    int active = 0;</span>
+<span class="nc bnc" id="L586" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc" id="L588">                            boolean completed = response.getJSONObject(i).optBoolean(&quot;completed&quot;, false);</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">                            if (!completed) active++;</span>
+<span class="nc" id="L590">                        } catch (JSONException e) { e.printStackTrace(); }</span>
+                    }
+<span class="nc" id="L592">                    TextView tv = findViewById(R.id.tvStatRoutines);</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">                    if (tv != null) tv.setText(String.valueOf(active));</span>
+<span class="nc" id="L594">                },</span>
+                error -&gt; {
+<span class="fc" id="L596">                    TextView tv = findViewById(R.id.tvStatRoutines);</span>
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">                    if (tv != null) tv.setText(&quot;0&quot;);</span>
+<span class="fc" id="L598">                }</span>
+        );
+<span class="fc" id="L600">        Volley.newRequestQueue(this).add(routinesReq);</span>
+
+        // Check-in stat — today's mood
+<span class="fc" id="L603">        String today = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;, Locale.getDefault()).format(new Date());</span>
+<span class="fc" id="L604">        String checkInUrl = ApiConstants.BASE_URL + &quot;/users/&quot; + userId + &quot;/checkins&quot;;</span>
+<span class="fc" id="L605">        JsonArrayRequest checkInReq = new JsonArrayRequest(Request.Method.GET, checkInUrl, null,</span>
+                response -&gt; {
+<span class="fc" id="L607">                    int todayRating = 0;</span>
+                    try {
+<span class="fc bfc" id="L609" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L610">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="fc bfc" id="L611" title="All 2 branches covered.">                            if (today.equals(obj.optString(&quot;date&quot;, &quot;&quot;))) {</span>
+<span class="fc" id="L612">                                todayRating = obj.optInt(&quot;rating&quot;, 0);</span>
+<span class="fc" id="L613">                                break;</span>
+                            }
+                        }
+<span class="pc" id="L616">                    } catch (JSONException e) { e.printStackTrace(); }</span>
+<span class="fc" id="L617">                    TextView tv = findViewById(R.id.tvStatCheckIn);</span>
+<span class="pc bpc" id="L618" title="1 of 2 branches missed.">                    if (tv != null) {</span>
+<span class="fc" id="L619">                        String[] emojis = {&quot;—&quot;, &quot;😢&quot;, &quot;😕&quot;, &quot;😐&quot;, &quot;🙂&quot;, &quot;😄&quot;};</span>
+<span class="fc bfc" id="L620" title="All 2 branches covered.">                        tv.setText(todayRating &gt; 0 ? emojis[todayRating] : &quot;—&quot;);</span>
+                    }
+<span class="fc" id="L622">                },</span>
+                error -&gt; {
+<span class="nc" id="L624">                    TextView tv = findViewById(R.id.tvStatCheckIn);</span>
+<span class="nc bnc" id="L625" title="All 2 branches missed.">                    if (tv != null) tv.setText(&quot;—&quot;);</span>
+<span class="nc" id="L626">                }</span>
+        );
+<span class="fc" id="L628">        Volley.newRequestQueue(this).add(checkInReq);</span>
+<span class="fc" id="L629">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

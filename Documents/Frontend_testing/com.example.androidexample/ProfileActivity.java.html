@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProfileActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">ProfileActivity.java</span></div><h1>ProfileActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+import com.example.androidexample.ApiConstants;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+
+<span class="nc" id="L18">public class ProfileActivity extends AppCompatActivity {</span>
+
+    private TextView tvEmail;
+    private Button btnDelete, btnBack;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L25">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L26">        setContentView(R.layout.activity_profile);</span>
+
+
+        // Grabbing info from previous page:
+<span class="nc" id="L30">        Bundle extras = getIntent().getExtras();</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        String username = extras != null ? extras.getString(&quot;username&quot;, &quot;&quot;) : &quot;&quot;;</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        String password = extras != null ? extras.getString(&quot;password&quot;, &quot;&quot;) : &quot;&quot;;</span>
+
+<span class="nc" id="L34">        tvEmail = findViewById(R.id.tvEmail);</span>
+<span class="nc" id="L35">        btnDelete = findViewById(R.id.btn_delete_profile);</span>
+<span class="nc" id="L36">        btnBack = findViewById(R.id.btn_back_home);</span>
+<span class="nc" id="L37">        Button btnEditProfile = findViewById(R.id.btnEditProfile);</span>
+<span class="nc" id="L38">        Button btnWorryNotes = findViewById(R.id.btnWorryNotes);</span>
+
+<span class="nc" id="L40">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L41">        String email = prefs.getString(&quot;USER_EMAIL&quot;, &quot;&quot;);</span>
+<span class="nc" id="L42">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;&quot;);</span>
+
+<span class="nc bnc" id="L44" title="All 4 branches missed.">        tvEmail.setText(email == null || email.isEmpty() ? &quot;Email: (not found)&quot; : &quot;Email: &quot; + email);</span>
+
+<span class="nc" id="L46">        btnBack.setOnClickListener(v -&gt; finish());</span>
+
+<span class="nc" id="L48">        btnDelete.setOnClickListener(v -&gt; {</span>
+<span class="nc bnc" id="L49" title="All 4 branches missed.">            if (userId == null || userId.trim().isEmpty()) {</span>
+<span class="nc" id="L50">                Toast.makeText(this, &quot;User ID missing. Save ID after signup first.&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L51">                return;</span>
+            }
+
+<span class="nc" id="L54">            new AlertDialog.Builder(ProfileActivity.this)</span>
+<span class="nc" id="L55">                    .setTitle(&quot;Delete Profile?&quot;)</span>
+<span class="nc" id="L56">                    .setMessage(&quot;Are you sure you want to delete your account? This cannot be undone.&quot;)</span>
+<span class="nc" id="L57">                    .setPositiveButton(&quot;Yes, Delete&quot;, (dialog, which) -&gt; deleteUser(userId))</span>
+<span class="nc" id="L58">                    .setNegativeButton(&quot;Cancel&quot;, (dialog, which) -&gt; dialog.dismiss())</span>
+<span class="nc" id="L59">                    .show();</span>
+<span class="nc" id="L60">        });</span>
+
+<span class="nc" id="L62">        btnEditProfile.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L63">            Intent intent = new Intent(ProfileActivity.this, EditProfile.class);</span>
+
+<span class="nc" id="L65">            intent.putExtra(&quot;userId&quot;, userId);</span>
+
+            // send email (EditProfile reads &quot;email&quot;)
+<span class="nc" id="L68">            intent.putExtra(&quot;email&quot;, email);</span>
+
+
+<span class="nc" id="L71">            intent.putExtra(&quot;name&quot;, prefs.getString(&quot;USER_NAME&quot;, &quot;&quot;));</span>
+<span class="nc" id="L72">            intent.putExtra(&quot;password&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L74">            startActivity(intent);</span>
+<span class="nc" id="L75">        });</span>
+
+<span class="nc" id="L77">        btnWorryNotes.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+<span class="nc" id="L80">                Intent intent = new Intent(ProfileActivity.this, WorryNotes.class);</span>
+<span class="nc" id="L81">                startActivity(intent);</span>
+<span class="nc" id="L82">            }</span>
+        });
+
+<span class="nc" id="L85">    }</span>
+
+    private void deleteUser(String userId) {
+<span class="nc" id="L88">        String url = ApiConstants.DELETE + userId;</span>
+
+<span class="nc" id="L90">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+                    // Clear local session
+<span class="nc" id="L95">                    SharedPreferences.Editor editor = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit();</span>
+<span class="nc" id="L96">                    editor.clear();</span>
+<span class="nc" id="L97">                    editor.apply();</span>
+
+<span class="nc" id="L99">                    Toast.makeText(ProfileActivity.this, &quot;Profile deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+
+                    // Back to signup
+<span class="nc" id="L102">                    Intent i = new Intent(ProfileActivity.this, SignUpActivity.class);</span>
+<span class="nc" id="L103">                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L104">                    startActivity(i);</span>
+<span class="nc" id="L105">                    finishAffinity();</span>
+<span class="nc" id="L106">                },</span>
+<span class="nc" id="L107">                error -&gt; Toast.makeText(ProfileActivity.this,</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                        &quot;Delete failed: &quot; + (error.getMessage() != null ? error.getMessage() : &quot;unknown error&quot;),</span>
+<span class="nc" id="L109">                        Toast.LENGTH_LONG).show()</span>
+        );
+
+<span class="nc" id="L112">        VolleySingleton.getInstance(this).addToRequestQueue(request);</span>
+<span class="nc" id="L113">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

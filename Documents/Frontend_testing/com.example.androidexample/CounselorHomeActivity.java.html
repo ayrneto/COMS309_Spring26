@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounselorHomeActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">CounselorHomeActivity.java</span></div><h1>CounselorHomeActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+
+<span class="nc" id="L26">public class CounselorHomeActivity extends AppCompatActivity {</span>
+
+    private DrawerLayout drawerLayout;
+    private TextView     tvAppointmentBadge;
+    private String       userId, email, displayName, specialization, profilePicUrl, status;
+
+    // Status cycle: tap to rotate through
+<span class="nc" id="L33">    private static final String[] STATUSES     = {&quot;AVAILABLE&quot;, &quot;BUSY&quot;, &quot;OFFLINE&quot;};</span>
+<span class="nc" id="L34">    private static final int[]    STATUS_COLORS = {0xFF2E7D32, 0xFFE65100, 0xFF757575};</span>
+<span class="nc" id="L35">    private int currentStatusIndex = 0;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L39">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L40">        setContentView(R.layout.activity_counsellor_home);</span>
+
+<span class="nc" id="L42">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L43">        userId        = prefs.getString(&quot;USER_ID&quot;,               &quot;&quot;);</span>
+<span class="nc" id="L44">        email         = prefs.getString(&quot;USER_EMAIL&quot;,            &quot;&quot;);</span>
+        // Fall back to USER_NAME if display name not yet set via Edit Profile
+<span class="nc" id="L46">        String rawDisplay = prefs.getString(&quot;COUNSELOR_DISPLAY_NAME&quot;,&quot;&quot;);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        displayName   = rawDisplay.isEmpty() ? prefs.getString(&quot;USER_NAME&quot;, &quot;&quot;) : rawDisplay;</span>
+<span class="nc" id="L48">        specialization= prefs.getString(&quot;COUNSELOR_SPECIALIZATION&quot;,&quot;&quot;);</span>
+<span class="nc" id="L49">        profilePicUrl = prefs.getString(&quot;COUNSELOR_PROFILE_PIC&quot;, &quot;&quot;);</span>
+<span class="nc" id="L50">        status        = prefs.getString(&quot;COUNSELOR_STATUS&quot;,      &quot;AVAILABLE&quot;);</span>
+
+<span class="nc" id="L52">        drawerLayout       = findViewById(R.id.drawerLayout);</span>
+<span class="nc" id="L53">        tvAppointmentBadge = findViewById(R.id.tvAppointmentBadge);</span>
+
+        // ── Hero banner ───────────────────────────────────────────────────────
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        String firstName = displayName.isEmpty() ? &quot;Counsellor&quot; : displayName.split(&quot; &quot;)[0];</span>
+<span class="nc" id="L57">        ((TextView) findViewById(R.id.tvWelcome)).setText(firstName);</span>
+
+        // ── Drawer header ─────────────────────────────────────────────────────
+<span class="nc" id="L60">        ((TextView) findViewById(R.id.drawerName))</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                .setText(displayName.isEmpty() ? &quot;Hello!&quot; : &quot;Hi, &quot; + displayName);</span>
+<span class="nc" id="L62">        ((TextView) findViewById(R.id.drawerEmail)).setText(email);</span>
+
+<span class="nc" id="L64">        AvatarHelper.load(this, displayName, profilePicUrl,</span>
+<span class="nc" id="L65">                findViewById(R.id.tvDrawerAvatar),</span>
+<span class="nc" id="L66">                findViewById(R.id.ivDrawerAvatar));</span>
+
+        // Re-check avatar after 2 seconds in case fetchCounsellorProfile
+        // in LoginActivity hasn't finished saving yet when onCreate fires
+<span class="nc" id="L70">        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -&gt; {</span>
+<span class="nc" id="L71">            String latestPic = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L72">                    .getString(&quot;COUNSELOR_PROFILE_PIC&quot;, &quot;&quot;);</span>
+<span class="nc" id="L73">            String latestName = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L74">                    .getString(&quot;COUNSELOR_DISPLAY_NAME&quot;, &quot;&quot;);</span>
+<span class="nc" id="L75">            AvatarHelper.load(this, latestName, latestPic,</span>
+<span class="nc" id="L76">                    findViewById(R.id.tvDrawerAvatar),</span>
+<span class="nc" id="L77">                    findViewById(R.id.ivDrawerAvatar));</span>
+<span class="nc" id="L78">        }, 2000);</span>
+
+        // ── Status toggle button ──────────────────────────────────────────────
+<span class="nc" id="L81">        com.google.android.material.button.MaterialButton btnStatus =</span>
+<span class="nc" id="L82">                findViewById(R.id.btnStatusToggle);</span>
+<span class="nc" id="L83">        setStatusButton(btnStatus, status);</span>
+
+<span class="nc" id="L85">        btnStatus.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L86">            currentStatusIndex = (currentStatusIndex + 1) % STATUSES.length;</span>
+<span class="nc" id="L87">            String newStatus = STATUSES[currentStatusIndex];</span>
+<span class="nc" id="L88">            setStatusButton(btnStatus, newStatus);</span>
+<span class="nc" id="L89">            saveStatus(newStatus);</span>
+<span class="nc" id="L90">        });</span>
+
+        // ── Hamburger ─────────────────────────────────────────────────────────
+<span class="nc" id="L93">        ((ImageButton) findViewById(R.id.btnHamburger))</span>
+<span class="nc" id="L94">                .setOnClickListener(v -&gt; drawerLayout.open());</span>
+
+        // ── Drawer navigation ─────────────────────────────────────────────────
+<span class="nc" id="L97">        findViewById(R.id.drawerItemAppointments).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L98">            drawerLayout.close();</span>
+<span class="nc" id="L99">            startActivity(new Intent(this, AppointmentRequestsActivity.class));</span>
+<span class="nc" id="L100">        });</span>
+<span class="nc" id="L101">        findViewById(R.id.drawerItemChat).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L102">            drawerLayout.close();</span>
+<span class="nc" id="L103">            startActivity(new Intent(this, UserListActivity.class));</span>
+<span class="nc" id="L104">        });</span>
+<span class="nc" id="L105">        findViewById(R.id.drawerItemAssignTask).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L106">            drawerLayout.close();</span>
+<span class="nc" id="L107">            startActivity(new Intent(this, AssignTaskActivity.class));</span>
+<span class="nc" id="L108">        });</span>
+<span class="nc" id="L109">        findViewById(R.id.drawerItemSharedNotes).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L110">            drawerLayout.close();</span>
+<span class="nc" id="L111">            startActivity(new Intent(this, SharedNotesActivity.class));</span>
+<span class="nc" id="L112">        });</span>
+<span class="nc" id="L113">        findViewById(R.id.drawerItemEditProfile).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L114">            drawerLayout.close();</span>
+<span class="nc" id="L115">            Intent intent = new Intent(this, CounselorEditProfileActivity.class);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            intent.putExtra(&quot;userId&quot;,            Long.parseLong(userId.isEmpty() ? &quot;-1&quot; : userId));</span>
+<span class="nc" id="L117">            intent.putExtra(&quot;displayName&quot;,       displayName);</span>
+<span class="nc" id="L118">            intent.putExtra(&quot;specialization&quot;,    specialization);</span>
+<span class="nc" id="L119">            intent.putExtra(&quot;bio&quot;,               prefs.getString(&quot;COUNSELOR_BIO&quot;, &quot;&quot;));</span>
+<span class="nc" id="L120">            intent.putExtra(&quot;profilePictureUrl&quot;, profilePicUrl);</span>
+<span class="nc" id="L121">            intent.putExtra(&quot;status&quot;,            status);</span>
+<span class="nc" id="L122">            startActivity(intent);</span>
+<span class="nc" id="L123">        });</span>
+<span class="nc" id="L124">        findViewById(R.id.drawerItemLogout).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L125">            drawerLayout.close();</span>
+<span class="nc" id="L126">            prefs.edit().clear().apply();</span>
+<span class="nc" id="L127">            Intent intent = new Intent(this, LoginActivity.class);</span>
+<span class="nc" id="L128">            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);</span>
+<span class="nc" id="L129">            startActivity(intent);</span>
+<span class="nc" id="L130">            finishAffinity();</span>
+<span class="nc" id="L131">        });</span>
+
+        // ── Load data ─────────────────────────────────────────────────────────
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (!userId.isEmpty()) {</span>
+<span class="nc" id="L135">            fetchStats(userId);</span>
+<span class="nc" id="L136">            fetchUpcomingAppointments(userId);</span>
+<span class="nc" id="L137">            fetchRecentActivity(userId);</span>
+        }
+<span class="nc" id="L139">    }</span>
+
+    @Override
+    protected void onResume() {
+<span class="nc" id="L143">        super.onResume();</span>
+<span class="nc" id="L144">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L145">        displayName    = prefs.getString(&quot;COUNSELOR_DISPLAY_NAME&quot;,   &quot;&quot;);</span>
+<span class="nc" id="L146">        profilePicUrl  = prefs.getString(&quot;COUNSELOR_PROFILE_PIC&quot;,    &quot;&quot;);</span>
+<span class="nc" id="L147">        specialization = prefs.getString(&quot;COUNSELOR_SPECIALIZATION&quot;, &quot;&quot;);</span>
+<span class="nc" id="L148">        status         = prefs.getString(&quot;COUNSELOR_STATUS&quot;,         &quot;AVAILABLE&quot;);</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">        String firstName = displayName.isEmpty() ? &quot;Counsellor&quot; : displayName.split(&quot; &quot;)[0];</span>
+<span class="nc" id="L151">        ((TextView) findViewById(R.id.tvWelcome)).setText(firstName);</span>
+<span class="nc" id="L152">        ((TextView) findViewById(R.id.drawerName))</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">                .setText(displayName.isEmpty() ? &quot;Hello!&quot; : &quot;Hi, &quot; + displayName);</span>
+<span class="nc" id="L154">        AvatarHelper.load(this, displayName, profilePicUrl,</span>
+<span class="nc" id="L155">                findViewById(R.id.tvDrawerAvatar),</span>
+<span class="nc" id="L156">                findViewById(R.id.ivDrawerAvatar));</span>
+
+<span class="nc" id="L158">        setStatusButton(findViewById(R.id.btnStatusToggle), status);</span>
+
+<span class="nc" id="L160">        String uid = prefs.getString(&quot;USER_ID&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (!uid.isEmpty()) {</span>
+<span class="nc" id="L162">            fetchStats(uid);</span>
+<span class="nc" id="L163">            fetchUpcomingAppointments(uid);</span>
+<span class="nc" id="L164">            fetchRecentActivity(uid);</span>
+        }
+<span class="nc" id="L166">    }</span>
+
+    // ── Status toggle helpers ─────────────────────────────────────────────────
+
+    private void setStatusButton(com.google.android.material.button.MaterialButton btn,
+                                 String s) {
+<span class="nc" id="L172">        btn.setText(s);</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        for (int i = 0; i &lt; STATUSES.length; i++) {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (STATUSES[i].equals(s)) {</span>
+<span class="nc" id="L175">                currentStatusIndex = i;</span>
+<span class="nc" id="L176">                btn.setBackgroundTintList(</span>
+<span class="nc" id="L177">                        android.content.res.ColorStateList.valueOf(STATUS_COLORS[i]));</span>
+<span class="nc" id="L178">                break;</span>
+            }
+        }
+<span class="nc" id="L181">    }</span>
+
+    private void saveStatus(String newStatus) {
+<span class="nc" id="L184">        String url = ApiConstants.counselorProfile(Long.parseLong(userId));</span>
+<span class="nc" id="L185">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L187">            body.put(&quot;status&quot;, newStatus);</span>
+<span class="nc" id="L188">        } catch (Exception e) { return; }</span>
+
+<span class="nc" id="L190">        final String bodyStr = body.toString();</span>
+
+<span class="nc" id="L192">        StringRequest req = new StringRequest(Request.Method.PUT, url,</span>
+                response -&gt; {
+<span class="nc" id="L194">                    getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE)</span>
+<span class="nc" id="L195">                            .edit().putString(&quot;COUNSELOR_STATUS&quot;, newStatus).apply();</span>
+<span class="nc" id="L196">                    Toast.makeText(this, &quot;Status: &quot; + newStatus, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L197">                },</span>
+                error -&gt; {
+<span class="nc" id="L199">                    String errMsg = &quot;Could not update status&quot;;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                    if (error.networkResponse != null)</span>
+<span class="nc" id="L201">                        errMsg += &quot; (HTTP &quot; + error.networkResponse.statusCode + &quot;)&quot;;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                    else if (error.getMessage() != null)</span>
+<span class="nc" id="L203">                        errMsg += &quot;: &quot; + error.getMessage();</span>
+<span class="nc" id="L204">                    Toast.makeText(this, errMsg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L205">                    android.util.Log.e(&quot;StatusToggle&quot;, &quot;URL: &quot; + url + &quot; | Body: &quot; + bodyStr + &quot; | Error: &quot; + error.toString());</span>
+<span class="nc" id="L206">                }</span>
+<span class="nc" id="L207">        ) {</span>
+<span class="nc" id="L208">            @Override public byte[] getBody() { return bodyStr.getBytes(StandardCharsets.UTF_8); }</span>
+<span class="nc" id="L209">            @Override public String getBodyContentType() { return &quot;application/json; charset=utf-8&quot;; }</span>
+        };
+
+<span class="nc" id="L212">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L213">    }</span>
+
+    // ── Stats ─────────────────────────────────────────────────────────────────
+
+    private void fetchStats(String counselorId) {
+        // Accepted users count
+<span class="nc" id="L219">        String acceptedUrl = ApiConstants.acceptedByCounsellor(Long.parseLong(counselorId));</span>
+<span class="nc" id="L220">        JsonArrayRequest usersReq = new JsonArrayRequest(Request.Method.GET, acceptedUrl, null,</span>
+                response -&gt; {
+                    // Deduplicate by userId
+<span class="nc" id="L223">                    java.util.Set&lt;Long&gt; seen = new java.util.HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="nc" id="L225">                        try { seen.add(response.getJSONObject(i).optLong(&quot;userId&quot;, -1)); }</span>
+<span class="nc" id="L226">                        catch (Exception e) { e.printStackTrace(); }</span>
+                    }
+<span class="nc" id="L228">                    TextView tv = findViewById(R.id.tvStatUsers);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">                    if (tv != null) tv.setText(String.valueOf(seen.size()));</span>
+<span class="nc" id="L230">                },</span>
+<span class="nc" id="L231">                error -&gt; {});</span>
+<span class="nc" id="L232">        VolleySingleton.getInstance(this).addToRequestQueue(usersReq);</span>
+
+        // Pending appointments
+<span class="nc" id="L235">        String pendingUrl = ApiConstants.appointmentsByCounsellor(Long.parseLong(counselorId));</span>
+<span class="nc" id="L236">        JsonArrayRequest pendingReq = new JsonArrayRequest(Request.Method.GET, pendingUrl, null,</span>
+                response -&gt; {
+<span class="nc" id="L238">                    int pending = 0;</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">                            if (&quot;PENDING&quot;.equalsIgnoreCase(</span>
+<span class="nc" id="L242">                                    response.getJSONObject(i).optString(&quot;status&quot;))) pending++;</span>
+<span class="nc" id="L243">                        } catch (Exception e) { e.printStackTrace(); }</span>
+                    }
+<span class="nc" id="L245">                    TextView tv = findViewById(R.id.tvStatPending);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">                    if (tv != null) tv.setText(String.valueOf(pending));</span>
+                    // Update badge too
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                    if (pending &gt; 0) {</span>
+<span class="nc" id="L249">                        tvAppointmentBadge.setText(String.valueOf(pending));</span>
+<span class="nc" id="L250">                        tvAppointmentBadge.setVisibility(View.VISIBLE);</span>
+                    } else {
+<span class="nc" id="L252">                        tvAppointmentBadge.setVisibility(View.GONE);</span>
+                    }
+<span class="nc" id="L254">                },</span>
+<span class="nc" id="L255">                error -&gt; {});</span>
+<span class="nc" id="L256">        VolleySingleton.getInstance(this).addToRequestQueue(pendingReq);</span>
+
+        // Shared notes count
+<span class="nc" id="L259">        String notesUrl = ApiConstants.BASE_URL + &quot;/api/counsellors/&quot; + counselorId + &quot;/shared-notes&quot;;</span>
+<span class="nc" id="L260">        JsonArrayRequest notesReq = new JsonArrayRequest(Request.Method.GET, notesUrl, null,</span>
+                response -&gt; {
+<span class="nc" id="L262">                    TextView tv = findViewById(R.id.tvStatSharedNotes);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">                    if (tv != null) tv.setText(String.valueOf(response.length()));</span>
+<span class="nc" id="L264">                },</span>
+<span class="nc" id="L265">                error -&gt; {});</span>
+<span class="nc" id="L266">        VolleySingleton.getInstance(this).addToRequestQueue(notesReq);</span>
+<span class="nc" id="L267">    }</span>
+
+    // ── Upcoming Appointments ─────────────────────────────────────────────────
+
+    private void fetchUpcomingAppointments(String counselorId) {
+<span class="nc" id="L272">        String url = ApiConstants.acceptedByCounsellor(Long.parseLong(counselorId));</span>
+
+<span class="nc" id="L274">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L276">                    LinearLayout container = findViewById(R.id.containerUpcoming);</span>
+<span class="nc" id="L277">                    TextView tvNone = findViewById(R.id.tvNoUpcoming);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">                    if (container == null) return;</span>
+
+                    // Remove old dynamic views (keep tvNoUpcoming)
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                    for (int i = container.getChildCount() - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">                        if (container.getChildAt(i) != tvNone)</span>
+<span class="nc" id="L283">                            container.removeViewAt(i);</span>
+                    }
+
+<span class="nc" id="L286">                    int shown = 0;</span>
+<span class="nc bnc" id="L287" title="All 4 branches missed.">                    for (int i = 0; i &lt; response.length() &amp;&amp; shown &lt; 3; i++) {</span>
+                        try {
+<span class="nc" id="L289">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="nc" id="L290">                            String userName = obj.optString(&quot;userName&quot;, &quot;Unknown&quot;);</span>
+<span class="nc" id="L291">                            String date     = obj.optString(&quot;date&quot;,     &quot;—&quot;);</span>
+<span class="nc" id="L292">                            String time     = obj.optString(&quot;timeSlot&quot;, &quot;&quot;);</span>
+
+                            // Build appointment row card
+<span class="nc" id="L295">                            CardView card = new CardView(this);</span>
+<span class="nc" id="L296">                            CardView.LayoutParams lp = new CardView.LayoutParams(</span>
+                                    CardView.LayoutParams.MATCH_PARENT,
+                                    CardView.LayoutParams.WRAP_CONTENT);
+<span class="nc" id="L299">                            lp.bottomMargin = (int)(8 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L300">                            card.setLayoutParams(lp);</span>
+<span class="nc" id="L301">                            card.setRadius(12 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L302">                            card.setCardElevation(2 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L303">                            card.setCardBackgroundColor(Color.WHITE);</span>
+
+<span class="nc" id="L305">                            LinearLayout row = new LinearLayout(this);</span>
+<span class="nc" id="L306">                            row.setOrientation(LinearLayout.HORIZONTAL);</span>
+<span class="nc" id="L307">                            row.setGravity(android.view.Gravity.CENTER_VERTICAL);</span>
+<span class="nc" id="L308">                            int p = (int)(14 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L309">                            row.setPadding(p, p, p, p);</span>
+
+<span class="nc" id="L311">                            TextView tvDot = new TextView(this);</span>
+<span class="nc" id="L312">                            tvDot.setText(&quot;📅&quot;);</span>
+<span class="nc" id="L313">                            tvDot.setTextSize(16);</span>
+<span class="nc" id="L314">                            LinearLayout.LayoutParams dotLp = new LinearLayout.LayoutParams(</span>
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+<span class="nc" id="L317">                            dotLp.rightMargin = (int)(12 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L318">                            tvDot.setLayoutParams(dotLp);</span>
+
+<span class="nc" id="L320">                            LinearLayout info = new LinearLayout(this);</span>
+<span class="nc" id="L321">                            info.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="nc" id="L322">                            LinearLayout.LayoutParams infoLp = new LinearLayout.LayoutParams(</span>
+                                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+<span class="nc" id="L324">                            info.setLayoutParams(infoLp);</span>
+
+<span class="nc" id="L326">                            TextView tvName = new TextView(this);</span>
+<span class="nc" id="L327">                            tvName.setText(userName);</span>
+<span class="nc" id="L328">                            tvName.setTextSize(14);</span>
+<span class="nc" id="L329">                            tvName.setTextColor(Color.parseColor(&quot;#1B1B1B&quot;));</span>
+<span class="nc" id="L330">                            tvName.setTypeface(null, android.graphics.Typeface.BOLD);</span>
+
+<span class="nc" id="L332">                            TextView tvDate = new TextView(this);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">                            tvDate.setText(date + (time.isEmpty() ? &quot;&quot; : &quot;  ·  &quot; + time));</span>
+<span class="nc" id="L334">                            tvDate.setTextSize(12);</span>
+<span class="nc" id="L335">                            tvDate.setTextColor(Color.parseColor(&quot;#6B6B6B&quot;));</span>
+
+<span class="nc" id="L337">                            info.addView(tvName);</span>
+<span class="nc" id="L338">                            info.addView(tvDate);</span>
+
+<span class="nc" id="L340">                            row.addView(tvDot);</span>
+<span class="nc" id="L341">                            row.addView(info);</span>
+<span class="nc" id="L342">                            card.addView(row);</span>
+<span class="nc" id="L343">                            container.addView(card);</span>
+<span class="nc" id="L344">                            shown++;</span>
+<span class="nc" id="L345">                        } catch (Exception e) { e.printStackTrace(); }</span>
+                    }
+
+<span class="nc bnc" id="L348" title="All 2 branches missed.">                    if (shown == 0) {</span>
+<span class="nc" id="L349">                        tvNone.setVisibility(View.VISIBLE);</span>
+                    } else {
+<span class="nc" id="L351">                        tvNone.setVisibility(View.GONE);</span>
+                    }
+<span class="nc" id="L353">                },</span>
+                error -&gt; {
+<span class="nc" id="L355">                    TextView tvNone = findViewById(R.id.tvNoUpcoming);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">                    if (tvNone != null) tvNone.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L357">                });</span>
+
+<span class="nc" id="L359">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L360">    }</span>
+
+    // ── Recent Activity ───────────────────────────────────────────────────────
+
+    private void fetchRecentActivity(String counselorId) {
+        // Use shared notes as recent activity events
+<span class="nc" id="L366">        String url = ApiConstants.BASE_URL + &quot;/api/counsellors/&quot; + counselorId + &quot;/shared-notes&quot;;</span>
+
+<span class="nc" id="L368">        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,</span>
+                response -&gt; {
+<span class="nc" id="L370">                    LinearLayout container = findViewById(R.id.containerActivity);</span>
+<span class="nc" id="L371">                    TextView tvNone = findViewById(R.id.tvNoActivity);</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">                    if (container == null) return;</span>
+
+<span class="nc bnc" id="L374" title="All 2 branches missed.">                    for (int i = container.getChildCount() - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">                        if (container.getChildAt(i) != tvNone)</span>
+<span class="nc" id="L376">                            container.removeViewAt(i);</span>
+                    }
+
+<span class="nc" id="L379">                    int shown = 0;</span>
+<span class="nc bnc" id="L380" title="All 4 branches missed.">                    for (int i = 0; i &lt; response.length() &amp;&amp; shown &lt; 5; i++) {</span>
+                        try {
+<span class="nc" id="L382">                            JSONObject obj  = response.getJSONObject(i);</span>
+<span class="nc" id="L383">                            String sharedBy = obj.optString(&quot;sharedByName&quot;, &quot;A user&quot;);</span>
+<span class="nc" id="L384">                            String title    = obj.optString(&quot;title&quot;, &quot;a worry note&quot;);</span>
+<span class="nc" id="L385">                            String date     = obj.optString(&quot;dueDate&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L387">                            CardView card = new CardView(this);</span>
+<span class="nc" id="L388">                            CardView.LayoutParams lp = new CardView.LayoutParams(</span>
+                                    CardView.LayoutParams.MATCH_PARENT,
+                                    CardView.LayoutParams.WRAP_CONTENT);
+<span class="nc" id="L391">                            lp.bottomMargin = (int)(6 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L392">                            card.setLayoutParams(lp);</span>
+<span class="nc" id="L393">                            card.setRadius(12 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L394">                            card.setCardElevation(2 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L395">                            card.setCardBackgroundColor(Color.WHITE);</span>
+
+<span class="nc" id="L397">                            LinearLayout row = new LinearLayout(this);</span>
+<span class="nc" id="L398">                            row.setOrientation(LinearLayout.HORIZONTAL);</span>
+<span class="nc" id="L399">                            row.setGravity(android.view.Gravity.CENTER_VERTICAL);</span>
+<span class="nc" id="L400">                            int p = (int)(12 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L401">                            row.setPadding(p, p, p, p);</span>
+
+<span class="nc" id="L403">                            TextView tvIcon = new TextView(this);</span>
+<span class="nc" id="L404">                            tvIcon.setText(&quot;📝&quot;);</span>
+<span class="nc" id="L405">                            tvIcon.setTextSize(15);</span>
+<span class="nc" id="L406">                            LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(</span>
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+<span class="nc" id="L409">                            iconLp.rightMargin = (int)(10 * getResources().getDisplayMetrics().density);</span>
+<span class="nc" id="L410">                            tvIcon.setLayoutParams(iconLp);</span>
+
+<span class="nc" id="L412">                            TextView tvEvent = new TextView(this);</span>
+<span class="nc" id="L413">                            tvEvent.setText(sharedBy + &quot; shared \&quot;&quot; + title + &quot;\&quot;&quot; +</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                                    (date.isEmpty() ? &quot;&quot; : &quot;  ·  &quot; + date));</span>
+<span class="nc" id="L415">                            tvEvent.setTextSize(12);</span>
+<span class="nc" id="L416">                            tvEvent.setTextColor(Color.parseColor(&quot;#1B1B1B&quot;));</span>
+<span class="nc" id="L417">                            LinearLayout.LayoutParams eventLp = new LinearLayout.LayoutParams(</span>
+                                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+<span class="nc" id="L419">                            tvEvent.setLayoutParams(eventLp);</span>
+
+<span class="nc" id="L421">                            row.addView(tvIcon);</span>
+<span class="nc" id="L422">                            row.addView(tvEvent);</span>
+<span class="nc" id="L423">                            card.addView(row);</span>
+<span class="nc" id="L424">                            container.addView(card);</span>
+<span class="nc" id="L425">                            shown++;</span>
+<span class="nc" id="L426">                        } catch (Exception e) { e.printStackTrace(); }</span>
+                    }
+
+<span class="nc bnc" id="L429" title="All 2 branches missed.">                    if (shown == 0) {</span>
+<span class="nc" id="L430">                        tvNone.setVisibility(View.VISIBLE);</span>
+                    } else {
+<span class="nc" id="L432">                        tvNone.setVisibility(View.GONE);</span>
+                    }
+<span class="nc" id="L434">                },</span>
+                error -&gt; {
+<span class="nc" id="L436">                    TextView tvNone = findViewById(R.id.tvNoActivity);</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">                    if (tvNone != null) tvNone.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L438">                });</span>
+
+<span class="nc" id="L440">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L441">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">LoginActivity.java</span></div><h1>LoginActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="fc" id="L26">public class LoginActivity extends AppCompatActivity {</span>
+
+    private Spinner roleSpinner;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L32">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L33">        setContentView(R.layout.activity_login);</span>
+
+        // Force light mode for colors to show correctly
+<span class="fc" id="L36">        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);</span>
+
+<span class="fc" id="L38">        EditText emailInput    = findViewById(R.id.inputEmail);</span>
+<span class="fc" id="L39">        EditText passwordInput = findViewById(R.id.inputPassword);</span>
+<span class="fc" id="L40">        Button loginBtn        = findViewById(R.id.btnLogin);</span>
+<span class="fc" id="L41">        LinearLayout signUpBtn = findViewById(R.id.btnSignUp);</span>
+<span class="fc" id="L42">        roleSpinner            = findViewById(R.id.spinner_role);</span>
+
+        // Request notification permission on app start
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.TIRAMISU) {</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)</span>
+                    != PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L48">                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);</span>
+            }
+        }
+
+<span class="fc" id="L52">        String[] roles = {&quot;USER&quot;, &quot;COUNSELLOR&quot;, &quot;ADMIN&quot;};</span>
+<span class="fc" id="L53">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(</span>
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                roles
+        );
+<span class="fc" id="L58">        roleSpinner.setAdapter(adapter);</span>
+
+<span class="fc" id="L60">        loginBtn.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L61">            String email    = emailInput.getText().toString().trim();</span>
+<span class="fc" id="L62">            String password = passwordInput.getText().toString();</span>
+<span class="fc" id="L63">            String role     = roleSpinner.getSelectedItem().toString();</span>
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (email.isEmpty()) {</span>
+<span class="fc" id="L66">                emailInput.setError(&quot;Enter your email&quot;);</span>
+<span class="fc" id="L67">                emailInput.requestFocus();</span>
+<span class="fc" id="L68">                return;</span>
+            }
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (password.isEmpty()) {</span>
+<span class="fc" id="L71">                passwordInput.setError(&quot;Enter your password&quot;);</span>
+<span class="fc" id="L72">                passwordInput.requestFocus();</span>
+<span class="fc" id="L73">                return;</span>
+            }
+
+<span class="fc" id="L76">            sendLoginRequest(email, password, role);</span>
+<span class="fc" id="L77">        });</span>
+
+<span class="fc" id="L79">        signUpBtn.setOnClickListener(v -&gt;</span>
+<span class="fc" id="L80">                startActivity(new Intent(LoginActivity.this, SignUpActivity.class))</span>
+        );
+<span class="fc" id="L82">    }</span>
+
+    private void sendLoginRequest(String email, String password, String role) {
+<span class="fc" id="L85">        String url = ApiConstants.LOGIN;</span>
+
+        // Create JSON object with email and password
+<span class="fc" id="L88">        JSONObject loginData = new JSONObject();</span>
+        try {
+<span class="fc" id="L90">            loginData.put(&quot;email&quot;,    email);</span>
+<span class="fc" id="L91">            loginData.put(&quot;password&quot;, password);</span>
+<span class="fc" id="L92">            loginData.put(&quot;role&quot;,     role);</span>
+<span class="nc" id="L93">        } catch (JSONException e) {</span>
+<span class="nc" id="L94">            Toast.makeText(this, &quot;JSON error: &quot; + e.getMessage(), Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L95">            return;</span>
+<span class="fc" id="L96">        }</span>
+
+        // Create request
+<span class="fc" id="L99">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                loginData,
+                response -&gt; {
+                    try {
+<span class="nc" id="L105">                        String userId        = String.valueOf(response.getLong(&quot;id&quot;));</span>
+<span class="nc" id="L106">                        String emailReturned = response.getString(&quot;email&quot;);</span>
+<span class="nc" id="L107">                        String returnedRole  = response.getString(&quot;role&quot;);</span>
+<span class="nc" id="L108">                        String nameReturned  = response.optString(&quot;name&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L110">                        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+
+                        // Read preserved values BEFORE clearing
+<span class="nc" id="L113">                        String nameFromServer = response.optString(&quot;name&quot;, &quot;&quot;);</span>
+<span class="nc" id="L114">                        String savedName      = prefs.getString(&quot;USER_NAME&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                        String finalName      = nameFromServer.isEmpty() ? savedName : nameFromServer;</span>
+
+<span class="nc" id="L117">                        String picFromServer  = response.optString(&quot;profilePicture&quot;, &quot;&quot;);</span>
+<span class="nc" id="L118">                        String savedPic       = prefs.getString(&quot;USER_PIC_URL&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">                        String finalPic       = picFromServer.isEmpty() ? savedPic : picFromServer;</span>
+
+<span class="nc" id="L121">                        SharedPreferences.Editor editor = prefs.edit();</span>
+<span class="nc" id="L122">                        editor.clear();</span>
+
+<span class="nc" id="L124">                        editor.putString(&quot;USER_ID&quot;,      userId);</span>
+<span class="nc" id="L125">                        editor.putString(&quot;USER_EMAIL&quot;,   emailReturned);</span>
+<span class="nc" id="L126">                        editor.putString(&quot;USER_ROLE&quot;,    returnedRole);</span>
+<span class="nc" id="L127">                        editor.putString(&quot;USER_NAME&quot;,    finalName);</span>
+<span class="nc" id="L128">                        editor.putString(&quot;USER_PIC_URL&quot;, finalPic);</span>
+<span class="nc" id="L129">                        editor.apply();</span>
+
+                        // For COUNSELLOR — fetch profile first, THEN navigate
+                        // so all SharedPrefs are populated before home screen loads
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                        if (!&quot;COUNSELLOR&quot;.equals(returnedRole)) {</span>
+<span class="nc" id="L134">                            navigateAfterLogin(returnedRole);</span>
+                        } else {
+<span class="nc" id="L136">                            fetchCounsellorProfileThenNavigate(userId);</span>
+                        }
+
+                        // Start WebSocket service
+<span class="nc" id="L140">                        Intent serviceIntent = new Intent(LoginActivity.this, WebSocketService.class);</span>
+<span class="nc" id="L141">                        startService(serviceIntent);</span>
+
+                        // After starting WebSocket service
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                        if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.TIRAMISU) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)</span>
+                                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+<span class="nc" id="L147">                                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);</span>
+                            }
+                        }
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">                        if (&quot;COUNSELLOR&quot;.equals(returnedRole)) return; // handled above</span>
+
+                        // Route based on role
+<span class="nc bnc" id="L154" title="All 2 branches missed.">                        switch (returnedRole) {</span>
+                            case &quot;ADMIN&quot;:
+<span class="nc" id="L156">                                startActivity(new Intent(this, AdminDashboardActivity.class));</span>
+<span class="nc" id="L157">                                break;</span>
+                            default:
+<span class="nc" id="L159">                                startActivity(new Intent(this, HomeActivity.class));</span>
+                                break;
+                        }
+<span class="nc" id="L162">                        finish();</span>
+
+<span class="nc" id="L164">                    } catch (Exception e) {</span>
+<span class="nc" id="L165">                        Toast.makeText(this,</span>
+<span class="nc" id="L166">                                &quot;Bad login response: &quot; + e.getMessage(),</span>
+<span class="nc" id="L167">                                Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L168">                    }</span>
+<span class="nc" id="L169">                },</span>
+                error -&gt; {
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="fc" id="L172">                        int statusCode = error.networkResponse.statusCode;</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                        if (statusCode == 401) {</span>
+<span class="fc" id="L174">                            Toast.makeText(this, &quot;Invalid email or password&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">                        } else if (statusCode == 403) {</span>
+<span class="nc" id="L176">                            Toast.makeText(this, &quot;Account is inactive&quot;, Toast.LENGTH_LONG).show();</span>
+                        } else {
+<span class="nc" id="L178">                            Toast.makeText(this, &quot;Login failed: HTTP &quot; + statusCode, Toast.LENGTH_LONG).show();</span>
+                        }
+<span class="fc" id="L180">                    } else {</span>
+<span class="nc" id="L181">                        Toast.makeText(this, &quot;Network error. Check connection.&quot;, Toast.LENGTH_LONG).show();</span>
+                    }
+<span class="fc" id="L183">                }</span>
+        );
+
+        // Add to request queue
+<span class="fc" id="L187">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L188">        queue.add(request);</span>
+<span class="fc" id="L189">    }</span>
+    // Navigate to correct home screen based on role
+    private void navigateAfterLogin(String role) {
+<span class="nc bnc" id="L192" title="All 3 branches missed.">        switch (role) {</span>
+            case &quot;COUNSELLOR&quot;:
+<span class="nc" id="L194">                startActivity(new android.content.Intent(this, CounselorHomeActivity.class));</span>
+<span class="nc" id="L195">                break;</span>
+            case &quot;ADMIN&quot;:
+<span class="nc" id="L197">                startActivity(new android.content.Intent(this, AdminDashboardActivity.class));</span>
+<span class="nc" id="L198">                break;</span>
+            default:
+<span class="nc" id="L200">                startActivity(new android.content.Intent(this, HomeActivity.class));</span>
+                break;
+        }
+<span class="nc" id="L203">        finish();</span>
+<span class="nc" id="L204">    }</span>
+
+    // Fetch counsellor profile THEN navigate — ensures all prefs are set before home loads
+    private void fetchCounsellorProfileThenNavigate(String userId) {
+<span class="nc" id="L208">        String url = ApiConstants.BASE_URL + &quot;/api/counsellors/&quot; + userId + &quot;/profile&quot;;</span>
+
+<span class="nc" id="L210">        com.android.volley.toolbox.JsonObjectRequest req =</span>
+                new com.android.volley.toolbox.JsonObjectRequest(
+                        com.android.volley.Request.Method.GET, url, null,
+                        response -&gt; {
+<span class="nc" id="L214">                            getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit()</span>
+<span class="nc" id="L215">                                    .putString(&quot;COUNSELOR_DISPLAY_NAME&quot;,   response.optString(&quot;displayName&quot;,       &quot;&quot;))</span>
+<span class="nc" id="L216">                                    .putString(&quot;COUNSELOR_SPECIALIZATION&quot;, response.optString(&quot;specialization&quot;,    &quot;&quot;))</span>
+<span class="nc" id="L217">                                    .putString(&quot;COUNSELOR_BIO&quot;,            response.optString(&quot;bio&quot;,               &quot;&quot;))</span>
+<span class="nc" id="L218">                                    .putString(&quot;COUNSELOR_PROFILE_PIC&quot;,    response.optString(&quot;profilePictureUrl&quot;, &quot;&quot;))</span>
+<span class="nc" id="L219">                                    .putString(&quot;COUNSELOR_STATUS&quot;,         response.optString(&quot;status&quot;,            &quot;AVAILABLE&quot;))</span>
+<span class="nc" id="L220">                                    .apply();</span>
+                            // Navigate only after profile is saved
+<span class="nc" id="L222">                            startActivity(new android.content.Intent(this, CounselorHomeActivity.class));</span>
+<span class="nc" id="L223">                            finish();</span>
+<span class="nc" id="L224">                        },</span>
+                        error -&gt; {
+                            // Profile fetch failed — navigate anyway, fields will be empty
+<span class="nc" id="L227">                            startActivity(new android.content.Intent(this, CounselorHomeActivity.class));</span>
+<span class="nc" id="L228">                            finish();</span>
+<span class="nc" id="L229">                        }</span>
+                );
+
+<span class="nc" id="L232">        com.android.volley.toolbox.Volley.newRequestQueue(this).add(req);</span>
+<span class="nc" id="L233">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

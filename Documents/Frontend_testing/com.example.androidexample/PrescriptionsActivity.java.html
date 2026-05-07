@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PrescriptionsActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">PrescriptionsActivity.java</span></div><h1>PrescriptionsActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+<span class="fc" id="L24">public class PrescriptionsActivity extends AppCompatActivity {</span>
+
+    private LinearLayout prescriptionsContainer;
+    private TextView tvEmpty;
+    private RequestQueue requestQueue;
+    private String userId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L33">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L34">        setContentView(R.layout.activity_prescriptions);</span>
+
+<span class="fc" id="L36">        prescriptionsContainer = findViewById(R.id.prescriptionsContainer);</span>
+<span class="fc" id="L37">        tvEmpty                = findViewById(R.id.tvEmpty);</span>
+
+<span class="fc" id="L39">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L40">        userId = prefs.getString(&quot;USER_ID&quot;, &quot;1&quot;);</span>
+
+<span class="fc" id="L42">        requestQueue = Volley.newRequestQueue(this);</span>
+
+<span class="pc" id="L44">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+<span class="fc" id="L46">        loadPrescriptions();</span>
+<span class="fc" id="L47">    }</span>
+
+    // ── Load all prescriptions for this user ──────────────────────────────────
+
+    private void loadPrescriptions() {
+<span class="fc" id="L52">        String url = ApiConstants.userPrescriptions(Long.parseLong(userId));</span>
+
+<span class="fc" id="L54">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+<span class="fc" id="L58">                response -&gt; renderPrescriptions(response),</span>
+<span class="nc" id="L59">                error  -&gt; Toast.makeText(this, &quot;Failed to load prescriptions&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="fc" id="L62">        requestQueue.add(req);</span>
+<span class="fc" id="L63">    }</span>
+
+    private void renderPrescriptions(JSONArray data) {
+<span class="fc" id="L66">        prescriptionsContainer.removeAllViews();</span>
+
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (data.length() == 0) {</span>
+<span class="nc" id="L69">            tvEmpty.setVisibility(View.VISIBLE);</span>
+<span class="nc" id="L70">            return;</span>
+        }
+
+<span class="fc" id="L73">        tvEmpty.setVisibility(View.GONE);</span>
+
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        for (int i = 0; i &lt; data.length(); i++) {</span>
+            try {
+<span class="fc" id="L77">                JSONObject p = data.getJSONObject(i);</span>
+
+<span class="fc" id="L79">                String medicationName = p.optString(&quot;medicationName&quot;, &quot;Unknown&quot;);</span>
+<span class="fc" id="L80">                String dosage         = p.optString(&quot;dosage&quot;, &quot;—&quot;);</span>
+<span class="fc" id="L81">                String instructions   = p.optString(&quot;instructions&quot;, &quot;—&quot;);</span>
+<span class="fc" id="L82">                String startDate      = p.optString(&quot;startDate&quot;, &quot;—&quot;);</span>
+<span class="fc" id="L83">                String endDate        = p.optString(&quot;endDate&quot;, &quot;—&quot;);</span>
+
+                // Parse counsellor name from nested object
+<span class="fc" id="L86">                String counsellorName = &quot;—&quot;;</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                if (!p.isNull(&quot;counsellor&quot;)) {</span>
+<span class="fc" id="L88">                    org.json.JSONObject counsellorObj = p.optJSONObject(&quot;counsellor&quot;);</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">                    if (counsellorObj != null) {</span>
+<span class="fc" id="L90">                        counsellorName = counsellorObj.optString(&quot;name&quot;,</span>
+<span class="fc" id="L91">                                counsellorObj.optString(&quot;username&quot;, &quot;—&quot;));</span>
+                    }
+                }
+<span class="fc" id="L94">                int    durationDays   = p.optInt(&quot;durationDays&quot;, 0);</span>
+<span class="fc" id="L95">                boolean active        = p.optBoolean(&quot;active&quot;, false);</span>
+
+<span class="fc" id="L97">                View row = LayoutInflater.from(this)</span>
+<span class="fc" id="L98">                        .inflate(R.layout.item_prescription, prescriptionsContainer, false);</span>
+
+<span class="fc" id="L100">                ((TextView) row.findViewById(R.id.tvMedName)).setText(medicationName);</span>
+<span class="fc" id="L101">                ((TextView) row.findViewById(R.id.tvDosage)).setText(&quot;Dosage: &quot; + dosage);</span>
+<span class="fc" id="L102">                ((TextView) row.findViewById(R.id.tvInstructions)).setText(&quot;Instructions: &quot; + instructions);</span>
+<span class="fc" id="L103">                ((TextView) row.findViewById(R.id.tvPrescribedBy)).setText(&quot;Prescribed by: &quot; + counsellorName);</span>
+<span class="fc" id="L104">                ((TextView) row.findViewById(R.id.tvDates)).setText(&quot;From &quot; + startDate + &quot; to &quot; + endDate</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                        + (durationDays &gt; 0 ? &quot; (&quot; + durationDays + &quot; days)&quot; : &quot;&quot;));</span>
+
+<span class="fc" id="L107">                TextView tvStatus = row.findViewById(R.id.tvStatus);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                if (active) {</span>
+<span class="fc" id="L109">                    tvStatus.setText(&quot;ACTIVE&quot;);</span>
+<span class="fc" id="L110">                    tvStatus.setBackgroundColor(Color.parseColor(&quot;#3A7D55&quot;));</span>
+                } else {
+<span class="nc" id="L112">                    tvStatus.setText(&quot;INACTIVE&quot;);</span>
+<span class="nc" id="L113">                    tvStatus.setBackgroundColor(Color.parseColor(&quot;#9E9E9E&quot;));</span>
+                }
+
+<span class="fc" id="L116">                prescriptionsContainer.addView(row);</span>
+
+<span class="nc" id="L118">            } catch (Exception e) {</span>
+<span class="nc" id="L119">                e.printStackTrace();</span>
+<span class="fc" id="L120">            }</span>
+        }
+<span class="fc" id="L122">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

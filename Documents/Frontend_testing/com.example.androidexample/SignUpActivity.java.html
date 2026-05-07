@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SignUpActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">SignUpActivity.java</span></div><h1>SignUpActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Patterns;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="fc" id="L21">public class SignUpActivity extends AppCompatActivity {</span>
+
+    private EditText etEmail, etPassword, etConfirmPassword, etName;
+    private Button btnSignup;
+    private Spinner roleSpinner;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L29">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L30">        setContentView(R.layout.activity_signup);</span>
+
+<span class="fc" id="L32">        etName            = findViewById(R.id.et_name);</span>
+<span class="fc" id="L33">        etEmail           = findViewById(R.id.et_email);</span>
+<span class="fc" id="L34">        etPassword        = findViewById(R.id.et_password);</span>
+<span class="fc" id="L35">        etConfirmPassword = findViewById(R.id.et_confirm_password);</span>
+<span class="fc" id="L36">        btnSignup         = findViewById(R.id.btn_signup);</span>
+<span class="fc" id="L37">        TextView tvHint   = findViewById(R.id.tvHint);</span>
+
+<span class="fc" id="L39">        roleSpinner = findViewById(R.id.spinner_role);</span>
+<span class="fc" id="L40">        String[] roles = {&quot;USER&quot;, &quot;COUNSELLOR&quot;};</span>
+<span class="fc" id="L41">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(</span>
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                roles
+        );
+<span class="fc" id="L46">        roleSpinner.setAdapter(adapter);</span>
+
+<span class="pc" id="L48">        btnSignup.setOnClickListener(v -&gt; attemptSignup());</span>
+<span class="fc" id="L49">        tvHint.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L50">                startActivity(new Intent(SignUpActivity.this, LoginActivity.class))</span>
+        );
+<span class="fc" id="L52">    }</span>
+
+    private void attemptSignup() {
+<span class="nc" id="L55">        String name     = etName.getText().toString().trim();</span>
+<span class="nc" id="L56">        String email    = etEmail.getText().toString().trim();</span>
+<span class="nc" id="L57">        String password = etPassword.getText().toString().trim();</span>
+<span class="nc" id="L58">        String confirm  = etConfirmPassword.getText().toString().trim();</span>
+<span class="nc" id="L59">        String role     = roleSpinner.getSelectedItem().toString();</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (name.isEmpty()) {</span>
+<span class="nc" id="L62">            etName.setError(&quot;Enter your name&quot;);</span>
+<span class="nc" id="L63">            etName.requestFocus();</span>
+<span class="nc" id="L64">            return;</span>
+        }
+
+<span class="nc bnc" id="L67" title="All 4 branches missed.">        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {</span>
+<span class="nc" id="L68">            etEmail.setError(&quot;Enter a valid email&quot;);</span>
+<span class="nc" id="L69">            etEmail.requestFocus();</span>
+<span class="nc" id="L70">            return;</span>
+        }
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (password.length() &lt; 8) {</span>
+<span class="nc" id="L74">            etPassword.setError(&quot;Password must be at least 8 characters&quot;);</span>
+<span class="nc" id="L75">            etPassword.requestFocus();</span>
+<span class="nc" id="L76">            return;</span>
+        }
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (!password.equals(confirm)) {</span>
+<span class="nc" id="L80">            etConfirmPassword.setError(&quot;Passwords do not match&quot;);</span>
+<span class="nc" id="L81">            etConfirmPassword.requestFocus();</span>
+<span class="nc" id="L82">            return;</span>
+        }
+
+<span class="nc" id="L85">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L87">            body.put(&quot;name&quot;, name);</span>
+<span class="nc" id="L88">            body.put(&quot;email&quot;, email);</span>
+<span class="nc" id="L89">            body.put(&quot;password&quot;, password);</span>
+<span class="nc" id="L90">            body.put(&quot;confirmPassword&quot;, confirm);</span>
+<span class="nc" id="L91">            body.put(&quot;role&quot;, role);</span>
+<span class="nc" id="L92">        } catch (JSONException e) {</span>
+<span class="nc" id="L93">            Toast.makeText(this, &quot;JSON error&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L94">            return;</span>
+<span class="nc" id="L95">        }</span>
+
+<span class="nc" id="L97">        JsonObjectRequest req = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                ApiConstants.SIGNUP,
+                body,
+                response -&gt; {
+                    try {
+<span class="nc" id="L103">                        String createdId = String.valueOf(response.getLong(&quot;id&quot;));</span>
+
+<span class="nc" id="L105">                        SharedPreferences.Editor editor =</span>
+<span class="nc" id="L106">                                getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE).edit();</span>
+<span class="nc" id="L107">                        editor.putString(&quot;USER_NAME&quot;,  name);</span>
+<span class="nc" id="L108">                        editor.putString(&quot;USER_EMAIL&quot;, email);</span>
+<span class="nc" id="L109">                        editor.putString(&quot;USER_ID&quot;,    createdId);</span>
+<span class="nc" id="L110">                        editor.putString(&quot;USER_ROLE&quot;,  role);</span>
+
+                        // Clear cached counselor profile from any previous user
+<span class="nc" id="L113">                        editor.remove(&quot;COUNSELOR_DISPLAY_NAME&quot;);</span>
+<span class="nc" id="L114">                        editor.remove(&quot;COUNSELOR_SPECIALIZATION&quot;);</span>
+<span class="nc" id="L115">                        editor.remove(&quot;COUNSELOR_BIO&quot;);</span>
+<span class="nc" id="L116">                        editor.remove(&quot;COUNSELOR_PROFILE_PIC&quot;);</span>
+<span class="nc" id="L117">                        editor.remove(&quot;COUNSELOR_STATUS&quot;);</span>
+
+<span class="nc" id="L119">                        editor.apply();</span>
+
+<span class="nc" id="L121">                        Toast.makeText(this, &quot;Account created&quot;, Toast.LENGTH_SHORT).show();</span>
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">                        if (role.equals(&quot;COUNSELLOR&quot;)) {</span>
+<span class="nc" id="L124">                            startActivity(new Intent(this, CounselorHomeActivity.class));</span>
+                        } else {
+<span class="nc" id="L126">                            startActivity(new Intent(this, HomeActivity.class));</span>
+                        }
+<span class="nc" id="L128">                        finish();</span>
+<span class="nc" id="L129">                    } catch (Exception e) {</span>
+<span class="nc" id="L130">                        Toast.makeText(this, &quot;Error reading response: &quot; + e.getMessage(), Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L131">                    }</span>
+<span class="nc" id="L132">                },</span>
+                error -&gt; {
+<span class="nc" id="L134">                    String msg = &quot;Signup failed&quot;;</span>
+
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                    if (error.networkResponse != null) {</span>
+<span class="nc" id="L137">                        int code = error.networkResponse.statusCode;</span>
+<span class="nc" id="L138">                        String bodyStr = new String(error.networkResponse.data);</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                        if (code == 409) {</span>
+<span class="nc" id="L141">                            msg = &quot;Email already registered. Try logging in.&quot;;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                        } else if (code == 400) {</span>
+<span class="nc" id="L143">                            msg = &quot;HTTP 400: &quot; + bodyStr;</span>
+                        } else {
+<span class="nc" id="L145">                            msg = &quot;HTTP &quot; + code + &quot;: &quot; + bodyStr;</span>
+                        }
+<span class="nc" id="L147">                    } else {</span>
+<span class="nc" id="L148">                        msg = error.toString();</span>
+                    }
+
+<span class="nc" id="L151">                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L152">                }</span>
+        );
+
+<span class="nc" id="L155">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L156">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

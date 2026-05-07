@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SelectCounselorActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">SelectCounselorActivity.java</span></div><h1>SelectCounselorActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+<span class="nc" id="L20">public class SelectCounselorActivity extends AppCompatActivity {</span>
+
+    private long noteId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L26">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L27">        setContentView(R.layout.activity_select_counselor);</span>
+
+        // Get noteId from intent
+<span class="nc" id="L30">        noteId = getIntent().getLongExtra(&quot;noteId&quot;, -1);</span>
+
+<span class="nc" id="L32">        fetchCounselors();</span>
+<span class="nc" id="L33">    }</span>
+
+    private void fetchCounselors() {
+<span class="nc" id="L36">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L37">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+
+<span class="nc" id="L39">        String url = ApiConstants.BASE_URL + &quot;/users/&quot; + userId + &quot;/counsellors&quot;;</span>
+
+<span class="nc" id="L41">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET,
+                url,
+                null,
+                response -&gt; {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                    if (response.length() == 0) {</span>
+<span class="nc" id="L47">                        Toast.makeText(this, &quot;No counselors assigned to you yet&quot;, Toast.LENGTH_LONG).show();</span>
+<span class="nc" id="L48">                        finish();</span>
+<span class="nc" id="L49">                        return;</span>
+                    }
+<span class="nc" id="L51">                    displayCounselors(response);</span>
+<span class="nc" id="L52">                },</span>
+                error -&gt; {
+<span class="nc" id="L54">                    Toast.makeText(this, &quot;Failed to load counselors&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L55">                }</span>
+        );
+
+<span class="nc" id="L58">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L59">    }</span>
+
+    private void displayCounselors(org.json.JSONArray counselors) {
+<span class="nc" id="L62">        LinearLayout container = findViewById(R.id.counselorsContainer);</span>
+<span class="nc" id="L63">        container.removeAllViews();</span>
+
+        try {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            for (int i = 0; i &lt; counselors.length(); i++) {</span>
+<span class="nc" id="L67">                JSONObject counselor = counselors.getJSONObject(i);</span>
+
+                // TODO: VERIFY FIELD NAMES - Adjust based on actual backend response
+                // Expected fields: id, name, email (or displayName)
+<span class="nc" id="L71">                String counselorId = counselor.getString(&quot;id&quot;);</span>
+<span class="nc" id="L72">                String counselorName = counselor.optString(&quot;name&quot;, &quot;Counselor #&quot; + counselorId);</span>
+<span class="nc" id="L73">                String counselorEmail = counselor.optString(&quot;email&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L75">                addCounselorCard(container, counselorId, counselorName, counselorEmail);</span>
+            }
+<span class="nc" id="L77">        } catch (JSONException e) {</span>
+<span class="nc" id="L78">            e.printStackTrace();</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">    }</span>
+
+    private void addCounselorCard(LinearLayout container, String counselorId, String counselorName, String counselorEmail) {
+<span class="nc" id="L83">        View cardView = getLayoutInflater().inflate(R.layout.counselor_card, container, false);</span>
+
+<span class="nc" id="L85">        TextView nameView = cardView.findViewById(R.id.counselorName);</span>
+<span class="nc" id="L86">        TextView emailView = cardView.findViewById(R.id.counselorEmail);</span>
+
+<span class="nc" id="L88">        nameView.setText(counselorName);</span>
+<span class="nc" id="L89">        emailView.setText(counselorEmail);</span>
+
+        // Set avatar initial
+<span class="nc" id="L92">        android.widget.TextView tvAvatar = cardView.findViewById(R.id.tvAvatar);</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">        if (tvAvatar != null &amp;&amp; !counselorName.isEmpty()) {</span>
+<span class="nc" id="L94">            tvAvatar.setText(String.valueOf(counselorName.charAt(0)).toUpperCase());</span>
+        }
+
+        // Click to share note with this counselor
+<span class="nc" id="L98">        cardView.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L99">            shareNoteWithCounselor(counselorId, counselorName);</span>
+<span class="nc" id="L100">        });</span>
+
+<span class="nc" id="L102">        container.addView(cardView);</span>
+<span class="nc" id="L103">    }</span>
+
+    private void shareNoteWithCounselor(String counselorId, String counselorName) {
+<span class="nc" id="L106">        String url = ApiConstants.BASE_URL + &quot;/api/notes/&quot; + noteId + &quot;/share&quot;;</span>
+
+<span class="nc" id="L108">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="nc" id="L110">            requestBody.put(&quot;counsellorUserId&quot;, Long.parseLong(counselorId));</span>
+<span class="nc" id="L111">        } catch (JSONException e) {</span>
+<span class="nc" id="L112">            e.printStackTrace();</span>
+<span class="nc" id="L113">            return;</span>
+<span class="nc" id="L114">        }</span>
+
+<span class="nc" id="L116">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PATCH,
+                url,
+                requestBody,
+                response -&gt; {
+<span class="nc" id="L121">                    Toast.makeText(this, &quot;Note shared with &quot; + counselorName, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L122">                    finish();</span>
+<span class="nc" id="L123">                },</span>
+                error -&gt; {
+<span class="nc" id="L125">                    Toast.makeText(this, &quot;Failed to share note&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L126">                }</span>
+        );
+
+<span class="nc" id="L129">        Volley.newRequestQueue(this).add(request);</span>
+<span class="nc" id="L130">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

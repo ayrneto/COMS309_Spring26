@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserProfileActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">UserProfileActivity.java</span></div><h1>UserProfileActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
+
+import org.json.JSONObject;
+
+<span class="nc" id="L17">public class UserProfileActivity extends AppCompatActivity {</span>
+
+    private long   targetUserId;
+    private String targetUserName;
+    private String targetUserEmail;
+
+    private TextView tvLatestMood, tvLatestNote, tvLatestDate;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L27">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L28">        setContentView(R.layout.activity_user_profile);</span>
+
+        // Receive data from UserListActivity
+<span class="nc" id="L31">        targetUserId   = getIntent().getLongExtra(&quot;TARGET_USER_ID&quot;, -1);</span>
+<span class="nc" id="L32">        targetUserName  = getIntent().getStringExtra(&quot;TARGET_USER_NAME&quot;);</span>
+<span class="nc" id="L33">        targetUserEmail = getIntent().getStringExtra(&quot;TARGET_USER_EMAIL&quot;);</span>
+<span class="nc" id="L34">        String appointmentDate = getIntent().getStringExtra(&quot;APPOINTMENT_DATE&quot;);</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (targetUserId == -1) {</span>
+<span class="nc" id="L37">            Toast.makeText(this, &quot;User not found&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L38">            finish();</span>
+<span class="nc" id="L39">            return;</span>
+        }
+
+        // Populate header
+<span class="nc bnc" id="L43" title="All 4 branches missed.">        String initial = (targetUserName == null || targetUserName.isEmpty()) ? &quot;?&quot;</span>
+<span class="nc" id="L44">                : String.valueOf(targetUserName.charAt(0)).toUpperCase();</span>
+<span class="nc" id="L45">        ((TextView) findViewById(R.id.tvAvatarLarge)).setText(initial);</span>
+<span class="nc" id="L46">        ((TextView) findViewById(R.id.tvUserName)).setText(</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                targetUserName == null ? &quot;Unknown&quot; : targetUserName);</span>
+<span class="nc" id="L48">        ((TextView) findViewById(R.id.tvUserEmail)).setText(</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                targetUserEmail == null ? &quot;&quot; : targetUserEmail);</span>
+
+<span class="nc bnc" id="L51" title="All 4 branches missed.">        if (appointmentDate != null &amp;&amp; !appointmentDate.trim().isEmpty()) {</span>
+<span class="nc" id="L52">            ((TextView) findViewById(R.id.tvAppointmentInfo)).setText(</span>
+<span class="nc" id="L53">                    &quot;Appointment: &quot; + appointmentDate.trim());</span>
+        } else {
+<span class="nc" id="L55">            findViewById(R.id.tvAppointmentInfo).setVisibility(View.GONE);</span>
+        }
+
+        // Check-in summary views
+<span class="nc" id="L59">        tvLatestMood  = findViewById(R.id.tvLatestMood);</span>
+<span class="nc" id="L60">        tvLatestNote  = findViewById(R.id.tvLatestNote);</span>
+<span class="nc" id="L61">        tvLatestDate  = findViewById(R.id.tvLatestDate);</span>
+
+        // Back button
+<span class="nc" id="L64">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // ── Action: Chat ─────────────────────────────────────────────────────
+<span class="nc" id="L67">        ((Button) findViewById(R.id.btnChat)).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L68">            Intent intent = new Intent(this, ChatActivity.class);</span>
+<span class="nc" id="L69">            intent.putExtra(&quot;partnerUserId&quot;, targetUserId);</span>
+<span class="nc" id="L70">            intent.putExtra(&quot;partnerName&quot;,   targetUserName);</span>
+<span class="nc" id="L71">            startActivity(intent);</span>
+<span class="nc" id="L72">        });</span>
+
+        // ── Action: Assign Task ───────────────────────────────────────────────
+<span class="nc" id="L75">        ((Button) findViewById(R.id.btnAssignTask)).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L76">            Intent intent = new Intent(this, AssignTaskActivity.class);</span>
+            // Pre-fill email so counsellor doesn't have to type it
+<span class="nc" id="L78">            intent.putExtra(&quot;PREFILL_EMAIL&quot;, targetUserEmail);</span>
+<span class="nc" id="L79">            intent.putExtra(&quot;PREFILL_NAME&quot;,  targetUserName);</span>
+<span class="nc" id="L80">            startActivity(intent);</span>
+<span class="nc" id="L81">        });</span>
+
+        // ── Action: Assign Prescription ───────────────────────────────────────
+<span class="nc" id="L84">        ((Button) findViewById(R.id.btnPrescriptions)).setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L85">            Intent intent = new Intent(this, AssignPrescriptionActivity.class);</span>
+<span class="nc" id="L86">            intent.putExtra(&quot;TARGET_USER_ID&quot;,   targetUserId);</span>
+<span class="nc" id="L87">            intent.putExtra(&quot;TARGET_USER_NAME&quot;, targetUserName);</span>
+<span class="nc" id="L88">            startActivity(intent);</span>
+<span class="nc" id="L89">        });</span>
+
+        // Load latest check-in for this user
+<span class="nc" id="L92">        loadLatestCheckIn();</span>
+<span class="nc" id="L93">    }</span>
+
+    // ── Load latest check-in summary ─────────────────────────────────────────
+
+    private void loadLatestCheckIn() {
+<span class="nc" id="L98">        String url = ApiConstants.BASE_URL + &quot;/users/&quot; + targetUserId + &quot;/checkins&quot;;</span>
+
+<span class="nc" id="L100">        JsonArrayRequest req = new JsonArrayRequest(</span>
+                Request.Method.GET, url, null,
+                response -&gt; {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                    if (response.length() == 0) {</span>
+<span class="nc" id="L104">                        showNoCheckIn();</span>
+<span class="nc" id="L105">                        return;</span>
+                    }
+                    // Take the last entry (most recent)
+                    try {
+<span class="nc" id="L109">                        JSONObject latest = response.getJSONObject(response.length() - 1);</span>
+<span class="nc" id="L110">                        int    rating      = latest.optInt(&quot;rating&quot;, 0);</span>
+<span class="nc" id="L111">                        String description = latest.optString(&quot;description&quot;, &quot;&quot;);</span>
+<span class="nc" id="L112">                        String date        = latest.optString(&quot;date&quot;, &quot;&quot;);</span>
+
+<span class="nc" id="L114">                        String moodEmoji = moodToEmoji(rating);</span>
+<span class="nc" id="L115">                        tvLatestMood.setText(&quot;Latest Mood: &quot; + moodEmoji + &quot; (&quot; + rating + &quot;/5)&quot;);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                        tvLatestNote.setText(description.isEmpty() ? &quot;No note left&quot; : &quot;\u201C&quot; + description + &quot;\u201D&quot;);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                        tvLatestDate.setText(date.isEmpty() ? &quot;&quot; : &quot;on &quot; + date);</span>
+
+<span class="nc" id="L119">                    } catch (Exception e) {</span>
+<span class="nc" id="L120">                        showNoCheckIn();</span>
+<span class="nc" id="L121">                    }</span>
+<span class="nc" id="L122">                },</span>
+<span class="nc" id="L123">                error -&gt; showNoCheckIn()</span>
+        );
+
+<span class="nc" id="L126">        VolleySingleton.getInstance(this).addToRequestQueue(req);</span>
+<span class="nc" id="L127">    }</span>
+
+    private void showNoCheckIn() {
+<span class="nc" id="L130">        tvLatestMood.setText(&quot;No check-ins recorded yet&quot;);</span>
+<span class="nc" id="L131">        tvLatestNote.setVisibility(View.GONE);</span>
+<span class="nc" id="L132">        tvLatestDate.setVisibility(View.GONE);</span>
+<span class="nc" id="L133">    }</span>
+
+    private String moodToEmoji(int rating) {
+<span class="nc bnc" id="L136" title="All 6 branches missed.">        switch (rating) {</span>
+<span class="nc" id="L137">            case 1: return &quot;\uD83D\uDE22&quot;; // crying</span>
+<span class="nc" id="L138">            case 2: return &quot;\uD83D\uDE1F&quot;; // sad</span>
+<span class="nc" id="L139">            case 3: return &quot;\uD83D\uDE10&quot;; // neutral</span>
+<span class="nc" id="L140">            case 4: return &quot;\uD83D\uDE42&quot;; // slightly happy</span>
+<span class="nc" id="L141">            case 5: return &quot;\uD83D\uDE04&quot;; // big smile</span>
+<span class="nc" id="L142">            default: return &quot;—&quot;;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

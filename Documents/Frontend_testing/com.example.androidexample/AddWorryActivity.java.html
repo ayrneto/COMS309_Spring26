@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AddWorryActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">AddWorryActivity.java</span></div><h1>AddWorryActivity.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.DatePickerDialog;
+import java.util.Calendar;
+import android.util.Log;
+
+<span class="fc" id="L28">public class AddWorryActivity extends AppCompatActivity {</span>
+
+<span class="fc" id="L30">    private boolean isEditMode = false;</span>
+<span class="fc" id="L31">    private long noteId = -1;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L35">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L36">        setContentView(R.layout.activity_add_worry);</span>
+
+        // Force light mode for colors to show correctly
+<span class="fc" id="L39">        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);</span>
+
+<span class="fc" id="L41">        EditText titleInput   = findViewById(R.id.inputTitle);</span>
+<span class="fc" id="L42">        EditText contentInput = findViewById(R.id.inputContent);</span>
+<span class="fc" id="L43">        EditText dueDateInput = findViewById(R.id.inputDueDate);</span>
+<span class="fc" id="L44">        Spinner  labelSpinner = findViewById(R.id.spinnerLabel);</span>
+<span class="fc" id="L45">        Button   saveBtn      = findViewById(R.id.btnSaveWorry);</span>
+<span class="fc" id="L46">        TextView tvTopTitle   = findViewById(R.id.tvTopBarTitle);</span>
+
+        // Back button
+<span class="fc" id="L49">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // Spinner
+<span class="fc" id="L52">        String[] labels = {&quot;Work&quot;, &quot;Personal&quot;, &quot;School&quot;, &quot;Finance&quot;, &quot;Social&quot;};</span>
+<span class="fc" id="L53">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, labels);
+<span class="fc" id="L55">        labelSpinner.setAdapter(adapter);</span>
+
+        // Edit mode pre-fill
+<span class="fc" id="L58">        Bundle extras = getIntent().getExtras();</span>
+<span class="pc bpc" id="L59" title="1 of 4 branches missed.">        if (extras != null &amp;&amp; extras.containsKey(&quot;noteId&quot;)) {</span>
+<span class="fc" id="L60">            isEditMode = true;</span>
+<span class="fc" id="L61">            noteId = extras.getLong(&quot;noteId&quot;);</span>
+
+            // Pre-fill the fields
+<span class="fc" id="L64">            titleInput.setText(extras.getString(&quot;title&quot;));</span>
+<span class="fc" id="L65">            contentInput.setText(extras.getString(&quot;content&quot;));</span>
+<span class="fc" id="L66">            dueDateInput.setText(extras.getString(&quot;dueDate&quot;));</span>
+
+<span class="fc" id="L68">            String label = extras.getString(&quot;label&quot;);</span>
+<span class="fc" id="L69">            int pos = adapter.getPosition(label);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (pos &gt;= 0) labelSpinner.setSelection(pos);</span>
+
+<span class="fc" id="L72">            saveBtn.setText(&quot;Update&quot;);</span>
+<span class="fc" id="L73">            tvTopTitle.setText(&quot;Edit Worry Note&quot;);</span>
+        }
+
+<span class="fc" id="L76">        saveBtn.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L77">            String title   = titleInput.getText().toString();</span>
+<span class="fc" id="L78">            String content = contentInput.getText().toString();</span>
+<span class="fc" id="L79">            String dueDate = dueDateInput.getText().toString();</span>
+<span class="fc" id="L80">            String label   = labelSpinner.getSelectedItem().toString();</span>
+
+<span class="fc bfc" id="L82" title="All 4 branches covered.">            if (title.isEmpty() || content.isEmpty()) {</span>
+<span class="fc" id="L83">                Toast.makeText(this, &quot;Title and content required&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L84">                return;</span>
+            }
+
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (isEditMode) updateWorry(title, content, dueDate, label);</span>
+<span class="fc" id="L88">            else            saveWorry(title, content, dueDate, label);</span>
+<span class="fc" id="L89">        });</span>
+
+        // Date picker
+<span class="fc" id="L92">        dueDateInput.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L93">            Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L94">            new DatePickerDialog(this,</span>
+<span class="nc" id="L95">                    (view, year, month, day) -&gt; dueDateInput.setText(</span>
+<span class="nc" id="L96">                            String.format(&quot;%04d-%02d-%02d&quot;, year, month + 1, day)),</span>
+<span class="nc" id="L97">                    cal.get(Calendar.YEAR),</span>
+<span class="nc" id="L98">                    cal.get(Calendar.MONTH),</span>
+<span class="nc" id="L99">                    cal.get(Calendar.DAY_OF_MONTH)</span>
+<span class="nc" id="L100">            ).show();</span>
+<span class="nc" id="L101">        });</span>
+<span class="fc" id="L102">    }</span>
+
+    // Used only for when saving a NEW Worry Note
+    private void saveWorry(String title, String content, String dueDate, String label) {
+<span class="fc" id="L106">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L107">        String userId = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L108">        String url    = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
+
+<span class="fc" id="L110">        JSONObject noteData = new JSONObject();</span>
+        try {
+<span class="fc" id="L112">            noteData.put(&quot;title&quot;, title);</span>
+<span class="fc" id="L113">            noteData.put(&quot;content&quot;, content);</span>
+<span class="fc" id="L114">            noteData.put(&quot;label&quot;, label);</span>
+
+            // Only send dueDate if user picked a date
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (!dueDate.isEmpty()) {</span>
+<span class="fc" id="L118">                noteData.put(&quot;dueDate&quot;, dueDate);</span>
+            }
+
+<span class="fc" id="L121">            Log.d(&quot;AddWorry&quot;, &quot;Sending JSON: &quot; + noteData.toString());</span>
+
+<span class="nc" id="L123">        } catch (JSONException e) {</span>
+<span class="nc" id="L124">            e.printStackTrace();</span>
+<span class="fc" id="L125">        }</span>
+
+<span class="fc" id="L127">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.POST,
+                url,
+                noteData,
+                response -&gt; {
+<span class="fc" id="L132">                    Toast.makeText(this, &quot;Worry saved!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L133">                    finish();  // Go back to WorryNotes page</span>
+<span class="fc" id="L134">                },</span>
+                error -&gt; {
+<span class="nc" id="L136">                    Toast.makeText(this, &quot;Failed to save&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L137">                }</span>
+        );
+
+<span class="fc" id="L140">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L141">        queue.add(request);</span>
+<span class="fc" id="L142">    }</span>
+
+
+    // Used only when updating an existing note
+    private void updateWorry(String title, String content, String dueDate, String label) {
+<span class="fc" id="L147">        String url = ApiConstants.BASE_URL + &quot;/api/notes/&quot; + noteId;</span>
+
+<span class="fc" id="L149">        JSONObject noteData = new JSONObject();</span>
+        try {
+<span class="fc" id="L151">            noteData.put(&quot;title&quot;, title);</span>
+<span class="fc" id="L152">            noteData.put(&quot;content&quot;, content);</span>
+<span class="fc" id="L153">            noteData.put(&quot;dueDate&quot;, dueDate);</span>
+<span class="fc" id="L154">            noteData.put(&quot;label&quot;, label);</span>
+<span class="nc" id="L155">        } catch (JSONException e) {</span>
+<span class="nc" id="L156">            e.printStackTrace();</span>
+<span class="fc" id="L157">        }</span>
+
+<span class="fc" id="L159">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.PUT,
+                url,
+                noteData,
+                response -&gt; {
+<span class="nc" id="L164">                    Toast.makeText(this, &quot;Worry updated!&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L165">                    finish();</span>
+<span class="nc" id="L166">                },</span>
+                error -&gt; {
+<span class="fc" id="L168">                    Toast.makeText(this, &quot;Failed to update&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="fc" id="L169">                }</span>
+        );
+
+<span class="fc" id="L172">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L173">        queue.add(request);</span>
+<span class="fc" id="L174">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>

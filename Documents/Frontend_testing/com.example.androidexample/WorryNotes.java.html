@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WorryNotes.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.androidexample</a> &gt; <span class="el_source">WorryNotes.java</span></div><h1>WorryNotes.java</h1><pre class="source lang-java linenums">package com.example.androidexample;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+<span class="fc" id="L33">public class WorryNotes extends AppCompatActivity {</span>
+
+<span class="fc" id="L35">    private List&lt;JSONObject&gt; allNotes = new ArrayList&lt;&gt;();</span>
+    private Spinner filterSpinner;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L40">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L41">        setContentView(R.layout.activity_worry_notes);</span>
+
+<span class="fc" id="L43">        filterSpinner = findViewById(R.id.filterSpinner);</span>
+<span class="fc" id="L44">        setupFilter();</span>
+
+        //Getting global values:
+<span class="fc" id="L47">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L48">        Long userId = Long.parseLong(prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;));</span>
+
+        // Back button
+<span class="fc" id="L51">        findViewById(R.id.btnBack).setOnClickListener(v -&gt; finish());</span>
+
+        // Add note button
+<span class="fc" id="L54">        FrameLayout btnAddWorryNote = findViewById(R.id.btnAddWorryNote);</span>
+<span class="fc" id="L55">        btnAddWorryNote.setOnClickListener(view -&gt;</span>
+<span class="fc" id="L56">                startActivity(new Intent(WorryNotes.this, AddWorryActivity.class))</span>
+        );
+
+<span class="fc" id="L59">        fetchUserNotes(userId);</span>
+<span class="fc" id="L60">    }</span>
+
+    private void fetchUserNotes(Long userId) {
+<span class="fc" id="L63">        String url = ApiConstants.BASE_URL + &quot;/api/users/&quot; + userId + &quot;/notes&quot;;</span>
+
+<span class="fc" id="L65">        JsonArrayRequest request = new JsonArrayRequest(</span>
+                Request.Method.GET, url, null,
+                response -&gt; {
+<span class="fc" id="L68">                    allNotes.clear();</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                    for (int i = 0; i &lt; response.length(); i++) {</span>
+                        try {
+<span class="fc" id="L71">                            allNotes.add(response.getJSONObject(i));</span>
+<span class="nc" id="L72">                        } catch (JSONException e) {</span>
+<span class="nc" id="L73">                            e.printStackTrace();</span>
+<span class="fc" id="L74">                        }</span>
+                    }
+<span class="fc" id="L76">                    sortAndDisplay(filterSpinner.getSelectedItemPosition());</span>
+<span class="fc" id="L77">                },</span>
+<span class="nc" id="L78">                error -&gt; Toast.makeText(this, &quot;Failed to load&quot;, Toast.LENGTH_SHORT).show()</span>
+        );
+
+<span class="fc" id="L81">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="fc" id="L82">        queue.add(request);</span>
+<span class="fc" id="L83">    }</span>
+
+    private void displayNotes(List&lt;JSONObject&gt; notes) {
+<span class="fc" id="L86">        GridLayout container = findViewById(R.id.worriesContainer);</span>
+<span class="fc" id="L87">        container.removeAllViews();</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (JSONObject note : notes) {</span>
+            try {
+<span class="fc" id="L91">                long noteId = note.getLong(&quot;id&quot;);</span>
+<span class="fc" id="L92">                String title = note.getString(&quot;title&quot;);</span>
+<span class="fc" id="L93">                String content = note.getString(&quot;content&quot;);</span>
+<span class="fc" id="L94">                String dueDate = note.getString(&quot;dueDate&quot;);</span>
+<span class="fc" id="L95">                String label = note.getString(&quot;label&quot;);</span>
+
+<span class="fc" id="L97">                addNoteCard(container, title, content, dueDate, label, noteId);</span>
+<span class="nc" id="L98">            } catch (JSONException e) {</span>
+<span class="nc" id="L99">                e.printStackTrace();</span>
+<span class="fc" id="L100">            }</span>
+<span class="fc" id="L101">        }</span>
+<span class="fc" id="L102">    }</span>
+
+    private void addNoteCard(GridLayout container, String title, String content,
+                             String dueDate, String label, long noteId) {
+<span class="fc" id="L106">        View cardView = getLayoutInflater().inflate(R.layout.note_card, container, false);</span>
+
+<span class="fc" id="L108">        ((TextView) cardView.findViewById(R.id.worryTitle)).setText(title);</span>
+<span class="fc" id="L109">        ((TextView) cardView.findViewById(R.id.worryContent)).setText(content);</span>
+<span class="fc" id="L110">        ((TextView) cardView.findViewById(R.id.worryDueDate)).setText(&quot;Due: &quot; + dueDate);</span>
+<span class="fc" id="L111">        ((TextView) cardView.findViewById(R.id.worryLabel)).setText(label);</span>
+
+<span class="fc" id="L113">        cardView.setOnClickListener(v -&gt;</span>
+<span class="nc" id="L114">                showEditDeleteDialog(noteId, title, content, dueDate, label));</span>
+
+<span class="fc" id="L116">        container.addView(cardView);</span>
+<span class="fc" id="L117">    }</span>
+
+    // Methods for editing / deleting note popup:
+    private void showEditDeleteDialog(long noteId, String title, String content, String dueDate, String label) {
+<span class="nc" id="L121">        AlertDialog.Builder builder = new AlertDialog.Builder(this);</span>
+<span class="nc" id="L122">        builder.setTitle(&quot;Choose Action&quot;);</span>
+
+<span class="nc" id="L124">        builder.setPositiveButton(&quot;Edit&quot;, (dialog, which) -&gt; {</span>
+            // Open AddWorryActivity with existing data
+<span class="nc" id="L126">            Intent intent = new Intent(WorryNotes.this, AddWorryActivity.class);</span>
+<span class="nc" id="L127">            intent.putExtra(&quot;noteId&quot;, noteId);</span>
+<span class="nc" id="L128">            intent.putExtra(&quot;title&quot;, title);</span>
+<span class="nc" id="L129">            intent.putExtra(&quot;content&quot;, content);</span>
+<span class="nc" id="L130">            intent.putExtra(&quot;dueDate&quot;, dueDate);</span>
+<span class="nc" id="L131">            intent.putExtra(&quot;label&quot;, label);</span>
+<span class="nc" id="L132">            startActivity(intent);</span>
+<span class="nc" id="L133">        });</span>
+
+<span class="nc" id="L135">        builder.setNegativeButton(&quot;Delete&quot;, (dialog, which) -&gt; {</span>
+<span class="nc" id="L136">            deleteNote(noteId);</span>
+<span class="nc" id="L137">        });</span>
+
+<span class="nc" id="L139">        builder.setNeutralButton(&quot;Share&quot;, (dialog, which) -&gt; {</span>
+            // Open counselor selection page
+<span class="nc" id="L141">            Intent intent = new Intent(WorryNotes.this, SelectCounselorActivity.class);</span>
+<span class="nc" id="L142">            intent.putExtra(&quot;noteId&quot;, noteId);</span>
+<span class="nc" id="L143">            startActivity(intent);</span>
+<span class="nc" id="L144">        });</span>
+
+<span class="nc" id="L146">        builder.show();</span>
+<span class="nc" id="L147">    }</span>
+
+    private void deleteNote(long noteId) {
+<span class="nc" id="L150">        String url = ApiConstants.BASE_URL + &quot;/api/notes/&quot; + noteId;</span>
+
+<span class="nc" id="L152">        StringRequest request = new StringRequest(</span>
+                Request.Method.DELETE,
+                url,
+                response -&gt; {
+<span class="nc" id="L156">                    Toast.makeText(this, &quot;Note deleted&quot;, Toast.LENGTH_SHORT).show();</span>
+                    // Refresh the list
+<span class="nc" id="L158">                    SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="nc" id="L159">                    String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="nc" id="L160">                    Long userId = Long.parseLong(userIdString);</span>
+<span class="nc" id="L161">                    fetchUserNotes(userId);</span>
+<span class="nc" id="L162">                },</span>
+                error -&gt; {
+<span class="nc" id="L164">                    Toast.makeText(this, &quot;Delete failed&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L165">                }</span>
+        );
+
+<span class="nc" id="L168">        RequestQueue queue = Volley.newRequestQueue(this);</span>
+<span class="nc" id="L169">        queue.add(request);</span>
+<span class="nc" id="L170">    }</span>
+
+    // Causes the WorryNotes page to refresh right away when updating or adding notes
+    @Override
+    protected void onResume() {
+<span class="fc" id="L175">        super.onResume();</span>
+
+        // Refresh the notes list
+<span class="fc" id="L178">        SharedPreferences prefs = getSharedPreferences(&quot;AA_PREFS&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L179">        String userIdString = prefs.getString(&quot;USER_ID&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L180">        Long userId = Long.parseLong(userIdString);</span>
+<span class="fc" id="L181">        fetchUserNotes(userId);</span>
+<span class="fc" id="L182">    }</span>
+
+    private void setupFilter() {
+<span class="fc" id="L185">        String[] filterOptions = {&quot;By Date (Newest)&quot;, &quot;By Label (A-Z)&quot;, &quot;By Due Date&quot;};</span>
+<span class="fc" id="L186">        ArrayAdapter&lt;String&gt; adapter = new ArrayAdapter&lt;&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item, filterOptions);
+<span class="fc" id="L188">        filterSpinner.setAdapter(adapter);</span>
+
+<span class="fc" id="L190">        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override
+            public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
+<span class="fc" id="L193">                sortAndDisplay(position);</span>
+<span class="fc" id="L194">            }</span>
+
+            @Override
+<span class="nc" id="L197">            public void onNothingSelected(AdapterView&lt;?&gt; parent) {}</span>
+        });
+<span class="fc" id="L199">    }</span>
+
+    private void sortAndDisplay(int filterType) {
+<span class="fc" id="L202">        List&lt;JSONObject&gt; sorted = new ArrayList&lt;&gt;(allNotes);</span>
+
+<span class="pc bpc" id="L204" title="3 of 4 branches missed.">        switch (filterType) {</span>
+            case 0: // By Date (Newest first)
+<span class="fc" id="L206">                Collections.reverse(sorted);</span>
+<span class="fc" id="L207">                break;</span>
+
+            case 1: // By Label (A-Z), then by date
+<span class="nc" id="L210">                Collections.sort(sorted, (a, b) -&gt; {</span>
+                    try {
+<span class="nc" id="L212">                        String labelA = a.getString(&quot;label&quot;);</span>
+<span class="nc" id="L213">                        String labelB = b.getString(&quot;label&quot;);</span>
+<span class="nc" id="L214">                        int labelCompare = labelA.compareTo(labelB);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                        if (labelCompare != 0) {</span>
+<span class="nc" id="L216">                            return labelCompare;</span>
+                        }
+<span class="nc" id="L218">                        return b.getInt(&quot;id&quot;) - a.getInt(&quot;id&quot;);</span>
+<span class="nc" id="L219">                    } catch (JSONException e) {</span>
+<span class="nc" id="L220">                        return 0;</span>
+                    }
+                });
+<span class="nc" id="L223">                break;</span>
+
+            case 2: // By Due Date (earliest first)
+<span class="nc" id="L226">                Collections.sort(sorted, (a, b) -&gt; {</span>
+                    try {
+<span class="nc" id="L228">                        String dateA = a.optString(&quot;dueDate&quot;, &quot;9999-12-31&quot;);</span>
+<span class="nc" id="L229">                        String dateB = b.optString(&quot;dueDate&quot;, &quot;9999-12-31&quot;);</span>
+<span class="nc" id="L230">                        return dateA.compareTo(dateB);</span>
+<span class="nc" id="L231">                    } catch (Exception e) {</span>
+<span class="nc" id="L232">                        return 0;</span>
+                    }
+                });
+                break;
+        }
+
+<span class="fc" id="L238">        displayNotes(sorted);</span>
+<span class="fc" id="L239">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span>Generated by the Android Gradle plugin 8.8.1</div></body></html>
