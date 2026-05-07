@@ -36,14 +36,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.anything;
 
-/**
- * Frontend System Tests — 20 focused test cases.
- *
- * Each test covers multiple UI paths in a single pass, mirroring the
- * backend strategy that achieved 82% coverage in 20 tests.
- *
- * NOTE: AIChatActivity intentionally excluded to preserve API tokens.
- */
+
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FrontendSystemTest {
