@@ -7,10 +7,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
 @RunWith(AndroidJUnit4.class)
@@ -22,34 +19,34 @@ public class WorryNotesTest {
 
     @Test
     public void testWorriesContainerDisplayed() {
-        onView(withId(R.id.worriesContainer))
-                .check(matches(isDisplayed()));
+        Espresso.onView(ViewMatchers.withId(R.id.worriesContainer))
+                .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
     }
 
     @Test
     public void testAddWorryNoteButtonExists() {
-        onView(withId(R.id.btnAddWorryNote))
-                .check(matches(isDisplayed()));
+        Espresso.onView(ViewMatchers.withId(R.id.btnAddWorryNote))
+                .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
     }
 
     @Test
     public void testAddWorryNoteButtonClick() {
-        onView(withId(R.id.btnAddWorryNote))
-                .perform(click());
+        Espresso.onView(ViewMatchers.withId(R.id.btnAddWorryNote))
+                .perform(ViewActions.click());
 
         // Should launch AddWorryActivity
     }
 
     @Test
     public void testBackButtonExists() {
-        onView(withId(R.id.btnBack))
-                .check(matches(isDisplayed()));
+        Espresso.onView(ViewMatchers.withId(R.id.btnBack))
+                .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
     }
 
     @Test
     public void testBackButtonClick() {
-        onView(withId(R.id.btnBack))
-                .perform(click());
+        Espresso.onView(ViewMatchers.withId(R.id.btnBack))
+                .perform(ViewActions.click());
 
         // Activity should finish
     }
@@ -58,7 +55,7 @@ public class WorryNotesTest {
     public void testActivityLoads() {
         // Activity loads and fetches notes from backend
         // Verify container is displayed
-        onView(withId(R.id.worriesContainer))
-                .check(matches(isDisplayed()));
+        Espresso.onView(ViewMatchers.withId(R.id.worriesContainer))
+                .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
     }
 }
