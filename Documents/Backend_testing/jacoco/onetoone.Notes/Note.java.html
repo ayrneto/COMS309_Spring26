@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Note.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Notes</a> &gt; <span class="el_source">Note.java</span></div><h1>Note.java</h1><pre class="source lang-java linenums">package onetoone.Notes;
+
+import onetoone.Users.User;
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = &quot;notes&quot;)
+<span class="fc" id="L10">public class Note {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+
+    @Column(columnDefinition = &quot;TEXT&quot;)
+    private String content;
+
+<span class="fc" id="L21">    private boolean archived = false;</span>
+
+    private String label;
+
+    private LocalDate dueDate;
+
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;user_id&quot;, nullable = false)
+    private User user;
+
+<span class="fc" id="L34">    private boolean shared = false;</span>
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;shared_with_counsellor_id&quot;)
+    private User sharedWithCounsellor;
+
+    @PrePersist
+    void onCreate() {
+<span class="fc" id="L42">        this.createdAt = Instant.now();</span>
+<span class="fc" id="L43">        this.updatedAt = this.createdAt;</span>
+<span class="fc" id="L44">    }</span>
+
+    @PreUpdate
+    void onUpdate() {
+<span class="fc" id="L48">        this.updatedAt = Instant.now();</span>
+<span class="fc" id="L49">    }</span>
+
+<span class="fc" id="L51">    public Long getId() { return id; }</span>
+
+<span class="fc" id="L53">    public String getTitle() { return title; }</span>
+<span class="fc" id="L54">    public void setTitle(String title) { this.title = title; }</span>
+
+<span class="fc" id="L56">    public String getContent() { return content; }</span>
+<span class="fc" id="L57">    public void setContent(String content) { this.content = content; }</span>
+
+<span class="nc" id="L59">    public boolean isArchived() { return archived; }</span>
+<span class="nc" id="L60">    public void setArchived(boolean archived) { this.archived = archived; }</span>
+
+<span class="fc" id="L62">    public String getLabel() { return label; }</span>
+<span class="fc" id="L63">    public void setLabel(String label) { this.label = label; }</span>
+
+<span class="fc" id="L65">    public LocalDate getDueDate() { return dueDate; }</span>
+<span class="fc" id="L66">    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }</span>
+
+<span class="fc" id="L68">    public Instant getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L69">    public Instant getUpdatedAt() { return updatedAt; }</span>
+
+<span class="fc" id="L71">    public User getUser() { return user; }</span>
+<span class="fc" id="L72">    public void setUser(User user) { this.user = user; }</span>
+
+<span class="fc" id="L74">    public boolean isShared() { return shared; }</span>
+<span class="fc" id="L75">    public void setShared(boolean shared) { this.shared = shared; }</span>
+
+<span class="fc" id="L77">    public User getSharedWithCounsellor() { return sharedWithCounsellor; }</span>
+<span class="fc" id="L78">    public void setSharedWithCounsellor(User sharedWithCounsellor) { this.sharedWithCounsellor = sharedWithCounsellor; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

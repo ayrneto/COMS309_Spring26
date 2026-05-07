@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatServer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.realtime_chat</a> &gt; <span class="el_source">ChatServer.java</span></div><h1>ChatServer.java</h1><pre class="source lang-java linenums">package onetoone.realtime_chat;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnError;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
+import jakarta.websocket.server.PathParam;
+import jakarta.websocket.server.ServerEndpoint;
+
+import onetoone.realtime_chat.dto.ChatMessageRequest;
+import onetoone.realtime_chat.dto.ChatMessageResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+
+@ServerEndpoint(&quot;/ws/chat/{senderId}/{receiverId}&quot;)
+@Component
+<span class="fc" id="L29">public class ChatServer {</span>
+
+<span class="fc" id="L31">    public static Map&lt;Long, Session&gt; userSessionMap = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L32">    private static Map&lt;Session, Long&gt; sessionUserMap = new Hashtable&lt;&gt;();</span>
+
+    private static ChatService chatService;
+
+    @Autowired
+    public void setChatService(ChatService service) {
+<span class="fc" id="L38">        ChatServer.chatService = service;</span>
+<span class="fc" id="L39">    }</span>
+
+<span class="fc" id="L41">    private final ObjectMapper objectMapper = new ObjectMapper()</span>
+<span class="fc" id="L42">            .registerModule(new JavaTimeModule());</span>
+
+<span class="fc" id="L44">    private final Logger logger = LoggerFactory.getLogger(ChatServer.class);</span>
+
+    // ── Commands ──────────────────────────────────────────────────────────────
+    private static final String HELP_TEXT =
+            &quot;Available commands:\n&quot; +
+                    &quot;  /help    — Show this list\n&quot; +
+                    &quot;  /clear   — Clear chat history from your view\n&quot; +
+                    &quot;  /status  — Show your connection status\n&quot; +
+                    &quot;  /ping    — Check if the other user is online&quot;;
+
+    @OnOpen
+    public void onOpen(Session session,
+                       @PathParam(&quot;senderId&quot;) Long senderId,
+                       @PathParam(&quot;receiverId&quot;) Long receiverId) throws IOException {
+
+<span class="fc" id="L59">        logger.info(&quot;[onOpen] senderId=&quot; + senderId + &quot; receiverId=&quot; + receiverId);</span>
+
+<span class="fc" id="L61">        userSessionMap.put(senderId, session);</span>
+<span class="fc" id="L62">        sessionUserMap.put(session, senderId);</span>
+
+<span class="fc" id="L64">        sendToUser(senderId, buildSystem(&quot;Connected as user &quot; + senderId));</span>
+<span class="fc" id="L65">        logger.info(&quot;[onOpen] Active sessions: &quot; + userSessionMap.keySet());</span>
+<span class="fc" id="L66">    }</span>
+
+    @OnMessage
+    public void onMessage(Session session, String messageJson,
+                          @PathParam(&quot;senderId&quot;) Long senderId,
+                          @PathParam(&quot;receiverId&quot;) Long receiverId) throws IOException {
+
+<span class="fc" id="L73">        logger.info(&quot;[onMessage] from user &quot; + senderId + &quot;: &quot; + messageJson);</span>
+
+<span class="pc bpc" id="L75" title="2 of 4 branches missed.">        if (messageJson == null || messageJson.trim().isEmpty()) return;</span>
+
+        // 1. Parse JSON into request DTO
+        ChatMessageRequest dto;
+        try {
+<span class="fc" id="L80">            dto = objectMapper.readValue(messageJson, ChatMessageRequest.class);</span>
+<span class="fc" id="L81">        } catch (Exception e) {</span>
+<span class="fc" id="L82">            logger.error(&quot;[onMessage] Failed to parse JSON: &quot; + e.getMessage());</span>
+<span class="fc" id="L83">            sendToUser(senderId, buildError(&quot;Invalid JSON format&quot;));</span>
+<span class="fc" id="L84">            return;</span>
+<span class="fc" id="L85">        }</span>
+
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        String type = dto.getType() != null ? dto.getType() : &quot;message&quot;;</span>
+
+        // ── TYPING indicator ──────────────────────────────────────────────────
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (&quot;typing&quot;.equals(type)) {</span>
+<span class="fc" id="L91">            Map&lt;String, Object&gt; typingPayload = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L92">            typingPayload.put(&quot;type&quot;, &quot;typing&quot;);</span>
+<span class="fc" id="L93">            typingPayload.put(&quot;senderId&quot;, senderId);</span>
+<span class="fc" id="L94">            typingPayload.put(&quot;isTyping&quot;, Boolean.TRUE.equals(dto.getIsTyping()));</span>
+<span class="fc" id="L95">            forwardToReceiver(dto.getReceiverId(), typingPayload);</span>
+<span class="fc" id="L96">            logger.info(&quot;[onMessage] Typing indicator from &quot; + senderId</span>
+<span class="fc" id="L97">                    + &quot; → &quot; + dto.getReceiverId() + &quot; isTyping=&quot; + dto.getIsTyping());</span>
+<span class="fc" id="L98">            return;</span>
+        }
+
+        // ── READ receipt ──────────────────────────────────────────────────────
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (&quot;read&quot;.equals(type)) {</span>
+<span class="fc" id="L103">            Map&lt;String, Object&gt; readPayload = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L104">            readPayload.put(&quot;type&quot;, &quot;read&quot;);</span>
+<span class="fc" id="L105">            readPayload.put(&quot;senderId&quot;, senderId);</span>
+<span class="fc" id="L106">            forwardToReceiver(dto.getReceiverId(), readPayload);</span>
+<span class="fc" id="L107">            logger.info(&quot;[onMessage] Read receipt from &quot; + senderId + &quot; → &quot; + dto.getReceiverId());</span>
+<span class="fc" id="L108">            return;</span>
+        }
+
+        // ── COMMAND ───────────────────────────────────────────────────────────
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        String content = dto.getContent() != null ? dto.getContent().trim() : &quot;&quot;;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (content.startsWith(&quot;/&quot;)) {</span>
+<span class="fc" id="L114">            handleCommand(content, senderId, receiverId);</span>
+<span class="fc" id="L115">            return;</span>
+        }
+
+        // ── REGULAR MESSAGE (text or file) ────────────────────────────────────
+
+        // Extract optional file fields — null for plain text messages
+<span class="fc" id="L121">        String fileUrl  = dto.getFileUrl();</span>
+<span class="fc" id="L122">        String fileName = dto.getFileName();</span>
+<span class="fc" id="L123">        String fileType = dto.getFileType();</span>
+
+<span class="pc bpc" id="L125" title="1 of 4 branches missed.">        boolean isFileMessage = fileUrl != null &amp;&amp; !fileUrl.isEmpty();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (isFileMessage) {</span>
+<span class="fc" id="L127">            logger.info(&quot;[onMessage] File message from &quot; + senderId</span>
+<span class="fc" id="L128">                    + &quot; → &quot; + dto.getReceiverId()</span>
+                    + &quot; file=&quot; + fileName + &quot; (&quot; + fileType + &quot;)&quot;);
+        }
+
+        // 2. Save to database (with file fields if present)
+        ChatMessage saved;
+        try {
+<span class="fc" id="L135">            saved = chatService.saveMessage(</span>
+<span class="fc" id="L136">                    dto.getSenderId(),</span>
+<span class="fc" id="L137">                    dto.getReceiverId(),</span>
+<span class="fc" id="L138">                    dto.getContent(),</span>
+                    fileUrl,
+                    fileName,
+                    fileType
+            );
+<span class="nc" id="L143">        } catch (Exception e) {</span>
+<span class="nc" id="L144">            logger.error(&quot;[onMessage] DB save failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L145">            sendToUser(senderId, buildError(&quot;Failed to save message&quot;));</span>
+<span class="nc" id="L146">            return;</span>
+<span class="fc" id="L147">        }</span>
+
+        // 3. Build response JSON (ChatMessageResponse now includes file fields)
+<span class="fc" id="L150">        String responseJson = objectMapper.writeValueAsString(new ChatMessageResponse(saved));</span>
+
+        // 4. Forward to receiver if online
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (userSessionMap.containsKey(receiverId)) {</span>
+<span class="fc" id="L154">            Session receiverSession = userSessionMap.get(receiverId);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">            if (receiverSession.isOpen()) {</span>
+<span class="fc" id="L156">                receiverSession.getBasicRemote().sendText(responseJson);</span>
+<span class="fc" id="L157">                logger.info(&quot;[onMessage] Forwarded to user &quot; + receiverId);</span>
+            }
+<span class="fc" id="L159">        } else {</span>
+<span class="fc" id="L160">            logger.info(&quot;[onMessage] User &quot; + receiverId + &quot; not connected — saved to DB only&quot;);</span>
+        }
+
+        // 5. Echo back to sender
+<span class="fc" id="L164">        session.getBasicRemote().sendText(responseJson);</span>
+<span class="fc" id="L165">    }</span>
+
+    @OnClose
+    public void onClose(Session session,
+                        @PathParam(&quot;senderId&quot;) Long senderId,
+                        @PathParam(&quot;receiverId&quot;) Long receiverId) throws IOException {
+
+<span class="fc" id="L172">        logger.info(&quot;[onClose] user &quot; + senderId + &quot; disconnected&quot;);</span>
+
+<span class="fc" id="L174">        Map&lt;String, Object&gt; offlinePayload = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L175">        offlinePayload.put(&quot;type&quot;, &quot;typing&quot;);</span>
+<span class="fc" id="L176">        offlinePayload.put(&quot;senderId&quot;, senderId);</span>
+<span class="fc" id="L177">        offlinePayload.put(&quot;isTyping&quot;, false);</span>
+<span class="fc" id="L178">        forwardToReceiver(receiverId, offlinePayload);</span>
+
+<span class="fc" id="L180">        userSessionMap.remove(senderId);</span>
+<span class="fc" id="L181">        sessionUserMap.remove(session);</span>
+<span class="fc" id="L182">    }</span>
+
+    @OnError
+    public void onError(Session session, Throwable throwable,
+                        @PathParam(&quot;senderId&quot;) Long senderId,
+                        @PathParam(&quot;receiverId&quot;) Long receiverId) {
+
+<span class="nc" id="L189">        logger.error(&quot;[onError] user &quot; + senderId + &quot;: &quot; + throwable.getMessage());</span>
+<span class="nc" id="L190">        userSessionMap.remove(senderId);</span>
+<span class="nc" id="L191">        sessionUserMap.remove(session);</span>
+<span class="nc" id="L192">    }</span>
+
+    // ── Command handler ───────────────────────────────────────────────────────
+
+    private void handleCommand(String command, Long senderId, Long receiverId) {
+<span class="fc" id="L197">        String cmd = command.split(&quot;\\s+&quot;)[0].toLowerCase();</span>
+
+<span class="pc bpc" id="L199" title="1 of 5 branches missed.">        switch (cmd) {</span>
+            case &quot;/help&quot;:
+<span class="fc" id="L201">                sendToUser(senderId, buildSystem(HELP_TEXT));</span>
+<span class="fc" id="L202">                logger.info(&quot;[command] /help used by user &quot; + senderId);</span>
+<span class="fc" id="L203">                break;</span>
+
+            case &quot;/clear&quot;:
+<span class="fc" id="L206">                sendToUser(senderId, buildCommand(&quot;clear&quot;, null));</span>
+<span class="fc" id="L207">                logger.info(&quot;[command] /clear used by user &quot; + senderId);</span>
+<span class="fc" id="L208">                break;</span>
+
+            case &quot;/status&quot;:
+<span class="fc" id="L211">                boolean senderOnline   = userSessionMap.containsKey(senderId);</span>
+<span class="fc" id="L212">                boolean receiverOnline = userSessionMap.containsKey(receiverId);</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">                String statusMsg = &quot;You are &quot; + (senderOnline ? &quot;online&quot; : &quot;offline&quot;) +</span>
+                        &quot;. User &quot; + receiverId + &quot; is &quot; +
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">                        (receiverOnline ? &quot;online&quot; : &quot;offline&quot;) + &quot;.&quot;;</span>
+<span class="fc" id="L216">                sendToUser(senderId, buildSystem(statusMsg));</span>
+<span class="fc" id="L217">                logger.info(&quot;[command] /status used by user &quot; + senderId);</span>
+<span class="fc" id="L218">                break;</span>
+
+            case &quot;/ping&quot;:
+<span class="fc" id="L221">                boolean isOnline = userSessionMap.containsKey(receiverId);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                String pingResult = isOnline</span>
+<span class="fc" id="L223">                        ? &quot;User &quot; + receiverId + &quot; is online.&quot;</span>
+<span class="pc" id="L224">                        : &quot;User &quot; + receiverId + &quot; is offline.&quot;;</span>
+<span class="fc" id="L225">                sendToUser(senderId, buildSystem(pingResult));</span>
+<span class="fc" id="L226">                logger.info(&quot;[command] /ping used by user &quot; + senderId);</span>
+<span class="fc" id="L227">                break;</span>
+
+            default:
+<span class="nc" id="L230">                sendToUser(senderId, buildSystem(</span>
+                        &quot;Unknown command: &quot; + cmd + &quot;. Type /help for available commands.&quot;));
+                break;
+        }
+<span class="fc" id="L234">    }</span>
+
+    // ── Payload builders ──────────────────────────────────────────────────────
+
+    private String buildSystem(String text) {
+        try {
+<span class="fc" id="L240">            Map&lt;String, Object&gt; m = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L241">            m.put(&quot;type&quot;, &quot;system&quot;);</span>
+<span class="fc" id="L242">            m.put(&quot;text&quot;, text);</span>
+<span class="fc" id="L243">            return objectMapper.writeValueAsString(m);</span>
+<span class="nc" id="L244">        } catch (Exception e) {</span>
+<span class="nc" id="L245">            return &quot;{\&quot;type\&quot;:\&quot;system\&quot;,\&quot;text\&quot;:\&quot;&quot; + text + &quot;\&quot;}&quot;;</span>
+        }
+    }
+
+    private String buildCommand(String action, Object data) {
+        try {
+<span class="fc" id="L251">            Map&lt;String, Object&gt; m = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L252">            m.put(&quot;type&quot;, &quot;command&quot;);</span>
+<span class="fc" id="L253">            m.put(&quot;action&quot;, action);</span>
+<span class="fc" id="L254">            m.put(&quot;data&quot;, data);</span>
+<span class="fc" id="L255">            return objectMapper.writeValueAsString(m);</span>
+<span class="nc" id="L256">        } catch (Exception e) {</span>
+<span class="nc" id="L257">            return &quot;{\&quot;type\&quot;:\&quot;command\&quot;,\&quot;action\&quot;:\&quot;&quot; + action + &quot;\&quot;}&quot;;</span>
+        }
+    }
+
+    private String buildError(String msg) {
+        try {
+<span class="fc" id="L263">            Map&lt;String, Object&gt; m = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L264">            m.put(&quot;type&quot;, &quot;error&quot;);</span>
+<span class="fc" id="L265">            m.put(&quot;text&quot;, msg);</span>
+<span class="fc" id="L266">            return objectMapper.writeValueAsString(m);</span>
+<span class="nc" id="L267">        } catch (Exception e) {</span>
+<span class="nc" id="L268">            return &quot;{\&quot;type\&quot;:\&quot;error\&quot;,\&quot;text\&quot;:\&quot;&quot; + msg + &quot;\&quot;}&quot;;</span>
+        }
+    }
+
+    private void sendToUser(Long userId, String message) {
+<span class="fc" id="L273">        Session target = userSessionMap.get(userId);</span>
+<span class="pc bpc" id="L274" title="2 of 4 branches missed.">        if (target != null &amp;&amp; target.isOpen()) {</span>
+            try {
+<span class="fc" id="L276">                target.getBasicRemote().sendText(message);</span>
+<span class="nc" id="L277">            } catch (IOException e) {</span>
+<span class="nc" id="L278">                logger.error(&quot;[sendToUser] Failed for user &quot; + userId + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L279">            }</span>
+        }
+<span class="fc" id="L281">    }</span>
+
+    private void forwardToReceiver(Long receiverId, Map&lt;String, Object&gt; payload) {
+        try {
+<span class="fc" id="L285">            String json = objectMapper.writeValueAsString(payload);</span>
+<span class="fc" id="L286">            Session receiverSession = userSessionMap.get(receiverId);</span>
+<span class="pc bpc" id="L287" title="1 of 4 branches missed.">            if (receiverSession != null &amp;&amp; receiverSession.isOpen()) {</span>
+<span class="fc" id="L288">                receiverSession.getBasicRemote().sendText(json);</span>
+            }
+<span class="fc" id="L290">        } catch (Exception e) {</span>
+<span class="fc" id="L291">            logger.error(&quot;[forwardToReceiver] Failed for user &quot; + receiverId + &quot;: &quot; + e.getMessage());</span>
+<span class="fc" id="L292">        }</span>
+<span class="fc" id="L293">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

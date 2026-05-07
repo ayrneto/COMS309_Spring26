@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoutineService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.RoutineTracker</a> &gt; <span class="el_source">RoutineService.java</span></div><h1>RoutineService.java</h1><pre class="source lang-java linenums">package onetoone.RoutineTracker;
+
+import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+public class RoutineService {
+
+    private final RoutineRepository routineRepo;
+    private final RoutineCheckInRepository checkInRepo;
+
+    public RoutineService(RoutineRepository routineRepo,
+<span class="fc" id="L14">                          RoutineCheckInRepository checkInRepo) {</span>
+<span class="fc" id="L15">        this.routineRepo = routineRepo;</span>
+<span class="fc" id="L16">        this.checkInRepo = checkInRepo;</span>
+<span class="fc" id="L17">    }</span>
+
+    public Routine checkIn(Long routineId) {
+<span class="fc" id="L20">        Routine routine = routineRepo.findById(routineId)</span>
+<span class="pc" id="L21">                .orElseThrow(() -&gt; new RuntimeException(&quot;Routine not found&quot;));</span>
+
+<span class="fc" id="L23">        LocalDate today = LocalDate.now();</span>
+
+        // Prevent duplicate check-in
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (checkInRepo.existsByRoutineIdAndCheckInDate(routineId, today)) {</span>
+<span class="nc" id="L27">            throw new RuntimeException(&quot;Already checked in today&quot;);</span>
+        }
+
+        // Get last check-in
+<span class="fc" id="L31">        var lastCheckInOpt = checkInRepo</span>
+<span class="fc" id="L32">                .findTopByRoutineIdOrderByCheckInDateDesc(routineId);</span>
+
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (lastCheckInOpt.isPresent()) {</span>
+<span class="nc" id="L35">            LocalDate lastDate = lastCheckInOpt.get().getCheckInDate();</span>
+
+<span class="nc bnc" id="L37" title="All 2 branches missed.">            if (lastDate.equals(today.minusDays(1))) {</span>
+                // Continue streak
+<span class="nc" id="L39">                routine.setStreakCount(routine.getStreakCount() + 1);</span>
+            } else {
+                // Missed a day → reset streak
+<span class="nc" id="L42">                routine.setStreakCount(1);</span>
+            }
+<span class="nc" id="L44">        } else {</span>
+            // First check-in
+<span class="fc" id="L46">            routine.setStreakCount(1);</span>
+        }
+
+        // Mark completed after 60 days
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (routine.getStreakCount() &gt;= 60) {</span>
+<span class="nc" id="L51">            routine.setCompleted(true);</span>
+        }
+
+        // Save check-in
+<span class="fc" id="L55">        RoutineCheckIn checkIn = new RoutineCheckIn();</span>
+<span class="fc" id="L56">        checkIn.setRoutine(routine);</span>
+<span class="fc" id="L57">        checkIn.setCheckInDate(today);</span>
+
+<span class="fc" id="L59">        checkInRepo.save(checkIn);</span>
+<span class="fc" id="L60">        return routineRepo.save(routine);</span>
+    }
+
+    public List&lt;RoutineCheckIn&gt; getCheckInsForUser(Long userId) {
+<span class="fc" id="L64">        return checkInRepo.findByRoutineUserId(userId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

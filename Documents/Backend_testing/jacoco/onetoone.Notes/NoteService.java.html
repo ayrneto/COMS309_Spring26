@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NoteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Notes</a> &gt; <span class="el_source">NoteService.java</span></div><h1>NoteService.java</h1><pre class="source lang-java linenums">package onetoone.Notes;
+
+import onetoone.Users.User;
+import onetoone.Users.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import onetoone.Notes.dto.NoteCreateRequest;
+import onetoone.Notes.dto.NoteUpdateRequest;
+import onetoone.Users.Role;
+import java.util.List;
+
+@Service
+<span class="fc" id="L15">public class NoteService {</span>
+
+    @Autowired
+    NoteRepository noteRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
+    public Note createNote(Long userId, NoteCreateRequest req) {
+<span class="fc" id="L24">        User user = userRepository.findById(userId)</span>
+<span class="pc" id="L25">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;User not found: &quot; + userId));</span>
+<span class="fc" id="L26">        Note note = new Note();</span>
+<span class="fc" id="L27">        note.setTitle(req.getTitle());</span>
+<span class="fc" id="L28">        note.setContent(req.getContent());</span>
+<span class="fc" id="L29">        note.setLabel(req.getLabel());</span>
+<span class="fc" id="L30">        note.setDueDate(req.getDueDate());</span>
+<span class="fc" id="L31">        note.setUser(user);</span>
+<span class="fc" id="L32">        return noteRepository.save(note);</span>
+    }
+
+    public List&lt;Note&gt; getUserNotes(Long userId) {
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        if (!userRepository.existsById(userId)) {</span>
+<span class="nc" id="L37">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;User not found: &quot; + userId);</span>
+        }
+<span class="fc" id="L39">        return noteRepository.findByUserId(userId);</span>
+    }
+
+    public Note getNote(Long noteId) {
+<span class="fc" id="L43">        return noteRepository.findById(noteId)</span>
+<span class="fc" id="L44">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Note not found: &quot; + noteId));</span>
+    }
+
+    public Note updateNote(Long noteId, NoteUpdateRequest req) {
+<span class="fc" id="L48">        Note note = getNote(noteId);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (req.getTitle() != null) note.setTitle(req.getTitle());</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (req.getContent() != null) note.setContent(req.getContent());</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if (req.getLabel() != null) note.setLabel(req.getLabel());</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (req.getDueDate() != null) note.setDueDate(req.getDueDate());</span>
+<span class="fc" id="L53">        return noteRepository.save(note);</span>
+    }
+
+    public void deleteNote(Long noteId) {
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (!noteRepository.existsById(noteId)) {</span>
+<span class="fc" id="L58">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Note not found: &quot; + noteId);</span>
+        }
+<span class="fc" id="L60">        noteRepository.deleteById(noteId);</span>
+<span class="fc" id="L61">    }</span>
+
+    public Note shareNote(Long noteId, Long counsellorUserId) {
+<span class="fc" id="L64">        Note note = getNote(noteId);</span>
+<span class="fc" id="L65">        User counsellor = userRepository.findById(counsellorUserId)</span>
+<span class="pc" id="L66">                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Counsellor not found: &quot; + counsellorUserId));</span>
+
+        // ADD THIS — reject if the user is not actually a counsellor
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (counsellor.getRole() != Role.COUNSELLOR) {</span>
+<span class="nc" id="L70">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;User &quot; + counsellorUserId + &quot; is not a counsellor&quot;);</span>
+        }
+
+<span class="fc" id="L73">        note.setShared(true);</span>
+<span class="fc" id="L74">        note.setSharedWithCounsellor(counsellor);</span>
+<span class="fc" id="L75">        return noteRepository.save(note);</span>
+    }
+
+    public Note unshareNote(Long noteId) {
+<span class="fc" id="L79">        Note note = getNote(noteId);</span>
+<span class="fc" id="L80">        note.setShared(false);</span>
+<span class="fc" id="L81">        note.setSharedWithCounsellor(null);</span>
+<span class="fc" id="L82">        return noteRepository.save(note);</span>
+    }
+
+    public List&lt;Note&gt; getNotesSharedWithCounsellor(Long counsellorUserId) {
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (!userRepository.existsById(counsellorUserId)) {</span>
+<span class="nc" id="L87">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Counsellor not found: &quot; + counsellorUserId);</span>
+        }
+<span class="fc" id="L89">        return noteRepository.findBySharedWithCounsellorId(counsellorUserId);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

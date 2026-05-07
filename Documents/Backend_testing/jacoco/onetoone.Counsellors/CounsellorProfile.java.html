@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CounsellorProfile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Counsellors</a> &gt; <span class="el_source">CounsellorProfile.java</span></div><h1>CounsellorProfile.java</h1><pre class="source lang-java linenums">package onetoone.Counsellors;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import onetoone.Users.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+@Entity
+@Table(name = &quot;counsellor_profiles&quot;)
+public class CounsellorProfile {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id&quot;)
+    @Schema(description = &quot;Counsellor profile ID&quot;, example = &quot;1&quot;)
+    private Long id;
+
+    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = &quot;user_id&quot;, nullable = false)  // maps to the user_id column
+    @Schema(description = &quot;User associated with the counsellor profile&quot;)
+    private User user; //pipeline trigger
+
+    @Column(nullable = false)
+    @Schema(description = &quot;Display name of the counsellor&quot;, example = &quot;Dr. Jane Doe&quot;)
+    private String displayName;          // what they want shown publicly
+
+    @Column(nullable = false)
+    @Schema(description = &quot;Specialization of the counsellor&quot;, example = &quot;Anxiety &amp; Depression&quot;)
+    private String specialization;       // e.g., &quot;Anxiety &amp; Depression&quot;
+
+    @Column(length = 1500)
+    @Schema(description = &quot;Bio or description text of the counsellor&quot;, example = &quot;10+ years experience in cognitive therapy&quot;)
+    private String bio;                  // advertising/about text
+
+    @Schema(description = &quot;URL to counsellor's profile picture&quot;, example = &quot;https://example.com/image.jpg&quot;)
+    private String profilePictureUrl;    // stored URL, not the actual image
+
+    @Schema(description = &quot;Number of ratings received&quot;, example = &quot;20&quot;)
+    private Integer ratingCount;
+    @Schema(description = &quot;Average rating of the counsellor&quot;, example = &quot;4.8&quot;)
+    private Double ratingAverage;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Schema(description = &quot;Availability status of the counsellor&quot;)
+    private CounsellorStatus status;
+
+    @Transient
+    private String email;
+
+    @Transient
+    private String password;
+
+
+<span class="fc" id="L58">    public CounsellorProfile() {}</span>
+
+    // ---------- getters/setters ----------
+<span class="fc" id="L61">    public Long getId() { return id; }</span>
+
+<span class="fc" id="L63">    public User getUser() { return user; }</span>
+<span class="fc" id="L64">    public void setUser(User user) { this.user = user; }</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    public String getEmail() { return user != null ? user.getEmail() : null; }</span>
+    public void setEmail(String email) {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        if (user != null) user.setEmail(email);</span>
+<span class="nc" id="L69">    }</span>
+
+<span class="fc bfc" id="L71" title="All 2 branches covered.">    public String getPassword() { return user != null ? user.getPassword() : null; }</span>
+    public void setPassword(String password) {
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (user != null) user.setPassword(password);</span>
+<span class="nc" id="L74">    }</span>
+
+<span class="fc" id="L76">    public String getDisplayName() { return displayName; }</span>
+<span class="fc" id="L77">    public void setDisplayName(String displayName) { this.displayName = displayName; }</span>
+
+<span class="fc" id="L79">    public String getSpecialization() { return specialization; }</span>
+<span class="fc" id="L80">    public void setSpecialization(String specialization) { this.specialization = specialization; }</span>
+
+<span class="fc" id="L82">    public String getBio() { return bio; }</span>
+<span class="fc" id="L83">    public void setBio(String bio) { this.bio = bio; }</span>
+
+<span class="fc" id="L85">    public String getProfilePictureUrl() { return profilePictureUrl; }</span>
+<span class="fc" id="L86">    public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }</span>
+
+<span class="fc" id="L88">    public Double getRatingAverage() { return ratingAverage; }</span>
+<span class="fc" id="L89">    public void setRatingAverage(Double ratingAverage) { this.ratingAverage = ratingAverage; }</span>
+
+<span class="fc" id="L91">    public Integer getRatingCount() { return ratingCount; }</span>
+<span class="fc" id="L92">    public void setRatingCount(Integer ratingCount) { this.ratingCount = ratingCount; }</span>
+
+<span class="fc" id="L94">    public CounsellorStatus getStatus() { return status; }</span>
+<span class="fc" id="L95">    public void setStatus(CounsellorStatus status) { this.status = status; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

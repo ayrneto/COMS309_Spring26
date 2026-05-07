@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoutineController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.RoutineTracker</a> &gt; <span class="el_source">RoutineController.java</span></div><h1>RoutineController.java</h1><pre class="source lang-java linenums">package onetoone.RoutineTracker;
+import onetoone.Users.User;
+import onetoone.Users.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/routines&quot;)
+public class RoutineController {
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    RoutineCheckInRepository routineCheckInRepository;
+
+    private final RoutineService routineService;
+
+    @Autowired
+    private final RoutineRepository routineRepo;
+
+    public RoutineController(RoutineService routineService,
+<span class="fc" id="L26">                             RoutineRepository routineRepo) {</span>
+<span class="fc" id="L27">        this.routineService = routineService;</span>
+<span class="fc" id="L28">        this.routineRepo = routineRepo;</span>
+<span class="fc" id="L29">    }</span>
+
+    @PostMapping(&quot;/users/{userId}/routines&quot;)
+    public Routine createRoutine(
+            @PathVariable Long userId,
+            @RequestBody Routine routine) {
+
+<span class="fc" id="L36">        User user = userRepository.findById(userId)</span>
+<span class="pc" id="L37">                .orElseThrow(() -&gt; new RuntimeException(&quot;User not found&quot;));</span>
+
+<span class="fc" id="L39">        routine.setUser(user);</span>
+
+<span class="fc" id="L41">        return routineRepo.save(routine);</span>
+    }
+
+    // Daily Check-In
+    @PostMapping(&quot;/{id}/checkin&quot;)
+    public Routine checkIn(@PathVariable Long id) {
+<span class="fc" id="L47">        return routineService.checkIn(id);</span>
+    }
+
+    @GetMapping(&quot;/users/{userId}/checkins&quot;)
+    public List&lt;RoutineCheckIn&gt; getUserCheckIns(@PathVariable Long userId) {
+<span class="fc" id="L52">        return routineService.getCheckInsForUser(userId);</span>
+    }
+
+    // Get all routines
+    @GetMapping
+    public List&lt;Routine&gt; getAll() {
+<span class="fc" id="L58">        return routineRepo.findAll();</span>
+    }
+
+    @GetMapping(&quot;/users/{userId}/routines&quot;)
+    public List&lt;Routine&gt; getUserRoutines(@PathVariable Long userId) {
+<span class="fc" id="L63">        System.out.println(&quot;DEBUG: Hit the getUserRoutines method for ID: &quot; + userId);</span>
+<span class="fc" id="L64">        return routineRepo.findByUserId(userId);</span>
+    }
+
+    @Transactional
+    @DeleteMapping(&quot;/{id}&quot;)
+    public String deleteRoutine(@PathVariable Long id) {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!routineRepo.existsById(id)) {</span>
+<span class="fc" id="L71">            throw new RuntimeException(&quot;Routine not found&quot;);</span>
+        }
+
+        // Delete related check-ins first
+<span class="fc" id="L75">        routineCheckInRepository.deleteByRoutineId(id);</span>
+
+<span class="fc" id="L77">        routineRepo.deleteById(id);</span>
+<span class="fc" id="L78">        return &quot;Routine deleted successfully&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

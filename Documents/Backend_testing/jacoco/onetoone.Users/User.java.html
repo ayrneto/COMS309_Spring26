@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>User.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Users</a> &gt; <span class="el_source">User.java</span></div><h1>User.java</h1><pre class="source lang-java linenums">package onetoone.Users;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import onetoone.Counsellors.CounsellorProfile;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+
+
+@Entity
+@Table(name = &quot;users&quot;, uniqueConstraints = @UniqueConstraint(columnNames = &quot;email&quot;))
+@Schema(description = &quot;User entity representing a registered user&quot;)
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = &quot;Unique identifier of the user&quot;, example = &quot;1&quot;, accessMode = Schema.AccessMode.READ_ONLY)
+    private Long id;
+
+    @NotBlank
+    @Schema(description = &quot;Full name of the user&quot;, example = &quot;John Doe&quot;)
+    private String name;
+
+    @Email
+    @NotBlank
+    @Column(nullable = false, unique = true)
+    @Schema(description = &quot;Email address of the user&quot;, example = &quot;john@example.com&quot;)
+    private String email;
+
+    @NotBlank
+    @Column(nullable = false)
+    @Schema(description = &quot;Password for authentication&quot;, example = &quot;password123&quot;, accessMode = Schema.AccessMode.WRITE_ONLY)
+    private String password;
+
+    @Column(name = &quot;confirm_password&quot;)
+    @Schema(description = &quot;Confirmation of password during registration&quot;, example = &quot;password123&quot;, accessMode = Schema.AccessMode.WRITE_ONLY)
+    private String confirmPassword;
+
+    @NotNull
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Schema(description = &quot;Role of the user in the system&quot;, example = &quot;USER&quot;, allowableValues = {&quot;USER&quot;,&quot;ADMIN&quot;,&quot;COUNSELLOR&quot;})
+    private Role role;
+
+<span class="pc" id="L48">    @Schema(description = &quot;Indicates if the user is currently logged in&quot;, example = &quot;false&quot;)</span>
+    private boolean isLoggedIn = false;
+
+<span class="pc" id="L51">    @Schema(description = &quot;Indicates if the user account is active&quot;, example = &quot;true&quot;)</span>
+    private boolean active = true;
+
+    @Schema
+    @Column
+    private String profilePicture;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = &quot;user&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Schema(description = &quot;Associated counsellor profile if the user is a counsellor&quot;)
+    private CounsellorProfile counsellorProfile;
+
+    // Constructors
+<span class="fc" id="L64">    public User() {}</span>
+
+<span class="nc" id="L66">    public User(String name, String email, String password) {</span>
+<span class="nc" id="L67">        this.name = name;</span>
+<span class="nc" id="L68">        this.email = email;</span>
+<span class="nc" id="L69">        this.password = password;</span>
+<span class="nc" id="L70">        this.active = true;</span>
+<span class="nc" id="L71">    }</span>
+
+    public void setCounsellorProfile(CounsellorProfile counsellorProfile) {
+<span class="fc" id="L74">        this.counsellorProfile = counsellorProfile;</span>
+<span class="fc" id="L75">    }</span>
+
+    // Getters and Setters
+
+    public Long getId() {
+<span class="fc" id="L80">        return id;</span>
+    }
+
+    public void setProfilePicture(String profilePicture) {
+<span class="nc" id="L84">        this.profilePicture = profilePicture;</span>
+<span class="nc" id="L85">    }</span>
+
+    public String getProfilePicture() {
+<span class="fc" id="L88">        return profilePicture;</span>
+    }
+
+    public void setId(Long id) {
+<span class="nc" id="L92">        this.id = id;</span>
+<span class="nc" id="L93">    }</span>
+
+    public String getName() {
+<span class="fc" id="L96">        return name;</span>
+    }
+
+    public void setName(String name) {
+<span class="fc" id="L100">        this.name = name;</span>
+<span class="fc" id="L101">    }</span>
+
+    public String getEmail() {
+<span class="fc" id="L104">        return email;</span>
+    }
+
+    public void setEmail(String email) {
+<span class="fc" id="L108">        this.email = email;</span>
+<span class="fc" id="L109">    }</span>
+
+    public String getPassword() {
+<span class="fc" id="L112">        return password;</span>
+    }
+
+    public void setPassword(String password) {
+<span class="fc" id="L116">        this.password = password;</span>
+<span class="fc" id="L117">    }</span>
+
+    public boolean isActive() {
+<span class="fc" id="L120">        return active;</span>
+    }
+
+    public void setActive(boolean active) {
+<span class="fc" id="L124">        this.active = active;</span>
+<span class="fc" id="L125">    }</span>
+
+    public String getConfirmPassword() {
+<span class="fc" id="L128">        return confirmPassword;</span>
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+<span class="fc" id="L132">        this.confirmPassword = confirmPassword;</span>
+<span class="fc" id="L133">    }</span>
+
+    public Role getRole() {
+<span class="fc" id="L136">        return role;</span>
+    }
+
+    public void setRole(Role role) {
+<span class="fc" id="L140">        this.role = role;</span>
+<span class="fc" id="L141">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

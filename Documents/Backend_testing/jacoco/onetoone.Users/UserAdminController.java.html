@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Users</a> &gt; <span class="el_source">UserAdminController.java</span></div><h1>UserAdminController.java</h1><pre class="source lang-java linenums">package onetoone.Users;
+
+import onetoone.Counsellors.CounsellorProfile;
+import onetoone.Users.dto.CreateCounsellorRequest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+
+@RestController
+@RequestMapping(&quot;/api/admin&quot;)
+@Tag(name = &quot;User Admin Controller&quot;, description = &quot;Admin operations for managing users and counsellors&quot;)
+public class UserAdminController {
+
+    private final UserRepository userRepository;
+
+<span class="fc" id="L26">    public UserAdminController(UserRepository userRepository) {</span>
+<span class="fc" id="L27">        this.userRepository = userRepository;</span>
+<span class="fc" id="L28">    }</span>
+
+    @GetMapping(&quot;/users&quot;)
+    public ResponseEntity&lt;?&gt; getAllUsers() {
+<span class="fc" id="L32">        List&lt;User&gt; users = userRepository.findAll();</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (users.isEmpty())</span>
+<span class="nc" id="L34">            return ResponseEntity.ok(&quot;{\&quot;message\&quot;:\&quot;No users found\&quot;}&quot;);</span>
+<span class="fc" id="L35">        return ResponseEntity.ok(users);</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteUser(@PathVariable Long id) {
+        try {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">            if (!userRepository.existsById(id)) {</span>
+<span class="nc" id="L42">                throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;User not found&quot;);</span>
+            }
+
+<span class="nc" id="L45">            userRepository.deleteById(id);</span>
+<span class="nc" id="L46">            return ResponseEntity.noContent().build();</span>
+
+<span class="nc" id="L48">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L49">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;User has related data&quot;);</span>
+<span class="nc" id="L50">        } catch (Exception e) {</span>
+<span class="nc" id="L51">            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, &quot;Error deleting user&quot;);</span>
+        }
+    }
+
+    @Operation(
+            summary = &quot;Update user&quot;,
+            description = &quot;Updates user details such as name, email, active status, and optionally password&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;User updated successfully&quot;),
+            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;User not found&quot;)
+    })
+    
+    @PutMapping(&quot;/update/{id}&quot;)
+    public String updateUser(@RequestBody User incoming, @PathVariable long id) {
+
+<span class="nc" id="L67">        return userRepository.findById(id).map(existing -&gt; {</span>
+
+            // update only the fields you allow to change
+<span class="nc" id="L70">            existing.setName(incoming.getName());</span>
+<span class="nc" id="L71">            existing.setEmail(incoming.getEmail());</span>
+<span class="nc" id="L72">            existing.setActive(incoming.isActive());</span>
+<span class="nc" id="L73">            existing.setProfilePicture(incoming.getProfilePicture());</span>
+
+            // only update password if provided (optional)
+<span class="nc bnc" id="L76" title="All 4 branches missed.">            if (incoming.getPassword() != null &amp;&amp; !incoming.getPassword().isBlank()) {</span>
+<span class="nc" id="L77">                existing.setPassword(incoming.getPassword());</span>
+<span class="nc" id="L78">                existing.setConfirmPassword(incoming.getConfirmPassword());// ideally hash</span>
+            }
+
+<span class="nc" id="L81">            userRepository.save(existing);</span>
+<span class="nc" id="L82">            return &quot;success&quot;;</span>
+
+<span class="nc" id="L84">        }).orElse(&quot;failure&quot;);</span>
+    }
+
+
+
+    @Operation(
+            summary = &quot;Create counsellor&quot;,
+            description = &quot;Creates a new counsellor user with name, email, and password&quot;
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Counsellor created successfully&quot;),
+            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Invalid input data&quot;)
+    })
+    @PostMapping(&quot;/counsellors&quot;)
+    public ResponseEntity&lt;?&gt; createCounsellor(@RequestBody CreateCounsellorRequest req) {
+<span class="nc bnc" id="L99" title="All 4 branches missed.">        if (req.name == null || req.name.trim().isEmpty()) {</span>
+<span class="nc" id="L100">            return ResponseEntity.badRequest().body(&quot;{\&quot;message\&quot;:\&quot;username required\&quot;}&quot;);</span>
+        }
+<span class="nc bnc" id="L102" title="All 4 branches missed.">        if (req.emailId == null || req.emailId.trim().isEmpty()) {</span>
+<span class="nc" id="L103">            return ResponseEntity.badRequest().body(&quot;{\&quot;message\&quot;:\&quot;emailId required\&quot;}&quot;);</span>
+        }
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        if (req.password == null || req.password.trim().isEmpty()) {</span>
+<span class="nc" id="L106">            return ResponseEntity.badRequest().body(&quot;{\&quot;message\&quot;:\&quot;password required\&quot;}&quot;);</span>
+        }
+
+<span class="nc" id="L109">        User u = new User();</span>
+<span class="nc" id="L110">        u.setName(req.name.trim());</span>
+<span class="nc" id="L111">        u.setEmail(req.emailId.trim());</span>
+<span class="nc" id="L112">        u.setPassword(req.password); // if that's your field</span>
+<span class="nc" id="L113">        userRepository.save(u);</span>
+
+<span class="nc" id="L115">        User saved = userRepository.save(u);</span>
+<span class="nc" id="L116">        return ResponseEntity.ok(saved);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

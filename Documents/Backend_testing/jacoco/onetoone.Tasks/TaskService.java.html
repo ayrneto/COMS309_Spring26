@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">System Test Coverage</a> &gt; <a href="index.source.html" class="el_package">onetoone.Tasks</a> &gt; <span class="el_source">TaskService.java</span></div><h1>TaskService.java</h1><pre class="source lang-java linenums">package onetoone.Tasks;
+
+import onetoone.Notification.NotificationService;
+import onetoone.Tasks.dto.TaskCreateRequest;
+import onetoone.Tasks.dto.TaskUpdateRequest;
+import onetoone.Users.User;
+import onetoone.Users.UserRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@EnableScheduling
+public class TaskService {
+
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public TaskService(TaskRepository taskRepository,
+                       UserRepository userRepository,
+                       NotificationService notificationService,
+<span class="fc" id="L30">                       SimpMessagingTemplate messagingTemplate) {</span>
+<span class="fc" id="L31">        this.taskRepository      = taskRepository;</span>
+<span class="fc" id="L32">        this.userRepository      = userRepository;</span>
+<span class="fc" id="L33">        this.notificationService = notificationService;</span>
+<span class="fc" id="L34">        this.messagingTemplate   = messagingTemplate;</span>
+<span class="fc" id="L35">    }</span>
+
+    public Task createTask(TaskCreateRequest req) {
+<span class="fc" id="L38">        User user = userRepository.findByEmail(req.getUserEmail());</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (user == null) {</span>
+<span class="fc" id="L40">            throw new RuntimeException(&quot;User not found with email: &quot; + req.getUserEmail());</span>
+        }
+
+<span class="fc" id="L43">        Task task = new Task(</span>
+<span class="fc" id="L44">                user.getId(),</span>
+<span class="fc" id="L45">                req.getTitle(),</span>
+<span class="fc" id="L46">                req.getDescription(),</span>
+<span class="fc" id="L47">                req.getDueDate(),</span>
+<span class="fc" id="L48">                req.getReminderDateTime()</span>
+        );
+<span class="fc" id="L50">        Task saved = taskRepository.save(task);</span>
+
+<span class="fc" id="L52">        pushWebSocket(user.getId(), saved, &quot;TASK_ASSIGNED&quot;);</span>
+<span class="fc" id="L53">        notificationService.createNotification(user.getId(), &quot;New task assigned: &quot; + saved.getTitle());</span>
+
+<span class="fc" id="L55">        return saved;</span>
+    }
+
+    public List&lt;Task&gt; getTasksForUser(Long userId) {
+<span class="fc" id="L59">        return taskRepository.findByUserId(userId);</span>
+    }
+
+    public Task updateTaskStatus(Long taskId, TaskStatus newStatus) {
+<span class="fc" id="L63">        Task task = findOrThrow(taskId);</span>
+<span class="fc" id="L64">        task.setStatus(newStatus);</span>
+<span class="fc" id="L65">        return taskRepository.save(task);</span>
+    }
+
+    public Task updateTask(Long taskId, TaskUpdateRequest req) {
+<span class="fc" id="L69">        Task task = findOrThrow(taskId);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (req.getTitle()            != null) task.setTitle(req.getTitle());</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (req.getDescription()      != null) task.setDescription(req.getDescription());</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (req.getDueDate()          != null) task.setDueDate(req.getDueDate());</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (req.getReminderDateTime() != null) task.setReminderDateTime(req.getReminderDateTime());</span>
+<span class="fc" id="L74">        return taskRepository.save(task);</span>
+    }
+
+    @Scheduled(fixedRate = 60_000)
+    public void sendDueReminders() {
+<span class="fc" id="L79">        LocalDateTime now       = LocalDateTime.now();</span>
+<span class="fc" id="L80">        LocalDateTime windowEnd = now.plusMinutes(1);</span>
+
+<span class="fc" id="L82">        List&lt;Task&gt; upcoming = taskRepository.findByReminderDateTimeBetween(now, windowEnd);</span>
+
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        for (Task task : upcoming) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if (task.getStatus() == TaskStatus.COMPLETED) continue;</span>
+
+<span class="nc" id="L87">            pushWebSocket(task.getUserId(), task, &quot;TASK_REMINDER&quot;);</span>
+<span class="nc" id="L88">            notificationService.createNotification(</span>
+<span class="nc" id="L89">                    task.getUserId(),</span>
+<span class="nc" id="L90">                    &quot;Reminder: \&quot;&quot; + task.getTitle() + &quot;\&quot; is due soon!&quot;</span>
+            );
+<span class="nc" id="L92">        }</span>
+<span class="fc" id="L93">    }</span>
+
+    private Task findOrThrow(Long taskId) {
+<span class="fc" id="L96">        return taskRepository.findById(taskId)</span>
+<span class="fc" id="L97">                .orElseThrow(() -&gt; new RuntimeException(&quot;Task not found with id: &quot; + taskId));</span>
+    }
+
+    private void pushWebSocket(Long userId, Task task, String eventType) {
+<span class="fc" id="L101">        Map&lt;String, Object&gt; payload = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L102">        payload.put(&quot;eventType&quot;,   eventType);</span>
+<span class="fc" id="L103">        payload.put(&quot;taskId&quot;,      task.getId());</span>
+<span class="fc" id="L104">        payload.put(&quot;title&quot;,       task.getTitle());</span>
+<span class="fc" id="L105">        payload.put(&quot;description&quot;, task.getDescription());</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        payload.put(&quot;dueDate&quot;,     task.getDueDate() != null ? task.getDueDate().toString() : null);</span>
+<span class="fc" id="L107">        payload.put(&quot;status&quot;,      task.getStatus().getDisplayName());</span>
+
+<span class="fc" id="L109">        messagingTemplate.convertAndSend(&quot;/topic/user/&quot; + userId, payload);</span>
+<span class="fc" id="L110">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
